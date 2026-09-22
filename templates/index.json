@@ -1,14 +1,11 @@
 {
   "sections": {
     "hero": {
-      "type": "image-banner",
-      "blocks": {
-        "heading": { "type": "heading", "settings": { "heading": "Welcome to your store" } },
-        "text": { "type": "text", "settings": { "text": "<p>Add your headline and shop link here.</p>" } },
-        "button": { "type": "button", "settings": { "button_label": "Shop now" } }
-      },
-      "block_order": ["heading", "text", "button"],
-      "settings": { "height": "medium", "text_alignment": "center" }
+      "type": "hero-inicio",
+      "settings": {
+        "heading": "Santidade em estilo",
+        "image_alt": "Dois modelos vestindo camisetas oversized Mater — frente em preto e costas em off-white com a estampa São Miguel Arcanjo"
+      }
     },
     "featured": {
       "type": "featured-collection",

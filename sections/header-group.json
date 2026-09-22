@@ -3,7 +3,11 @@
   "name": "t:section_groups.header.name",
   "sections": {
     "nav": {
-      "type": "nav"
+      "type": "nav",
+      "settings": {
+        "enable_country_selector": false,
+        "enable_language_selector": false
+      }
     }
   },
   "order": ["nav"]

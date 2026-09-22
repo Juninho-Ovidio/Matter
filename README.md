@@ -140,6 +140,7 @@ cabeçalho/rodapé (permitem reordenar no editor).
 | `contact-form.liquid` | Formulário de contato nativo |
 | `main-password.liquid` | Página de senha |
 | `main-404.liquid` | Conteúdo do 404 |
+| `hero-inicio.liquid` | Hero da home: arte full-bleed da marca (tipografia dentro da imagem) + H1 acessível |
 | `image-banner.liquid` | Banner hero (imagem + texto + botões) — home |
 | `featured-collection.liquid` | Coleção em destaque (grade de produtos) — home |
 | `collection-list.liquid` | Lista de coleções em cards — home |
@@ -175,7 +176,15 @@ Pedaços reutilizáveis chamados via `{% render 'nome' %}`.
 | `base.css` | Estilos base compartilhados (grid, botões, inputs, acessibilidade) |
 | `fontes.css` | Placeholder para fontes próprias (por padrão usa fontes do Shopify) |
 | `carrinho.js` | Add-to-cart via AJAX + atualização do contador (com fallback nativo) |
+| `logo-mater.png` | Logo da marca (PNG transparente, 800px) — fallback do header quando `settings.logo` está vazio |
+| `hero-inicio-1000/1800/2600.jpg` | Arte do hero da home em 3 larguras (srcset) — versões otimizadas de `img/inicio-1.png` |
 | `site.webmanifest` | Manifesto PWA |
+
+> A pasta `img/` guarda os **originais** de design (o `inicio-1.png` tem
+> 16710×8500 e 63 MB). O Shopify só serve arquivos de `assets/`, e com limite de
+> 20 MB por arquivo — por isso o tema usa as versões otimizadas acima. Ao trocar
+> a arte, regere os três JPEGs ou envie a imagem pelo editor (a section
+> `hero-inicio` prioriza a imagem do editor e serve os tamanhos pela CDN).
 
 ### `config/`
 | Arquivo | Função |

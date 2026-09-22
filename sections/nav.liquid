@@ -1,38 +1,58 @@
 {%- comment -%}
   ============================================================
-  NAV / HEADER — cabeçalho do site
+  NAV / HEADER — cabeçalho do site (layout Mater)
   ============================================================
 
   O QUE FAZ:
-  Monta o cabeçalho da loja: logo, navegação de múltiplos níveis
-  (menu com submenus e sub-submenus), busca, link de conta,
-  contador do carrinho e seletores de localização (país/moeda e
-  idioma). Inclui menu mobile com botão hambúrguer.
+  Monta o cabeçalho da loja no layout da marca Mater: menu à
+  esquerda, logo centralizado e ações (busca, conta, carrinho) à
+  direita, dentro de botões circulares brancos. Inclui navegação
+  de múltiplos níveis, menu mobile com botão hambúrguer e os
+  seletores de país/moeda e idioma.
 
   ONDE É USADA:
-  No layout (layout/theme.liquid), como header fixo presente em
-  todas as páginas. É uma section de grupo/header do tema.
+  No layout (layout/theme.liquid), via header-group.json, como
+  cabeçalho presente em todas as páginas.
 
   PRINCIPAIS PARTES:
-  - Logo: usa settings.logo (imagem) ou, se vazio, o nome da loja
-    (shop.name) como texto.
+  - header__inner: grid de 3 colunas (1fr | auto | 1fr) que mantém
+    o logo opticamente centralizado mesmo com menus de tamanhos
+    diferentes. No mobile vira auto | 1fr | auto.
+  - Logo: usa settings.logo (image_picker do editor). Se estiver
+    vazio, cai para o asset da marca (assets/logo-mater.png) em vez
+    do nome da loja em texto — assim a home já sobe com a marca
+    correta antes de qualquer configuração no admin.
   - header__nav: percorre section.settings.menu.links montando o
     menu desktop com até 3 níveis (link > child > grandchild).
+    Se o menu do admin ainda não existir, renderiza um menu de
+    demonstração (INÍCIO / COLEÇÃO / CONTATO) — veja FALLBACK abaixo.
   - header__actions: busca (details com painel), conta (só se
     customer_accounts_enabled) e carrinho com contador
-    data-cart-count baseado em cart.item_count.
+    data-cart-count baseado em cart.item_count. O contador fica
+    oculto (hidden) enquanto o carrinho está vazio; assets/carrinho.js
+    religa/desliga o atributo conforme o total muda.
   - Localização: renderiza o snippet 'localization-form' conforme
-    os settings enable_country_selector / enable_language_selector.
+    os settings enable_country_selector / enable_language_selector
+    (desligados por padrão em sections/header-group.json).
   - header__mobile-nav: menu alternativo para telas <= 1000px,
     aberto/fechado pelo <script> que alterna aria-expanded/hidden.
 
+  FALLBACK DO MENU:
+  O menu real de uma loja Shopify vem do admin (Navigation →
+  main-menu), não do código. Enquanto esse menu não existir, o
+  cabeçalho ficaria vazio e o layout não bateria com o design —
+  por isso há uma lista de demonstração hardcoded. Assim que o
+  main-menu for criado no admin, ela deixa de ser usada
+  automaticamente.
+
   OBSERVAÇÕES:
-  - Ícones vêm do snippet 'icon' (search, account, cart, etc.).
-  - O menu é definido no setting menu (link_list, default
-    "main-menu"); submenus só aparecem se o link tiver filhos.
+  - Ícones vêm do snippet 'icon' (search, account, cart) — são os
+    SVGs da marca, em currentColor.
+  - O cabeçalho é full-width (não usa .page-width): o recuo lateral
+    é o --mater-gutter, que acompanha a viewport.
   - Estilos e o JS do toggle mobile ficam inline neste arquivo.
 {%- endcomment -%}
-<header class="header page-width" data-section-id="{{ section.id }}">
+<header class="header" data-section-id="{{ section.id }}">
   <div class="header__inner">
     <button
       type="button"
@@ -43,6 +63,52 @@
     >
       <span class="header__burger"></span>
     </button>
+
+    <nav class="header__nav" role="navigation" aria-label="{{ 'sections.header.menu' | t }}">
+      <ul class="header__menu" role="list">
+        {%- if section.settings.menu.links.size > 0 -%}
+          {%- for link in section.settings.menu.links -%}
+            <li class="header__menu-item {% if link.links != blank %}header__menu-item--has-dropdown{% endif %}">
+              <a href="{{ link.url }}" class="header__menu-link" {% if link.current %}aria-current="page"{% endif %}>
+                {{ link.title | escape }}
+              </a>
+              {%- if link.links != blank -%}
+                <ul class="header__submenu" role="list">
+                  {%- for child in link.links -%}
+                    <li class="header__submenu-item {% if child.links != blank %}header__submenu-item--has-dropdown{% endif %}">
+                      <a href="{{ child.url }}" class="header__submenu-link">{{ child.title | escape }}</a>
+                      {%- if child.links != blank -%}
+                        <ul class="header__submenu header__submenu--nested" role="list">
+                          {%- for grandchild in child.links -%}
+                            <li><a href="{{ grandchild.url }}" class="header__submenu-link">{{ grandchild.title | escape }}</a></li>
+                          {%- endfor -%}
+                        </ul>
+                      {%- endif -%}
+                    </li>
+                  {%- endfor -%}
+                </ul>
+              {%- endif -%}
+            </li>
+          {%- endfor -%}
+        {%- else -%}
+          {%- comment -%} Menu de demonstração: usado só enquanto o main-menu não existir no admin. {%- endcomment -%}
+          {%- assign fallback_titles = 'INÍCIO,COLEÇÃO,CONTATO' | split: ',' -%}
+          {%- assign fallback_urls = '/,/collections/all,/pages/contato' | split: ',' -%}
+          {%- for title in fallback_titles -%}
+            {%- assign fallback_url = fallback_urls[forloop.index0] -%}
+            <li class="header__menu-item">
+              <a
+                href="{{ fallback_url }}"
+                class="header__menu-link"
+                {% if request.path == fallback_url %}aria-current="page"{% endif %}
+              >
+                {{ title }}
+              </a>
+            </li>
+          {%- endfor -%}
+        {%- endif -%}
+      </ul>
+    </nav>
 
     <a href="{{ routes.root_url }}" class="header__logo-link">
       {%- if settings.logo != blank -%}
@@ -60,37 +126,16 @@
             sizes: '(max-width: 1000px) 40vw, 200px'
         }}
       {%- else -%}
-        <span class="header__logo-text">{{ shop.name }}</span>
+        <img
+          src="{{ 'logo-mater.png' | asset_url }}"
+          class="header__logo-image"
+          width="800"
+          height="332"
+          alt="{{ shop.name | escape }}"
+          loading="eager"
+        >
       {%- endif -%}
     </a>
-
-    <nav class="header__nav" role="navigation" aria-label="{{ 'sections.header.menu' | t }}">
-      <ul class="header__menu" role="list">
-        {%- for link in section.settings.menu.links -%}
-          <li class="header__menu-item {% if link.links != blank %}header__menu-item--has-dropdown{% endif %}">
-            <a href="{{ link.url }}" class="header__menu-link" {% if link.current %}aria-current="page"{% endif %}>
-              {{ link.title | escape }}
-            </a>
-            {%- if link.links != blank -%}
-              <ul class="header__submenu" role="list">
-                {%- for child in link.links -%}
-                  <li class="header__submenu-item {% if child.links != blank %}header__submenu-item--has-dropdown{% endif %}">
-                    <a href="{{ child.url }}" class="header__submenu-link">{{ child.title | escape }}</a>
-                    {%- if child.links != blank -%}
-                      <ul class="header__submenu header__submenu--nested" role="list">
-                        {%- for grandchild in child.links -%}
-                          <li><a href="{{ grandchild.url }}" class="header__submenu-link">{{ grandchild.title | escape }}</a></li>
-                        {%- endfor -%}
-                      </ul>
-                    {%- endif -%}
-                  </li>
-                {%- endfor -%}
-              </ul>
-            {%- endif -%}
-          </li>
-        {%- endfor -%}
-      </ul>
-    </nav>
 
     <div class="header__actions">
       <details class="header__search">
@@ -120,7 +165,7 @@
 
       <a href="{{ routes.cart_url }}" class="header__action-button header__cart tap-target" aria-label="{{ 'templates.cart.cart' | t }}">
         {% render 'icon', name: 'cart' %}
-        <span class="header__cart-count" data-cart-count>{{ cart.item_count }}</span>
+        <span class="header__cart-count" data-cart-count {% if cart.item_count == 0 %}hidden{% endif %}>{{ cart.item_count }}</span>
       </a>
     </div>
   </div>
@@ -138,49 +183,90 @@
 
 <div class="header__mobile-nav" id="MobileNav-{{ section.id }}" hidden>
   <ul class="header__mobile-menu" role="list">
-    {%- for link in section.settings.menu.links -%}
-      <li>
-        <a href="{{ link.url }}" class="header__mobile-link">{{ link.title | escape }}</a>
-        {%- if link.links != blank -%}
-          <ul role="list" class="header__mobile-submenu">
-            {%- for child in link.links -%}
-              <li><a href="{{ child.url }}" class="header__mobile-link header__mobile-link--child">{{ child.title | escape }}</a></li>
-            {%- endfor -%}
-          </ul>
-        {%- endif -%}
-      </li>
-    {%- endfor -%}
+    {%- if section.settings.menu.links.size > 0 -%}
+      {%- for link in section.settings.menu.links -%}
+        <li>
+          <a href="{{ link.url }}" class="header__mobile-link">{{ link.title | escape }}</a>
+          {%- if link.links != blank -%}
+            <ul role="list" class="header__mobile-submenu">
+              {%- for child in link.links -%}
+                <li><a href="{{ child.url }}" class="header__mobile-link header__mobile-link--child">{{ child.title | escape }}</a></li>
+              {%- endfor -%}
+            </ul>
+          {%- endif -%}
+        </li>
+      {%- endfor -%}
+    {%- else -%}
+      {%- assign fallback_titles = 'INÍCIO,COLEÇÃO,CONTATO' | split: ',' -%}
+      {%- assign fallback_urls = '/,/collections/all,/pages/contato' | split: ',' -%}
+      {%- for title in fallback_titles -%}
+        <li><a href="{{ fallback_urls[forloop.index0] }}" class="header__mobile-link">{{ title }}</a></li>
+      {%- endfor -%}
+    {%- endif -%}
   </ul>
 </div>
 
 <style>
-  .header__inner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 20px;
-    padding: 16px 0;
+  .header {
+    /* Recuo lateral do cabeçalho: acompanha a viewport (design usa ~100px em 1670px). */
+    --mater-gutter: clamp(20px, 6vw, 100px);
+    position: relative;
+    z-index: 10;
+    background-color: var(--color-background);
   }
-  .header__logo-image { display: block; height: auto; }
-  .header__logo-text { font-family: var(--font-heading-family); font-size: var(--f4); }
-  .header__nav { flex: 1; }
+  .header__inner {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 20px;
+    min-height: 88px;
+    padding: 12px var(--mater-gutter);
+  }
+  .header__logo-link { display: block; justify-self: center; line-height: 0; }
+  .header__logo-image {
+    display: block;
+    width: clamp(120px, 11vw, 186px);
+    height: auto;
+  }
+  .header__nav { justify-self: start; }
   .header__menu {
     display: flex;
     align-items: center;
-    gap: 24px;
+    gap: clamp(18px, 2.6vw, 44px);
     margin: 0;
     padding: 0;
     list-style: none;
   }
   .header__menu-item { position: relative; }
-  .header__menu-link,
-  .header__submenu-link {
+  .header__menu-link {
+    position: relative;
+    display: inline-block;
+    padding-bottom: 12px;
     font-family: var(--font-heading-family);
-    font-size: var(--f2);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
     color: var(--color-text);
     text-decoration: none;
-    padding: 8px 0;
-    display: inline-block;
+  }
+  /* Sublinhado do item ativo (e no hover), como no design. */
+  .header__menu-link::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 1px;
+    background-color: currentColor;
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 0.2s ease;
+  }
+  .header__menu-link[aria-current='page']::after,
+  .header__menu-item:hover > .header__menu-link::after,
+  .header__menu-link:focus-visible::after {
+    transform: scaleX(1);
   }
   .header__submenu {
     position: absolute;
@@ -190,7 +276,7 @@
     margin: 0;
     padding: 8px 0;
     list-style: none;
-    background-color: var(--color-background);
+    background-color: var(--color-background-contrast);
     border: 1px solid var(--color-border);
     border-radius: var(--inputs-radius);
     opacity: 0;
@@ -209,24 +295,51 @@
     transform: translateY(0);
   }
   .header__submenu-item { position: relative; }
-  .header__submenu-link { padding: 6px 16px; width: 100%; }
-  .header__actions { display: flex; align-items: center; gap: 8px; }
+  .header__submenu-link {
+    display: block;
+    width: 100%;
+    padding: 8px 16px;
+    font-family: var(--font-heading-family);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-text);
+    text-decoration: none;
+  }
+  .header__actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+  }
+  /* Botões circulares brancos do design. */
   .header__action-button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     position: relative;
+    width: 46px;
+    height: 46px;
+    min-width: 46px;
+    min-height: 46px;
     color: var(--color-text);
-    background: none;
+    background-color: var(--color-background-contrast);
     border: none;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
     cursor: pointer;
     text-decoration: none;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
   }
-  .header__action-button svg { width: 22px; height: 22px; }
+  .header__action-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+  }
+  .header__action-button svg { width: 19px; height: 19px; }
   .header__cart-count {
     position: absolute;
-    top: 2px;
-    right: 2px;
+    top: -2px;
+    right: -2px;
     min-width: 18px;
     height: 18px;
     padding: 0 4px;
@@ -242,17 +355,24 @@
   .header__search summary::-webkit-details-marker { display: none; }
   .header__search-panel {
     position: absolute;
-    top: 100%;
+    top: calc(100% + 8px);
     right: 0;
     width: 320px;
     max-width: 90vw;
     padding: 12px;
-    background-color: var(--color-background);
+    background-color: var(--color-background-contrast);
     border: 1px solid var(--color-border);
     border-radius: var(--inputs-radius);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
     z-index: 20;
   }
-  .header__menu-toggle { display: none; background: none; border: none; }
+  .header__menu-toggle {
+    display: none;
+    justify-self: start;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
   .header__burger,
   .header__burger::before,
   .header__burger::after {
@@ -266,19 +386,40 @@
   .header__burger::before { content: ''; position: absolute; top: -7px; }
   .header__burger::after { content: ''; position: absolute; top: 7px; }
   .header__mobile-nav {
-    padding: 16px 20px;
+    padding: 16px var(--mater-gutter, 20px);
+    background-color: var(--color-background);
     border-top: 1px solid var(--color-border);
   }
   .header__mobile-menu, .header__mobile-submenu { list-style: none; margin: 0; padding: 0; }
-  .header__mobile-link { display: block; padding: 12px 0; font-size: var(--f3); color: var(--color-text); text-decoration: none; }
-  .header__mobile-link--child { padding-left: 16px; font-size: var(--f2); opacity: 0.8; }
-  .header__localization { padding: 8px 0; }
+  .header__mobile-link {
+    display: block;
+    padding: 12px 0;
+    font-family: var(--font-heading-family);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-text);
+    text-decoration: none;
+  }
+  .header__mobile-link--child { padding-left: 16px; font-weight: 400; letter-spacing: 0.08em; opacity: 0.8; }
+  .header__localization { padding: 8px var(--mater-gutter); }
 
   @media screen and (max-width: 1000px) {
+    .header__inner {
+      grid-template-columns: auto 1fr auto;
+      min-height: 68px;
+    }
     .header__nav { display: none; }
     .header__menu-toggle { display: inline-flex; }
-    .header__inner { justify-content: space-between; }
-    .header__logo-link { margin: 0 auto; }
+  }
+  /* Telas estreitas: aperta recuo, gaps e logo para que os 3 botões
+     de ação continuem na tela mantendo o alvo de toque de 44px. */
+  @media screen and (max-width: 749px) {
+    .header { --mater-gutter: 16px; }
+    .header__inner { gap: 10px; min-height: 64px; }
+    .header__logo-image { width: clamp(104px, 30vw, 150px); }
+    .header__actions { gap: 8px; }
   }
   @media screen and (min-width: 1001px) {
     .header__mobile-nav { display: none !important; }

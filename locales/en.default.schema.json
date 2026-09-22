@@ -54,6 +54,27 @@
         }
       }
     },
+    "hero_inicio": {
+      "name": "Hero (home)",
+      "settings": {
+        "image": {
+          "label": "Image",
+          "info": "Full-width artwork. Leave empty to use the artwork packaged with the theme."
+        },
+        "image_mobile": {
+          "label": "Image (mobile)",
+          "info": "Optional vertical crop used below 750px. Without it, the desktop artwork is shown in full."
+        },
+        "heading": {
+          "label": "Headline",
+          "info": "The page H1. Type the same headline that appears inside the artwork, for SEO and screen readers."
+        },
+        "image_alt": {
+          "label": "Image alt text",
+          "info": "Defaults to the headline."
+        }
+      }
+    },
     "image_banner": {
       "name": "Image banner",
       "settings": {
