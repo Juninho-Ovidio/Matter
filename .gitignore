@@ -1,2 +1,6 @@
 .DS_Store
 .shopify
+
+# Arte original do hero: 16710x8500, ~60 MB. Fica so no disco.
+# O que o tema serve sao as versoes otimizadas em assets/hero-inicio-*.jpg
+img/inicio-1.png
