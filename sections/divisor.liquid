@@ -1,0 +1,168 @@
+{%- comment -%}
+  ============================================================
+  DIVISOR — faixa preta que separa as sections (Mater)
+  ============================================================
+
+  O QUE FAZ:
+  Renderiza uma das faixas angulares da marca, em largura total,
+  para separar uma section da seguinte. São duas formas, desenhadas
+  para inclinações opostas:
+
+  - tela1: originada de img/tela1-divisor.svg (1673x79)
+           sobe da esquerda para a direita.
+  - tela2: originada de img/tela2-divisor.svg (1673x85)
+           desce da esquerda para a direita.
+
+  ONDE É USADA:
+  Section com preset: arraste no theme editor entre duas sections.
+  Na home ela aparece duas vezes (templates/index.json): tela1 entre
+  o hero e "Nossas coleções", tela2 logo abaixo das coleções.
+
+  POR QUE O SVG ESTÁ INLINE E NÃO EM assets/:
+  Cada divisor é um único <path>. Inline ele (a) não custa mais uma
+  requisição, (b) aceita `fill="currentColor"`, e é isso que permite
+  trocar a cor pelo editor em vez de ficar preso ao #070707 gravado
+  dentro do arquivo. Os .svg originais seguem em img/ como fonte de
+  design — se você reeditar um deles, copie o novo `d=` para cá.
+
+  ESCALA:
+  O SVG escala proporcionalmente (width 100% / height auto): 79px de
+  altura a 1673px de largura, ~19px num celular de 400px. É a
+  proporção original da arte. Se quiser espessura constante em
+  qualquer tela, marque "Esticar" — aí o SVG passa a usar
+  preserveAspectRatio="none" e respeita a altura configurada.
+
+  DESLOCAMENTO (offset):
+  O setting "Deslocamento vertical" é um margin-top em px que aceita
+  valor negativo: negativo puxa a faixa para CIMA, mordendo a section
+  de cima; positivo empurra para BAIXO, abrindo respiro antes dela.
+  Por isso o wrapper é position: relative com z-index 2 — assim a
+  faixa passa por cima da vizinha em vez de ser cortada por ela.
+
+  O fundo do wrapper é transparente por padrão, justamente para o
+  deslocamento não tapar a foto da section de cima. Se preencher a
+  cor de fundo, ela vira uma faixa sólida e volta a cobrir.
+
+  ACESSIBILIDADE:
+  É decoração pura: aria-hidden + focusable="false", para leitores
+  de tela ignorarem. Não tem texto nem função.
+{%- endcomment -%}
+{%- liquid
+  assign shape = section.settings.shape
+
+  if shape == 'tela2'
+    assign svg_width = 1673
+    assign svg_height = 85
+    # Borda de baixo suavizada. O path original de img/tela2-divisor.svg era
+    # ...V58.3962 H796 L0 84.5..., ou seja: reto de x=1673 ate x=796 e so entao
+    # uma queda diagonal. Isso criava um DEGRAU visivel no meio da faixa - o
+    # "divisor quebrando". Aqui a borda de baixo acompanha a mesma dobra suave
+    # da borda de cima (vertice em 825.5), deixando a espessura quase constante
+    # (55.8 na esquerda, 56.0 no meio, 58.4 na direita) e sem canto duro.
+    assign svg_path = 'M0 28.7264L825.5 17.5L1673 0V58.3962L825.5 73.5L0 84.5Z'
+  else
+    assign svg_width = 1673
+    assign svg_height = 79
+    assign svg_path = 'M1673 65.7629L847.5 79L0 65.7629V30.7791H847.5L1673 2.02656e-06V65.7629Z'
+  endif
+-%}
+<div class="divisor{% if section.settings.stretch %} divisor--stretch{% endif %}" data-section-id="{{ section.id }}">
+  <svg
+    class="divisor__shape"
+    viewBox="0 0 {{ svg_width }} {{ svg_height }}"
+    {% if section.settings.stretch %}preserveAspectRatio="none"{% endif %}
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden="true"
+    focusable="false"
+  >
+    <path d="{{ svg_path }}" fill="currentColor"/>
+  </svg>
+</div>
+
+<style>
+  #shopify-section-{{ section.id }} .divisor {
+    position: relative;
+    z-index: 2;
+    display: block;
+    width: 100%;
+    margin-top: {{ section.settings.offset }}px;
+    line-height: 0;
+    color: {{ section.settings.color }};
+    background-color: {{ section.settings.background }};
+  }
+  #shopify-section-{{ section.id }} .divisor__shape {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  #shopify-section-{{ section.id }} .divisor--stretch .divisor__shape {
+    height: {{ section.settings.height }}px;
+  }
+</style>
+
+{% schema %}
+{
+  "name": "t:sections.divisor.name",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "select",
+      "id": "shape",
+      "options": [
+        { "value": "tela1", "label": "t:sections.divisor.settings.shape.options__1.label" },
+        { "value": "tela2", "label": "t:sections.divisor.settings.shape.options__2.label" }
+      ],
+      "default": "tela1",
+      "label": "t:sections.divisor.settings.shape.label"
+    },
+    {
+      "type": "color",
+      "id": "color",
+      "default": "#070707",
+      "label": "t:sections.divisor.settings.color.label"
+    },
+    {
+      "type": "color",
+      "id": "background",
+      "default": "rgba(0,0,0,0)",
+      "label": "t:sections.divisor.settings.background.label",
+      "info": "t:sections.divisor.settings.background.info"
+    },
+    {
+      "type": "range",
+      "id": "offset",
+      "min": -160,
+      "max": 160,
+      "step": 5,
+      "unit": "px",
+      "default": 0,
+      "label": "t:sections.divisor.settings.offset.label",
+      "info": "t:sections.divisor.settings.offset.info"
+    },
+    {
+      "type": "checkbox",
+      "id": "stretch",
+      "default": false,
+      "label": "t:sections.divisor.settings.stretch.label",
+      "info": "t:sections.divisor.settings.stretch.info"
+    },
+    {
+      "type": "range",
+      "id": "height",
+      "min": 20,
+      "max": 140,
+      "step": 5,
+      "unit": "px",
+      "default": 80,
+      "label": "t:sections.divisor.settings.height.label",
+      "info": "t:sections.divisor.settings.height.info"
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.divisor.name"
+    }
+  ]
+}
+{% endschema %}

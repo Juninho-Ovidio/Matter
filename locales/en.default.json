@@ -29,7 +29,8 @@
       "page": "Page {{ number }}"
     },
     "breadcrumbs": {
-      "home": "Home"
+      "home": "Início",
+      "products": "Produtos"
     },
     "continue_shopping": "Continue shopping",
     "newsletter_form": {
@@ -70,15 +71,17 @@
   },
   "products": {
     "product": {
-      "add_to_cart": "Add to cart",
-      "sold_out": "Sold out",
-      "unavailable": "Unavailable",
-      "on_sale": "Sale",
+      "add_to_cart": "Adicionar ao carrinho",
+      "sold_out": "Esgotado",
+      "unavailable": "Indisponível",
+      "on_sale": "Desconto",
+      "new": "Novo",
+      "add_to_wishlist": "Favoritar {{ product }}",
       "quantity": {
-        "label": "Quantity",
-        "input_label": "Quantity for {{ product }}",
-        "increase": "Increase quantity for {{ product }}",
-        "decrease": "Decrease quantity for {{ product }}"
+        "label": "Quantidade",
+        "input_label": "Quantidade de {{ product }}",
+        "increase": "Aumentar quantidade de {{ product }}",
+        "decrease": "Diminuir quantidade de {{ product }}"
       },
       "price": {
         "from_price_html": "From {{ price }}",
@@ -86,12 +89,12 @@
         "sale_price": "Sale price",
         "unit_price": "Unit price"
       },
-      "vendor": "Vendor",
-      "view_full_details": "View full details",
-      "description": "Description",
-      "share": "Share",
-      "include_taxes": "Tax included.",
-      "shipping_policy_html": "<a href=\"{{ link }}\">Shipping</a> calculated at checkout.",
+      "vendor": "Marca",
+      "view_full_details": "Ver detalhes",
+      "description": "Descrição",
+      "share": "Compartilhar",
+      "include_taxes": "Impostos incluídos.",
+      "shipping_policy_html": "<a href=\"{{ link }}\">Frete</a> calculado no checkout.",
       "pickup_availability": {
         "view_store_info": "View store information",
         "check_other_stores": "Check availability at other stores",
@@ -164,7 +167,8 @@
   "sections": {
     "main_collection": {
       "empty": "No products found",
-      "use_fewer_filters": "Use fewer filters or remove all"
+      "use_fewer_filters": "Use fewer filters or remove all",
+      "show_more": "Mostrar mais"
     },
     "header": {
       "announcement": "Announcement",
@@ -204,7 +208,8 @@
       "base_by_html": "Base by <a href=\"{{ link }}\" target=\"_blank\" rel=\"noopener\">Team Lecdt</a>"
     },
     "collection_list": {
-      "view_all": "View all"
+      "view_all": "View all",
+      "view_collection": "Ver coleção"
     },
     "featured_collection": {
       "view_all": "View all",

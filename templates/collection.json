@@ -1,11 +1,13 @@
 {
   "sections": {
-    "banner": {
-      "type": "collection-banner"
-    },
     "product-grid": {
-      "type": "main-collection"
+      "type": "main-collection",
+      "settings": {
+        "subheading": "Vista sua fé. Leve o que te inspira.",
+        "products_per_page": 16,
+        "columns_desktop": 4
+      }
     }
   },
-  "order": ["banner", "product-grid"]
+  "order": ["product-grid"]
 }

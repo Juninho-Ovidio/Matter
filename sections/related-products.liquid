@@ -23,18 +23,60 @@
 {%- endcomment -%}
 {%- if section.settings.enable -%}
   <product-recommendations
-    class="related-products page-width"
+    class="related-products"
     data-url="{{ routes.product_recommendations_url }}?section_id={{ section.id }}&product_id={{ product.id }}&limit={{ section.settings.products_to_show }}"
   >
     {%- if recommendations.performed and recommendations.products_count > 0 -%}
-      <h2 class="related-products__title">{{ section.settings.heading | escape }}</h2>
-      <ul class="product-grid" role="list">
-        {%- for product in recommendations.products -%}
-          <li>{% render 'card-product', card_product: product %}</li>
-        {%- endfor -%}
-      </ul>
+      <div class="related-products__inner">
+        {%- if section.settings.eyebrow != blank -%}
+          <p class="related-products__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+        {%- endif -%}
+        <h2 class="related-products__title">{{ section.settings.heading | escape }}</h2>
+        <ul class="product-grid" role="list">
+          {%- for product in recommendations.products -%}
+            <li>{% render 'card-product', card_product: product %}</li>
+          {%- endfor -%}
+        </ul>
+      </div>
     {%- endif -%}
   </product-recommendations>
+
+  <style>
+    #shopify-section-{{ section.id }} .related-products {
+      --mater-gutter: clamp(20px, 6vw, 100px);
+      display: block;
+      background-color: var(--color-background);
+    }
+    #shopify-section-{{ section.id }} .related-products__inner {
+      padding: clamp(32px, 4vw, 64px) var(--mater-gutter) clamp(40px, 5vw, 80px);
+    }
+    #shopify-section-{{ section.id }} .related-products__eyebrow {
+      margin: 0 0 10px;
+      font-family: var(--font-heading-family);
+      font-size: clamp(0.72rem, 0.95vw, 1rem);
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+    #shopify-section-{{ section.id }} .related-products__title {
+      margin: 0 0 clamp(20px, 2.4vw, 38px);
+      font-family: var(--font-display-family);
+      font-weight: 400;
+      font-size: clamp(1.6rem, 3.2vw, 3.2rem);
+      line-height: 1;
+      text-transform: uppercase;
+    }
+    #shopify-section-{{ section.id }} .product-grid {
+      display: grid;
+      grid-template-columns: repeat({{ section.settings.products_to_show }}, minmax(0, 1fr));
+      gap: clamp(14px, 1.6vw, 26px) clamp(12px, 1.4vw, 22px);
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    @media screen and (max-width: 999px) {
+      #shopify-section-{{ section.id }} .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+  </style>
 
   <script>
     if (!customElements.get('product-recommendations')) {
@@ -71,8 +113,14 @@
     },
     {
       "type": "text",
+      "id": "eyebrow",
+      "default": "// Combina com",
+      "label": "t:sections.related_products.settings.eyebrow.label"
+    },
+    {
+      "type": "text",
       "id": "heading",
-      "default": "You may also like",
+      "default": "Você também pode gostar",
       "label": "t:sections.related_products.settings.heading.label"
     },
     {

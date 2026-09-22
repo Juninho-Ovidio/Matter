@@ -4,118 +4,257 @@
   ============================================================
 
   O QUE FAZ:
-  Renderiza o banner de abertura da home em largura total (full
-  bleed), preservando a proporção original da arte. A peça é uma
-  composição fechada: a tipografia ("SANTIDADE EM ESTILO",
-  "// STREETWEAR", a citação de I Timóteo e "SEJA BEM VINDO") já
-  faz parte da imagem, então a section não sobrepõe nenhum texto —
-  só entrega a arte no tamanho certo, com o texto equivalente
-  disponível para leitores de tela e para o Google.
+  Banner de abertura em largura total: a foto ocupa toda a largura,
+  preservando a proporção original, e a copy fica POR CIMA dela em
+  HTML de verdade — headline, eyebrow, citação bíblica e o "seja bem
+  vindo" do canto direito. Nada de texto dentro da imagem: tudo é
+  selecionável, traduzível, editável pelo lojista e lido pelo Google.
 
   ONDE É USADA:
   Primeira section da home (templates/index.json). Tem preset, então
   também pode ser adicionada em qualquer página pelo editor.
 
   PRINCIPAIS PARTES:
-  - <h1> visually-hidden: é o único H1 da home. Como a headline está
-    dentro da imagem, o texto real vive aqui (SEO + acessibilidade,
-    conforme o padrão do tema).
+  - <h1> real com a headline (único H1 da home).
   - Imagem eager + fetchpriority high (é o hero, carrega primeiro).
   - Fonte da imagem, em ordem:
-    1. section.settings.image — imagem enviada pelo lojista no editor;
-       serve versões responsivas pela CDN do Shopify (image_url).
+    1. section.settings.image — enviada pelo lojista no editor;
+       serve versões responsivas pela CDN do Shopify.
     2. assets/hero-inicio-*.jpg — arte da marca empacotada no tema,
-       em 3 larguras (1000 / 1800 / 2600) para montar o srcset.
-       É o que aparece antes de qualquer configuração no admin.
-  - section.settings.image_mobile (opcional): versão vertical/recortada
-    para telas estreitas. Veja a observação sobre mobile abaixo.
+       em 3 larguras (900 / 1400 / 1671) para montar o srcset.
+  - image_mobile (opcional): versão vertical para telas estreitas.
 
-  SOBRE O MOBILE:
-  A arte é bem horizontal (~1.97:1). Sem uma versão mobile, ela
-  continua inteira e legítima no celular, só que baixa. Recortar
-  com object-fit cortaria justamente a tipografia — por isso o
-  caminho certo é enviar uma arte vertical em "Imagem (mobile)".
+  POSICIONAMENTO DA COPY:
+  No desktop os blocos são absolutos, com top em PORCENTAGEM da
+  altura do hero (11% / 39% / 56% / 6.5%) e os tamanhos de fonte em
+  vw com clamp. Assim a composição inteira escala junto com a foto e
+  continua batendo com o layout em qualquer largura.
+
+  A copy pressupõe uma foto com a ESQUERDA livre (os modelos ao
+  centro/direita). Ao trocar a imagem, confira se o texto não caiu
+  em cima de alguém.
+
+  NO MOBILE:
+  Abaixo de 750px a copy sai de cima da foto e passa a fluir logo
+  abaixo dela. Sobreposta ficaria ilegível numa arte tão horizontal
+  (~1.99:1). Para manter a sobreposição no celular, envie uma arte
+  vertical em "Imagem (mobile)".
 
   OBSERVAÇÕES:
-  - O fundo da section usa --color-background, a mesma cor de fundo
-    da arte (#E5E5E4), para não aparecer emenda entre header e hero.
-  - Os arquivos originais em alta ficam em img/ (inicio-1.png); o que
-    o tema serve são as versões otimizadas em assets/.
+  - A headline usa --font-display-family (Anton, veja assets/fontes.css).
+  - O fundo usa --color-background, a mesma cor da arte (#e5e5e4),
+    para não aparecer emenda entre header e hero.
+  - Os originais em alta ficam em img/; o tema serve os otimizados
+    de assets/.
 {%- endcomment -%}
 <div
   class="hero-inicio{% if section.settings.image_mobile != blank %} hero-inicio--has-mobile{% endif %}"
   data-section-id="{{ section.id }}"
 >
-  {%- if section.settings.heading != blank -%}
-    <h1 class="visually-hidden">{{ section.settings.heading | escape }}</h1>
-  {%- endif -%}
-
   {%- assign hero_alt = section.settings.image_alt | default: section.settings.heading | escape -%}
 
-  {%- if section.settings.image_mobile != blank -%}
-    {{
-      section.settings.image_mobile
-      | image_url: width: 1200
-      | image_tag:
-        loading: 'eager',
-        fetchpriority: 'high',
-        class: 'hero-inicio__image hero-inicio__image--mobile',
-        widths: '480, 750, 900, 1200',
-        sizes: '100vw',
-        alt: hero_alt
-    }}
-  {%- endif -%}
+  <div class="hero-inicio__media">
+    {%- if section.settings.image_mobile != blank -%}
+      {{
+        section.settings.image_mobile
+        | image_url: width: 1200
+        | image_tag:
+          loading: 'eager',
+          fetchpriority: 'high',
+          class: 'hero-inicio__image hero-inicio__image--mobile',
+          widths: '480, 750, 900, 1200',
+          sizes: '100vw',
+          alt: hero_alt
+      }}
+    {%- endif -%}
 
-  {%- if section.settings.image != blank -%}
-    {{
-      section.settings.image
-      | image_url: width: 3000
-      | image_tag:
-        loading: 'eager',
-        fetchpriority: 'high',
-        class: 'hero-inicio__image hero-inicio__image--desktop',
-        widths: '750, 1100, 1500, 2000, 2600, 3000',
-        sizes: '100vw',
-        alt: hero_alt
-    }}
-  {%- else -%}
-    <img
-      class="hero-inicio__image hero-inicio__image--desktop"
-      src="{{ 'hero-inicio-1800.jpg' | asset_url }}"
-      srcset="
-        {{ 'hero-inicio-1000.jpg' | asset_url }} 1000w,
-        {{ 'hero-inicio-1800.jpg' | asset_url }} 1800w,
-        {{ 'hero-inicio-2600.jpg' | asset_url }} 2600w
-      "
-      sizes="100vw"
-      width="2600"
-      height="1323"
-      alt="{{ hero_alt }}"
-      loading="eager"
-      fetchpriority="high"
-    >
-  {%- endif -%}
+    {%- if section.settings.image != blank -%}
+      {{
+        section.settings.image
+        | image_url: width: 3000
+        | image_tag:
+          loading: 'eager',
+          fetchpriority: 'high',
+          class: 'hero-inicio__image hero-inicio__image--desktop',
+          widths: '750, 1100, 1500, 2000, 2600, 3000',
+          sizes: '100vw',
+          alt: hero_alt
+      }}
+    {%- else -%}
+      <img
+        class="hero-inicio__image hero-inicio__image--desktop"
+        src="{{ 'hero-inicio-1400.jpg' | asset_url }}"
+        srcset="
+          {{ 'hero-inicio-900.jpg' | asset_url }} 900w,
+          {{ 'hero-inicio-1400.jpg' | asset_url }} 1400w,
+          {{ 'hero-inicio-1671.jpg' | asset_url }} 1671w
+        "
+        sizes="100vw"
+        width="1671"
+        height="841"
+        alt="{{ hero_alt }}"
+        loading="eager"
+        fetchpriority="high"
+      >
+    {%- endif -%}
+
+    <div class="hero-inicio__overlay">
+      <div class="hero-inicio__headline">
+        {%- if section.settings.heading != blank -%}
+          <h1 class="hero-inicio__title">{{ section.settings.heading | escape | newline_to_br }}</h1>
+        {%- endif -%}
+        {%- if section.settings.eyebrow != blank -%}
+          <p class="hero-inicio__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+        {%- endif -%}
+      </div>
+
+      {%- if section.settings.quote != blank -%}
+        <blockquote class="hero-inicio__quote">
+          <p class="hero-inicio__quote-text">{{ section.settings.quote | escape | newline_to_br }}</p>
+          {%- if section.settings.quote_source != blank -%}
+            <cite class="hero-inicio__quote-source">{{ section.settings.quote_source | escape }}</cite>
+          {%- endif -%}
+        </blockquote>
+      {%- endif -%}
+
+      {%- if section.settings.welcome != blank -%}
+        <p class="hero-inicio__welcome">{{ section.settings.welcome | escape }}</p>
+      {%- endif -%}
+    </div>
+  </div>
 </div>
 
 <style>
-  .hero-inicio {
+  #shopify-section-{{ section.id }} .hero-inicio {
+    --mater-gutter: clamp(20px, 6vw, 100px);
     position: relative;
     width: 100%;
     background-color: var(--color-background);
-    /* Encosta no header: a arte já traz o próprio respiro no topo. */
-    margin-top: 0;
+  }
+  #shopify-section-{{ section.id }} .hero-inicio__media {
+    position: relative;
     line-height: 0;
   }
-  .hero-inicio__image {
+  #shopify-section-{{ section.id }} .hero-inicio__image {
     display: block;
     width: 100%;
     height: auto;
   }
-  .hero-inicio__image--mobile { display: none; }
+  #shopify-section-{{ section.id }} .hero-inicio__image--mobile { display: none; }
 
+  #shopify-section-{{ section.id }} .hero-inicio__overlay {
+    position: absolute;
+    inset: 0;
+    line-height: normal;
+    color: var(--color-text);
+  }
+  #shopify-section-{{ section.id }} .hero-inicio__overlay a { pointer-events: auto; }
+
+  #shopify-section-{{ section.id }} .hero-inicio__headline {
+    position: absolute;
+    top: 11%;
+    left: var(--mater-gutter);
+    max-width: 52%;
+  }
+  #shopify-section-{{ section.id }} .hero-inicio__title {
+    margin: 0;
+    font-family: var(--font-display-family);
+    font-weight: 400;
+    font-size: clamp(2.6rem, 6.9vw, 7.2rem);
+    line-height: 0.92;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+  }
+  #shopify-section-{{ section.id }} .hero-inicio__eyebrow {
+    margin: clamp(14px, 2.6vw, 44px) 0 0;
+    font-family: var(--font-heading-family);
+    font-size: clamp(0.8rem, 1.35vw, 1.45rem);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  #shopify-section-{{ section.id }} .hero-inicio__quote {
+    position: absolute;
+    top: 56%;
+    left: calc(var(--mater-gutter) + clamp(0px, 3.5vw, 58px));
+    margin: 0;
+    max-width: 40%;
+  }
+  #shopify-section-{{ section.id }} .hero-inicio__quote-text {
+    margin: 0;
+    font-size: clamp(0.8rem, 1.2vw, 1.25rem);
+    line-height: 1.55;
+  }
+  #shopify-section-{{ section.id }} .hero-inicio__quote-source {
+    display: block;
+    margin-top: 1.1em;
+    font-size: clamp(0.8rem, 1.2vw, 1.25rem);
+    font-style: normal;
+  }
+  /* Filete curto abaixo da referência bíblica */
+  #shopify-section-{{ section.id }} .hero-inicio__quote-source::after {
+    content: '';
+    display: block;
+    width: clamp(34px, 3.5vw, 58px);
+    height: 1px;
+    margin-top: 1.4em;
+    background-color: currentColor;
+  }
+
+  #shopify-section-{{ section.id }} .hero-inicio__welcome {
+    position: absolute;
+    top: 6.5%;
+    right: var(--mater-gutter);
+    margin: 0;
+    max-width: 8em;
+    font-family: var(--font-heading-family);
+    font-size: clamp(0.75rem, 1.25vw, 1.3rem);
+    line-height: 1.35;
+    letter-spacing: 0.1em;
+    text-align: right;
+    text-transform: uppercase;
+  }
+  #shopify-section-{{ section.id }} .hero-inicio__welcome::after {
+    content: '';
+    display: block;
+    width: clamp(36px, 3.6vw, 60px);
+    height: 1px;
+    margin: 0.9em 0 0 auto;
+    background-color: currentColor;
+  }
+
+  /* Abaixo de 750px a copy sai de cima da foto e vira fluxo normal. */
   @media screen and (max-width: 749px) {
-    .hero-inicio--has-mobile .hero-inicio__image--desktop { display: none; }
-    .hero-inicio--has-mobile .hero-inicio__image--mobile { display: block; }
+    #shopify-section-{{ section.id }} .hero-inicio--has-mobile .hero-inicio__image--desktop { display: none; }
+    #shopify-section-{{ section.id }} .hero-inicio--has-mobile .hero-inicio__image--mobile { display: block; }
+
+    #shopify-section-{{ section.id }} .hero-inicio__overlay {
+      position: static;
+      display: flex;
+      flex-direction: column;
+      padding: 28px var(--mater-gutter) 40px;
+    }
+    #shopify-section-{{ section.id }} .hero-inicio__headline,
+    #shopify-section-{{ section.id }} .hero-inicio__quote,
+    #shopify-section-{{ section.id }} .hero-inicio__welcome {
+      position: static;
+      max-width: none;
+      left: auto;
+      right: auto;
+    }
+    #shopify-section-{{ section.id }} .hero-inicio__title { font-size: clamp(2.4rem, 13vw, 4rem); }
+    #shopify-section-{{ section.id }} .hero-inicio__eyebrow { font-size: 0.85rem; margin-top: 14px; }
+    #shopify-section-{{ section.id }} .hero-inicio__quote { margin-top: 28px; }
+    #shopify-section-{{ section.id }} .hero-inicio__quote-text,
+    #shopify-section-{{ section.id }} .hero-inicio__quote-source { font-size: 0.95rem; }
+    /* No mobile o "seja bem vindo" vai para o topo do bloco de texto. */
+    #shopify-section-{{ section.id }} .hero-inicio__welcome {
+      order: -1;
+      margin-bottom: 20px;
+      text-align: left;
+      font-size: 0.8rem;
+    }
+    #shopify-section-{{ section.id }} .hero-inicio__welcome::after { margin-left: 0; }
   }
 </style>
 
@@ -138,16 +277,41 @@
     },
     {
       "type": "text",
+      "id": "image_alt",
+      "label": "t:sections.hero_inicio.settings.image_alt.label",
+      "info": "t:sections.hero_inicio.settings.image_alt.info"
+    },
+    {
+      "type": "textarea",
       "id": "heading",
-      "default": "Santidade em estilo",
+      "default": "Santidade\nem estilo",
       "label": "t:sections.hero_inicio.settings.heading.label",
       "info": "t:sections.hero_inicio.settings.heading.info"
     },
     {
       "type": "text",
-      "id": "image_alt",
-      "label": "t:sections.hero_inicio.settings.image_alt.label",
-      "info": "t:sections.hero_inicio.settings.image_alt.info"
+      "id": "eyebrow",
+      "default": "// Streetwear",
+      "label": "t:sections.hero_inicio.settings.eyebrow.label"
+    },
+    {
+      "type": "textarea",
+      "id": "quote",
+      "default": "\"Ninguém te despreze por seres jovem.\nAo contrário, torna-te modelo para os\nfiéis, no modo de falar e de viver,\nna caridade, na fé, na castidade.\nEnquanto eu não chegar, aplica-te\nà leitura, à exortação, ao ensino.\"",
+      "label": "t:sections.hero_inicio.settings.quote.label",
+      "info": "t:sections.hero_inicio.settings.quote.info"
+    },
+    {
+      "type": "text",
+      "id": "quote_source",
+      "default": "I Timóteo 4,12-16",
+      "label": "t:sections.hero_inicio.settings.quote_source.label"
+    },
+    {
+      "type": "text",
+      "id": "welcome",
+      "default": "Seja bem vindo",
+      "label": "t:sections.hero_inicio.settings.welcome.label"
     }
   ],
   "presets": [

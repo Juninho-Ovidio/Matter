@@ -26,9 +26,18 @@
         "share"
       ]
     },
+    "divisor": {
+      "type": "divisor",
+      "settings": { "shape": "tela2", "color": "#070707", "background": "rgba(0,0,0,0)", "offset": 0 }
+    },
     "related": {
-      "type": "related-products"
+      "type": "related-products",
+      "settings": {
+        "eyebrow": "// Combina com",
+        "heading": "Você também pode gostar",
+        "products_to_show": 4
+      }
     }
   },
-  "order": ["main", "related"]
+  "order": ["main", "divisor", "related"]
 }

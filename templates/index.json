@@ -3,14 +3,47 @@
     "hero": {
       "type": "hero-inicio",
       "settings": {
-        "heading": "Santidade em estilo",
-        "image_alt": "Dois modelos vestindo camisetas oversized Mater — frente em preto e costas em off-white com a estampa São Miguel Arcanjo"
+        "heading": "Santidade\nem estilo",
+        "eyebrow": "// Streetwear",
+        "quote": "\"Ninguém te despreze por seres jovem.\nAo contrário, torna-te modelo para os\nfiéis, no modo de falar e de viver,\nna caridade, na fé, na castidade.\nEnquanto eu não chegar, aplica-te\nà leitura, à exortação, ao ensino.\"",
+        "quote_source": "I Timóteo 4,12-16",
+        "welcome": "Seja bem vindo",
+        "image_alt": "Dois modelos vestindo camisetas oversized da Mater"
       }
     },
-    "featured": {
-      "type": "featured-collection",
-      "settings": { "heading": "Featured collection", "products_to_show": 4, "columns_desktop": 4 }
+    "divisor-1": {
+      "type": "divisor",
+      "settings": { "shape": "tela1", "color": "#070707", "background": "rgba(0,0,0,0)", "offset": -45 }
+    },
+    "colecoes": {
+      "type": "collection-list",
+      "blocks": {
+        "b1": { "type": "featured_collection", "settings": { "title": "Streetwear" } },
+        "b2": { "type": "featured_collection", "settings": { "title": "Pietrelcina" } },
+        "b3": { "type": "featured_collection", "settings": { "title": "Calcuta" } },
+        "b4": { "type": "featured_collection", "settings": { "title": "Acútis" } }
+      },
+      "block_order": ["b1", "b2", "b3", "b4"],
+      "settings": {
+        "eyebrow": "// Coleções",
+        "heading": "Nossas coleções",
+        "subheading": "Estilo, fé e propósito em cada detalhe.",
+        "side_text": "Camisetas que vão além do estilo. São expressão de uma fé que veste o seu dia a dia.",
+        "columns_desktop": 4
+      }
+    },
+    "divisor-2": {
+      "type": "divisor",
+      "settings": { "shape": "tela2", "color": "#070707", "background": "rgba(0,0,0,0)", "offset": 45 }
+    },
+    "produtos": {
+      "type": "produtos",
+      "settings": {
+        "heading": "Todos os produtos",
+        "subheading": "Vista sua fé e leve o que te inspira.",
+        "heading_tag": "h2"
+      }
     }
   },
-  "order": ["hero", "featured"]
+  "order": ["hero", "divisor-1", "colecoes", "divisor-2", "produtos"]
 }

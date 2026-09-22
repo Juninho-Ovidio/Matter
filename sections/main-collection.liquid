@@ -1,12 +1,13 @@
 {%- comment -%}
   ============================================================
-  MAIN COLLECTION — grade de produtos de uma coleção
+  MAIN COLLECTION — grade de produtos de uma coleção (Mater)
   ============================================================
 
   O QUE FAZ:
-  Mostra a grade de produtos de uma coleção com ordenação,
-  filtros facetados e paginação nativos do Shopify. Tudo funciona
-  sem JavaScript, pois usa formulários GET.
+  Página de listagem de produtos no layout da marca: breadcrumb,
+  título em display, subtítulo, contagem + ordenação no canto
+  direito, barra lateral de filtros à esquerda e a grade de cards
+  à direita, com paginação no rodapé.
 
   ONDE É USADA:
   No template de coleção (templates/collection.json), como section
@@ -15,125 +16,74 @@
   PRINCIPAIS PARTES:
   - {% paginate %}: pagina collection.products conforme o setting
     products_per_page.
-  - Toolbar de filtros (form GET): percorre collection.filters e
-    monta cada tipo (list/boolean com checkboxes e price_range com
-    inputs de mín/máx). Preserva o sort ativo via input hidden.
-  - Toolbar de ordenação (form GET): select com
-    collection.sort_options que faz submit no onchange; preserva
-    os filtros ativos via inputs hidden. Tem fallback <noscript>.
+  - Cabeçalho: breadcrumb (Início / nome da coleção), h1, subtítulo
+    opcional, contagem de produtos e o <select> de ordenação.
+  - Barra lateral (form GET): percorre collection.filters e monta
+    cada grupo num <details open> com título e divisória. Tipos
+    list/boolean viram checkboxes; price_range vira dois campos
+    numéricos. Preserva o sort ativo via input hidden.
+  - Filtros de cor ganham um disco colorido antes do rótulo, a
+    partir do nome do valor (veja SWATCHES abaixo).
+  - Grade: product-grid renderizando o snippet 'card-product',
+    seguida do snippet 'pagination' e do link "mostrar mais".
   - Estado vazio (collection__empty) quando não há produtos.
-  - Grade: product-grid renderizando o snippet 'card-product'
-    para cada produto, seguida do snippet 'pagination'.
+
+  FILTROS SÃO CONFIGURADOS NO ADMIN:
+  collection.filters vem do app Search & Discovery do Shopify. Os
+  grupos do layout (categoria, tamanho, cor, preço) só aparecem
+  depois de criados lá — o código aqui renderiza o que existir.
+
+  SWATCHES DE COR:
+  O Shopify não entrega o código da cor num filtro comum, então há
+  um de/para por NOME (preto, branco, bege...) no bloco liquid
+  abaixo. Cor que não estiver na lista simplesmente não ganha
+  disco — o rótulo continua aparecendo normalmente.
+
+  ORDENAÇÃO E FILTROS SEM JAVASCRIPT:
+  Os dois são formulários GET. Com JS, mudar um checkbox ou o
+  select já envia o formulário; sem JS, o <noscript> mostra os
+  botões de aplicar. Nada depende de JavaScript para funcionar.
 
   OBSERVAÇÕES:
-  - As colunas do desktop vêm do setting columns_desktop, aplicado
-    via variável CSS inline --grid-columns.
-  - Filtros e ordenação podem ser desligados pelos settings
-    enable_filtering e enable_sorting.
-  - Estilos ficam inline no <style>, escopados por
-    #shopify-section-{{ section.id }}.
+  - As colunas do desktop vêm do setting columns_desktop.
+  - Estilos ficam inline, escopados por #shopify-section-{{ section.id }}.
 {%- endcomment -%}
+
+{%- liquid
+  assign swatch_names = 'preto,branco,bege,cinza,azul,verde,vermelho,amarelo,rosa,roxo,laranja,marrom,off white,creme' | split: ','
+  assign swatch_hexes = '#070707,#ffffff,#d9c9a8,#9a9a97,#1c4ed8,#15803d,#b91c1c,#eab308,#ec4899,#7c3aed,#ea580c,#78350f,#f3efe7,#efe6d2' | split: ','
+-%}
 
 {%- paginate collection.products by section.settings.products_per_page -%}
   <div
-    class="collection page-width"
+    class="collection"
     data-section-id="{{ section.id }}"
     style="--grid-columns: {{ section.settings.columns_desktop }};"
   >
-    {%- if section.settings.enable_sorting or section.settings.enable_filtering -%}
-      <div class="collection__toolbar">
-        {%- if section.settings.enable_filtering and collection.filters.size > 0 -%}
-          <form method="get" class="collection__filters" id="CollectionFilters-{{ section.id }}">
-            {%- comment -%} Preserve current sort when filtering {%- endcomment -%}
-            {%- if collection.sort_by != blank -%}
-              <input type="hidden" name="sort_by" value="{{ collection.sort_by }}">
-            {%- endif -%}
+    <div class="collection__inner">
+      <div class="collection__top">
+        <div class="collection__intro">
+          <nav class="collection__breadcrumb" aria-label="{{ 'general.breadcrumbs.home' | t }}">
+            <a href="{{ routes.root_url }}">{{ 'general.breadcrumbs.home' | t }}</a>
+            <span aria-hidden="true">/</span>
+            <span aria-current="page">{{ collection.title | escape }}</span>
+          </nav>
 
-            {%- for filter in collection.filters -%}
-              <details class="collection__filter">
-                <summary class="collection__filter-summary">{{ filter.label | escape }}</summary>
-                <div class="collection__filter-content">
-                  {%- case filter.type -%}
-                    {%- when 'list', 'boolean' -%}
-                      <ul class="collection__filter-values" role="list">
-                        {%- for value in filter.values -%}
-                          <li class="collection__filter-value">
-                            <label>
-                              <input
-                                type="checkbox"
-                                name="{{ value.param_name }}"
-                                value="{{ value.value }}"
-                                {% if value.active %}checked{% endif %}
-                                {% if value.count == 0 and value.active == false %}disabled{% endif %}
-                              >
-                              <span>{{ value.label | escape }}</span>
-                              <span class="collection__filter-count">({{ value.count }})</span>
-                            </label>
-                          </li>
-                        {%- endfor -%}
-                      </ul>
+          <h1 class="collection__title">{{ collection.title | escape }}</h1>
 
-                    {%- when 'price_range' -%}
-                      <div class="collection__filter-price">
-                        <div class="collection__filter-price-field">
-                          <label
-                            class="field__label"
-                            for="Filter-{{ filter.label | escape }}-min-{{ section.id }}"
-                          >
-                            {{ 'products.facets.from' | t }}
-                          </label>
-                          <input
-                            class="field__input"
-                            type="number"
-                            name="{{ filter.min_value.param_name }}"
-                            id="Filter-{{ filter.label | escape }}-min-{{ section.id }}"
-                            min="0"
-                            max="{{ filter.range_max | money_without_currency | replace: ',', '' }}"
-                            {% if filter.min_value.value %}value="{{ filter.min_value.value | money_without_currency | replace: ',', '' }}"{% endif %}
-                            placeholder="0"
-                          >
-                        </div>
-                        <div class="collection__filter-price-field">
-                          <label
-                            class="field__label"
-                            for="Filter-{{ filter.label | escape }}-max-{{ section.id }}"
-                          >
-                            {{ 'products.facets.to' | t }}
-                          </label>
-                          <input
-                            class="field__input"
-                            type="number"
-                            name="{{ filter.max_value.param_name }}"
-                            id="Filter-{{ filter.label | escape }}-max-{{ section.id }}"
-                            min="0"
-                            max="{{ filter.range_max | money_without_currency | replace: ',', '' }}"
-                            {% if filter.max_value.value %}value="{{ filter.max_value.value | money_without_currency | replace: ',', '' }}"{% endif %}
-                            placeholder="{{ filter.range_max | money_without_currency | replace: ',', '' }}"
-                          >
-                        </div>
-                      </div>
-                  {%- endcase -%}
-                </div>
-              </details>
-            {%- endfor -%}
+          {%- if section.settings.subheading != blank -%}
+            <p class="collection__subtitle">{{ section.settings.subheading | escape }}</p>
+          {%- endif -%}
+        </div>
 
-            <div class="collection__filter-actions">
-              <button type="submit" class="button">{{ 'products.facets.apply' | t }}</button>
-              <a href="{{ collection.url }}" class="button button--secondary">
-                {{ 'products.facets.clear_all' | t }}
-              </a>
-            </div>
-          </form>
-        {%- endif -%}
-
-        <div class="collection__toolbar-bar">
+        <div class="collection__tools">
           <span class="collection__count">
             {{- 'products.facets.product_count_simple' | t: count: collection.products_count -}}
           </span>
 
           {%- if section.settings.enable_sorting -%}
             <form method="get" class="collection__sort">
-              {%- comment -%} Preserve active filters when sorting {%- endcomment -%}
+              {%- comment -%} Preserva os filtros ativos ao trocar a ordenação {%- endcomment -%}
               {%- for filter in collection.filters -%}
                 {%- for value in filter.values -%}
                   {%- if value.active -%}
@@ -158,93 +108,274 @@
                 {%- endif -%}
               {%- endfor -%}
 
-              <label class="field__label collection__sort-label" for="SortBy-{{ section.id }}">
+              <label class="visually-hidden" for="SortBy-{{ section.id }}">
                 {{ 'products.facets.sort_by_label' | t }}
               </label>
               <select
                 name="sort_by"
                 id="SortBy-{{ section.id }}"
-                class="select__select"
+                class="collection__sort-select"
                 onchange="this.form.submit()"
               >
                 {%- for option in collection.sort_options -%}
-                  <option
-                    value="{{ option.value }}"
-                    {% if option.value == collection.sort_by %}selected{% endif %}
-                  >
+                  <option value="{{ option.value }}" {% if option.value == collection.sort_by %}selected{% endif %}>
                     {{ option.name }}
                   </option>
                 {%- endfor -%}
               </select>
               <noscript>
-                <button type="submit" class="button button--secondary">
-                  {{ 'products.facets.apply' | t }}
-                </button>
+                <button type="submit" class="collection__mini-button">{{ 'products.facets.apply' | t }}</button>
               </noscript>
             </form>
           {%- endif -%}
         </div>
       </div>
-    {%- endif -%}
 
-    {%- if collection.products.size == 0 -%}
-      <div class="collection__empty">
-        <p>{{ 'sections.main_collection.empty' | t }}</p>
-        <a href="{{ routes.all_products_collection_url }}" class="button button--secondary">
-          {{ 'sections.main_collection.use_fewer_filters' | t }}
-        </a>
+      <div class="collection__layout">
+        {%- if section.settings.enable_filtering and collection.filters.size > 0 -%}
+          <aside class="collection__sidebar">
+            <form method="get" class="collection__filters" id="CollectionFilters-{{ section.id }}">
+              {%- if collection.sort_by != blank -%}
+                <input type="hidden" name="sort_by" value="{{ collection.sort_by }}">
+              {%- endif -%}
+
+              {%- for filter in collection.filters -%}
+                {%- assign filter_key = filter.label | downcase -%}
+                {%- assign is_color = false -%}
+                {%- if filter_key contains 'cor' or filter_key contains 'color' -%}
+                  {%- assign is_color = true -%}
+                {%- endif -%}
+
+                <details class="collection__filter" open>
+                  <summary class="collection__filter-summary">
+                    <span>{{ filter.label | escape }}</span>
+                    <span class="collection__filter-chevron" aria-hidden="true">
+                      {% render 'icon', name: 'chevron' %}
+                    </span>
+                  </summary>
+
+                  <div class="collection__filter-content">
+                    {%- case filter.type -%}
+                      {%- when 'list', 'boolean' -%}
+                        <ul class="collection__filter-values" role="list">
+                          {%- for value in filter.values -%}
+                            <li class="collection__filter-value">
+                              <label class="collection__check">
+                                <input
+                                  type="checkbox"
+                                  name="{{ value.param_name }}"
+                                  value="{{ value.value }}"
+                                  {% if value.active %}checked{% endif %}
+                                  {% if value.count == 0 and value.active == false %}disabled{% endif %}
+                                  onchange="this.form.submit()"
+                                >
+                                {%- if is_color -%}
+                                  {%- assign value_key = value.label | downcase | strip -%}
+                                  {%- assign swatch_index = -1 -%}
+                                  {%- for name in swatch_names -%}
+                                    {%- if name == value_key -%}
+                                      {%- assign swatch_index = forloop.index0 -%}
+                                      {%- break -%}
+                                    {%- endif -%}
+                                  {%- endfor -%}
+                                  {%- if swatch_index >= 0 -%}
+                                    <span
+                                      class="collection__swatch"
+                                      style="background-color: {{ swatch_hexes[swatch_index] }};"
+                                      aria-hidden="true"
+                                    ></span>
+                                  {%- endif -%}
+                                {%- endif -%}
+                                <span class="collection__check-label">{{ value.label | escape }}</span>
+                              </label>
+                            </li>
+                          {%- endfor -%}
+                        </ul>
+
+                      {%- when 'price_range' -%}
+                        <div class="collection__filter-price">
+                          <div class="collection__filter-price-field">
+                            <label class="field__label" for="Filter-min-{{ forloop.index }}-{{ section.id }}">
+                              {{ 'products.facets.from' | t }}
+                            </label>
+                            <input
+                              class="field__input"
+                              type="number"
+                              inputmode="numeric"
+                              name="{{ filter.min_value.param_name }}"
+                              id="Filter-min-{{ forloop.index }}-{{ section.id }}"
+                              min="0"
+                              max="{{ filter.range_max | money_without_currency | replace: ',', '' }}"
+                              {% if filter.min_value.value %}value="{{ filter.min_value.value | money_without_currency | replace: ',', '' }}"{% endif %}
+                              placeholder="0"
+                            >
+                          </div>
+                          <div class="collection__filter-price-field">
+                            <label class="field__label" for="Filter-max-{{ forloop.index }}-{{ section.id }}">
+                              {{ 'products.facets.to' | t }}
+                            </label>
+                            <input
+                              class="field__input"
+                              type="number"
+                              inputmode="numeric"
+                              name="{{ filter.max_value.param_name }}"
+                              id="Filter-max-{{ forloop.index }}-{{ section.id }}"
+                              min="0"
+                              max="{{ filter.range_max | money_without_currency | replace: ',', '' }}"
+                              {% if filter.max_value.value %}value="{{ filter.max_value.value | money_without_currency | replace: ',', '' }}"{% endif %}
+                              placeholder="{{ filter.range_max | money_without_currency | replace: ',', '' }}"
+                            >
+                          </div>
+                          <button type="submit" class="collection__mini-button">
+                            {{ 'products.facets.apply' | t }}
+                          </button>
+                        </div>
+                    {%- endcase -%}
+                  </div>
+                </details>
+              {%- endfor -%}
+
+              <div class="collection__filter-actions">
+                <noscript>
+                  <button type="submit" class="collection__mini-button">{{ 'products.facets.apply' | t }}</button>
+                </noscript>
+                <a href="{{ collection.url }}" class="collection__clear">
+                  {{ 'products.facets.clear_all' | t }}
+                </a>
+              </div>
+            </form>
+          </aside>
+        {%- endif -%}
+
+        <div class="collection__main">
+          {%- if collection.products.size == 0 -%}
+            <div class="collection__empty">
+              <p>{{ 'sections.main_collection.empty' | t }}</p>
+              <a href="{{ routes.all_products_collection_url }}" class="button button--secondary">
+                {{ 'sections.main_collection.use_fewer_filters' | t }}
+              </a>
+            </div>
+          {%- else -%}
+            <ul class="product-grid" role="list">
+              {%- for product in collection.products -%}
+                <li class="product-grid__item">
+                  {% render 'card-product', card_product: product %}
+                </li>
+              {%- endfor -%}
+            </ul>
+
+            {%- if paginate.pages > 1 -%}
+              <div class="collection__footer">
+                {% render 'pagination', paginate: paginate %}
+
+                {%- if paginate.next -%}
+                  <a href="{{ paginate.next.url }}" class="collection__more">
+                    {{- 'sections.main_collection.show_more' | t -}}
+                  </a>
+                {%- endif -%}
+              </div>
+            {%- endif -%}
+          {%- endif -%}
+        </div>
       </div>
-    {%- else -%}
-      <ul class="product-grid" role="list">
-        {%- for product in collection.products -%}
-          <li class="product-grid__item">
-            {% render 'card-product', card_product: product %}
-          </li>
-        {%- endfor -%}
-      </ul>
-
-      {% render 'pagination', paginate: paginate %}
-    {%- endif -%}
+    </div>
   </div>
 {%- endpaginate -%}
 
 <style>
   #shopify-section-{{ section.id }} .collection {
-    margin-bottom: var(--spacing-sections, 40px);
+    --mater-gutter: clamp(20px, 6vw, 100px);
+    padding: clamp(28px, 3vw, 48px) 0 clamp(40px, 5vw, 80px);
+    background-color: var(--color-background);
   }
-  #shopify-section-{{ section.id }} .collection__toolbar {
-    margin-bottom: 24px;
+  #shopify-section-{{ section.id }} .collection__inner { padding: 0 var(--mater-gutter); }
+
+  #shopify-section-{{ section.id }} .collection__top {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    gap: 24px;
+    margin-bottom: clamp(18px, 2vw, 30px);
   }
-  #shopify-section-{{ section.id }} .collection__filters {
+  #shopify-section-{{ section.id }} .collection__breadcrumb {
     display: flex;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    gap: 12px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid var(--color-border, #c2c2c2);
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    font-family: var(--font-heading-family);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
   }
-  #shopify-section-{{ section.id }} .collection__filter {
-    position: relative;
+  #shopify-section-{{ section.id }} .collection__breadcrumb a { color: inherit; text-decoration: none; opacity: 0.65; }
+  #shopify-section-{{ section.id }} .collection__breadcrumb a:hover { opacity: 1; }
+  #shopify-section-{{ section.id }} .collection__breadcrumb span[aria-hidden] { opacity: 0.4; }
+  #shopify-section-{{ section.id }} .collection__title {
+    margin: 0;
+    font-family: var(--font-display-family);
+    font-weight: 400;
+    font-size: clamp(1.9rem, 3.5vw, 3.6rem);
+    line-height: 1;
+    text-transform: uppercase;
   }
-  #shopify-section-{{ section.id }} .collection__filter-summary {
+  #shopify-section-{{ section.id }} .collection__subtitle {
+    margin: 10px 0 0;
+    font-size: 14px;
+    opacity: 0.6;
+  }
+  #shopify-section-{{ section.id }} .collection__tools {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  #shopify-section-{{ section.id }} .collection__count { font-size: 13px; opacity: 0.7; white-space: nowrap; }
+  #shopify-section-{{ section.id }} .collection__sort { margin: 0; }
+  #shopify-section-{{ section.id }} .collection__sort-select {
+    min-width: 190px;
+    min-height: 42px;
+    padding: 8px 34px 8px 14px;
+    font-family: var(--font-body-family);
+    font-size: 13px;
+    color: var(--color-text);
+    background-color: var(--color-background-contrast);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='m4 6 4 4 4-4' stroke='%23070707' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    border: 1px solid var(--color-border);
+    border-radius: var(--inputs-radius);
+    appearance: none;
     cursor: pointer;
-    padding: 8px 12px;
-    font-size: var(--f2);
-    border: 1px solid var(--color-border, #c2c2c2);
-    border-radius: var(--inputs-radius, 4px);
+  }
+
+  #shopify-section-{{ section.id }} .collection__layout {
+    display: grid;
+    grid-template-columns: 210px minmax(0, 1fr);
+    gap: clamp(24px, 3vw, 52px);
+    align-items: start;
+  }
+
+  #shopify-section-{{ section.id }} .collection__filters { margin: 0; }
+  #shopify-section-{{ section.id }} .collection__filter { border-bottom: 1px solid var(--color-border); }
+  #shopify-section-{{ section.id }} .collection__filter-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 16px 0;
+    font-family: var(--font-heading-family);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
     list-style: none;
+    cursor: pointer;
     user-select: none;
   }
-  #shopify-section-{{ section.id }} .collection__filter-summary::-webkit-details-marker {
-    display: none;
-  }
-  #shopify-section-{{ section.id }} .collection__filter-content {
-    margin-top: 8px;
-    padding: 12px;
-    border: 1px solid var(--color-border, #c2c2c2);
-    border-radius: var(--inputs-radius, 4px);
-    background-color: var(--color-background, #fff);
-  }
+  #shopify-section-{{ section.id }} .collection__filter-summary::-webkit-details-marker { display: none; }
+  #shopify-section-{{ section.id }} .collection__filter-chevron { display: inline-flex; transition: transform 0.2s ease; }
+  #shopify-section-{{ section.id }} .collection__filter-chevron svg { width: 14px; height: 14px; }
+  #shopify-section-{{ section.id }} .collection__filter[open] .collection__filter-chevron { transform: rotate(180deg); }
+  #shopify-section-{{ section.id }} .collection__filter-content { padding-bottom: 18px; }
   #shopify-section-{{ section.id }} .collection__filter-values {
     list-style: none;
     margin: 0;
@@ -252,66 +383,109 @@
     max-height: 260px;
     overflow-y: auto;
   }
-  #shopify-section-{{ section.id }} .collection__filter-value label {
+  #shopify-section-{{ section.id }} .collection__check {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 4px 0;
-    font-size: var(--f2);
+    gap: 10px;
+    padding: 6px 0;
+    font-size: 13px;
     cursor: pointer;
   }
-  #shopify-section-{{ section.id }} .collection__filter-count {
+  /* Checkbox desenhado na mão. O normalizar.css aplica
+     `input { appearance: none !important }` em TODO input, o que apaga o
+     checkbox nativo — então o controle precisa ser pintado aqui. De quebra
+     é o visual do layout: quadrado branco e, marcado, preto com check. */
+  #shopify-section-{{ section.id }} .collection__check input[type='checkbox'] {
+    position: relative;
+    width: 15px;
+    height: 15px;
+    margin: 0;
+    flex: none;
+    background-color: var(--color-background-contrast);
+    border: 1px solid var(--color-border);
+    border-radius: 2px;
+    cursor: pointer;
+  }
+  #shopify-section-{{ section.id }} .collection__check input[type='checkbox']:checked {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='m2.5 6.2 2.3 2.3 4.7-4.9' stroke='%23ffffff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 11px 11px;
+  }
+  #shopify-section-{{ section.id }} .collection__check input[type='checkbox']:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  #shopify-section-{{ section.id }} .collection__check input[type='checkbox']:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  #shopify-section-{{ section.id }} .collection__swatch {
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    border: 1px solid rgba(7, 7, 7, 0.22);
+    flex: none;
+  }
+  #shopify-section-{{ section.id }} .collection__filter-price { display: grid; gap: 10px; }
+  #shopify-section-{{ section.id }} .collection__filter-price .field__input { min-height: 38px; font-size: 13px; }
+  #shopify-section-{{ section.id }} .collection__mini-button {
+    min-height: 38px;
+    padding: 8px 16px;
+    font-family: var(--font-heading-family);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-accent-text);
+    background-color: var(--color-accent);
+    border: none;
+    border-radius: var(--buttons-radius);
+    cursor: pointer;
+  }
+  #shopify-section-{{ section.id }} .collection__filter-actions { padding-top: 18px; }
+  #shopify-section-{{ section.id }} .collection__clear {
+    font-family: var(--font-heading-family);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: inherit;
     opacity: 0.6;
-    font-size: var(--f1);
   }
-  #shopify-section-{{ section.id }} .collection__filter-price {
-    display: flex;
-    gap: 12px;
+  #shopify-section-{{ section.id }} .collection__clear:hover { opacity: 1; }
+
+  #shopify-section-{{ section.id }} .product-grid {
+    display: grid;
+    grid-template-columns: repeat(var(--grid-columns, 4), minmax(0, 1fr));
+    gap: clamp(14px, 1.6vw, 26px) clamp(12px, 1.4vw, 22px);
+    list-style: none;
+    margin: 0;
+    padding: 0;
   }
-  #shopify-section-{{ section.id }} .collection__filter-price-field {
-    flex: 1;
-  }
-  #shopify-section-{{ section.id }} .collection__filter-actions {
-    display: flex;
-    gap: 8px;
-    align-items: flex-end;
-  }
-  #shopify-section-{{ section.id }} .collection__toolbar-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    flex-wrap: wrap;
-    margin-top: 16px;
-  }
-  #shopify-section-{{ section.id }} .collection__count {
-    font-size: var(--f2);
-    opacity: 0.8;
-  }
-  #shopify-section-{{ section.id }} .collection__sort {
+
+  #shopify-section-{{ section.id }} .collection__empty { padding: 60px 0; text-align: center; font-size: var(--f3); }
+  #shopify-section-{{ section.id }} .collection__empty .button { margin-top: 20px; }
+
+  #shopify-section-{{ section.id }} .collection__footer {
+    position: relative;
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: center;
+    margin-top: clamp(28px, 3vw, 46px);
   }
-  #shopify-section-{{ section.id }} .collection__sort-label {
-    margin-bottom: 0;
-    white-space: nowrap;
+  #shopify-section-{{ section.id }} .collection__more {
+    position: absolute;
+    right: 0;
+    font-family: var(--font-heading-family);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: inherit;
+    text-decoration: none;
+    opacity: 0.7;
   }
-  #shopify-section-{{ section.id }} .collection__sort .select__select {
-    width: auto;
-    min-width: 200px;
-  }
-  #shopify-section-{{ section.id }} .collection__empty {
-    text-align: center;
-    padding: 60px 0;
-    font-size: var(--f3);
-  }
-  #shopify-section-{{ section.id }} .collection__empty .button {
-    margin-top: 20px;
-  }
-  #shopify-section-{{ section.id }} .pagination {
-    margin-top: 40px;
-  }
+  #shopify-section-{{ section.id }} .collection__more:hover { opacity: 1; }
   #shopify-section-{{ section.id }} .pagination__list {
     display: flex;
     flex-wrap: wrap;
@@ -326,31 +500,29 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 40px;
-    min-height: 40px;
-    padding: 0 8px;
-    font-size: var(--f2);
-    color: var(--color-text, #000);
+    min-width: 32px;
+    min-height: 32px;
+    padding: 0 6px;
+    font-size: 13px;
+    color: var(--color-text);
     text-decoration: none;
     border: 1px solid transparent;
-    border-radius: var(--inputs-radius, 4px);
+    border-radius: 50%;
   }
-  #shopify-section-{{ section.id }} a.pagination__item:hover {
-    border-color: var(--color-border, #c2c2c2);
-  }
+  #shopify-section-{{ section.id }} a.pagination__item:hover { border-color: var(--color-border); }
   #shopify-section-{{ section.id }} .pagination__item--current {
-    border-color: var(--color-accent, #000);
-    font-weight: bold;
+    color: var(--color-accent-text);
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
   }
-  @media screen and (max-width: 1000px) {
-    #shopify-section-{{ section.id }} .collection__toolbar-bar {
-      flex-direction: column;
-      align-items: stretch;
-    }
-    #shopify-section-{{ section.id }} .collection__sort .select__select {
-      min-width: 0;
-      flex: 1;
-    }
+
+  @media screen and (max-width: 999px) {
+    #shopify-section-{{ section.id }} .collection__layout { grid-template-columns: 1fr; }
+    #shopify-section-{{ section.id }} .collection__sidebar { border-bottom: 1px solid var(--color-border); }
+    #shopify-section-{{ section.id }} .collection__top { grid-template-columns: 1fr; align-items: start; }
+    #shopify-section-{{ section.id }} .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    #shopify-section-{{ section.id }} .collection__footer { flex-direction: column; gap: 18px; }
+    #shopify-section-{{ section.id }} .collection__more { position: static; }
   }
 </style>
 
@@ -360,6 +532,12 @@
   "tag": "section",
   "class": "section-main-collection",
   "settings": [
+    {
+      "type": "text",
+      "id": "subheading",
+      "default": "Vista sua fé. Leve o que te inspira.",
+      "label": "t:sections.main_collection.settings.subheading.label"
+    },
     {
       "type": "range",
       "id": "products_per_page",

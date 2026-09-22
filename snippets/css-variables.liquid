@@ -56,6 +56,9 @@
     --font-heading-weight: {{ header_font.weight }};
     --font-body-family: {{ body_font.family }}, {{ body_font.fallback_families }};
     --font-body-weight: {{ body_font.weight }};
+
+    /* Display da marca: Anton, empacotada em assets/ (veja assets/fontes.css) */
+    --font-display-family: 'Anton', 'Arial Narrow', Impact, sans-serif;
     --font-heading-scale: {{ settings.heading_scale | divided_by: 100.0 }};
     --font-body-scale: {{ settings.body_scale | divided_by: 100.0 }};
 

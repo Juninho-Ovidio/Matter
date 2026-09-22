@@ -54,24 +54,77 @@
         }
       }
     },
+    "produtos": {
+      "name": "Products heading",
+      "settings": {
+        "heading": { "label": "Heading" },
+        "subheading": { "label": "Subheading" },
+        "heading_tag": {
+          "label": "Heading level",
+          "info": "Use H1 only where this is the page's main heading. On the home page the hero already holds the H1.",
+          "options__1": { "label": "H2 (recommended)" },
+          "options__2": { "label": "H1" }
+        }
+      }
+    },
+    "divisor": {
+      "name": "Divider",
+      "settings": {
+        "shape": {
+          "label": "Shape",
+          "options__1": { "label": "Screen 1 — rises to the right" },
+          "options__2": { "label": "Screen 2 — falls to the right" }
+        },
+        "color": { "label": "Band colour" },
+        "background": {
+          "label": "Background",
+          "info": "Transparent by default, so an offset band can sit over the section above instead of covering it."
+        },
+        "offset": {
+          "label": "Vertical offset",
+          "info": "Negative pulls the band up into the section above; positive pushes it down."
+        },
+        "stretch": {
+          "label": "Stretch",
+          "info": "Keeps the band the same thickness at any width, instead of scaling with the artwork."
+        },
+        "height": {
+          "label": "Height",
+          "info": "Only used when Stretch is on."
+        }
+      }
+    },
     "hero_inicio": {
       "name": "Hero (home)",
       "settings": {
         "image": {
           "label": "Image",
-          "info": "Full-width artwork. Leave empty to use the artwork packaged with the theme."
+          "info": "Full-width photo. Leave empty to use the photo packaged with the theme. Keep the left side clear — the headline and quote sit there."
         },
         "image_mobile": {
           "label": "Image (mobile)",
-          "info": "Optional vertical crop used below 750px. Without it, the desktop artwork is shown in full."
-        },
-        "heading": {
-          "label": "Headline",
-          "info": "The page H1. Type the same headline that appears inside the artwork, for SEO and screen readers."
+          "info": "Optional vertical crop used below 750px. Without it, the copy moves below the photo on small screens."
         },
         "image_alt": {
           "label": "Image alt text",
           "info": "Defaults to the headline."
+        },
+        "heading": {
+          "label": "Headline",
+          "info": "The page H1. One line per row — the line breaks are kept."
+        },
+        "eyebrow": {
+          "label": "Eyebrow"
+        },
+        "quote": {
+          "label": "Quote",
+          "info": "One line per row — the line breaks are kept."
+        },
+        "quote_source": {
+          "label": "Quote source"
+        },
+        "welcome": {
+          "label": "Welcome note (top right)"
         }
       }
     },
@@ -125,14 +178,19 @@
     "collection_list": {
       "name": "Collection list",
       "settings": {
+        "eyebrow": { "label": "Eyebrow" },
         "heading": { "label": "Heading" },
+        "subheading": { "label": "Subheading" },
+        "side_text": { "label": "Side paragraph" },
         "columns_desktop": { "label": "Number of columns on desktop" }
       },
       "blocks": {
         "featured_collection": {
           "name": "Collection",
           "settings": {
-            "collection": { "label": "Collection" }
+            "collection": { "label": "Collection" },
+            "title": { "label": "Title", "info": "Defaults to the collection name." },
+            "image": { "label": "Image", "info": "Defaults to the collection's featured image." }
           }
         }
       }
@@ -189,6 +247,7 @@
       "name": "Related products",
       "settings": {
         "enable": { "label": "Show related products" },
+        "eyebrow": { "label": "Eyebrow" },
         "heading": { "label": "Heading" },
         "products_to_show": { "label": "Maximum products to show" }
       }
@@ -196,6 +255,7 @@
     "main_collection": {
       "name": "Product grid",
       "settings": {
+        "subheading": { "label": "Subheading" },
         "products_per_page": { "label": "Products per page" },
         "columns_desktop": { "label": "Number of columns on desktop" },
         "enable_sorting": { "label": "Enable sorting" },
@@ -367,6 +427,9 @@
           },
           "options__3": {
             "label": "Square"
+          },
+          "options__4": {
+            "label": "Landscape"
           }
         },
         "card_show_vendor": {

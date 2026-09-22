@@ -1,65 +1,268 @@
 {%- comment -%}
   ============================================================
-  COLLECTION LIST — grade de coleções selecionadas
+  COLLECTION LIST — "Nossas coleções" (Mater)
   ============================================================
 
   O QUE FAZ:
   Mostra um conjunto de coleções ESCOLHIDAS pelo lojista (via blocks)
-  como cards com imagem + título, cada um linkando para a coleção.
-  Diferente do main-list-collections, aqui você curadoria quais.
+  como cards altos com a foto sangrando, um degradê escuro no rodapé
+  e, por cima dele, o nome da coleção em display + o link
+  "VER COLEÇÃO →". Acima da grade vai o cabeçalho da seção:
+  eyebrow, título grande, subtítulo e um parágrafo de apoio à direita.
 
   ONDE É USADA:
-  Seção reutilizável (tem preset com 3 blocos) — comum na home.
+  Seção reutilizável (tem preset com 4 blocos) — na home, logo abaixo
+  do hero. Como tem preset, pode ir em qualquer página pelo editor.
 
   PRINCIPAIS PARTES:
-  - section.blocks do tipo featured_collection (cada um escolhe 1 coleção)
-  - featured_image da coleção ou placeholder SVG
-  - Settings: heading, columns_desktop
-  - Colunas via --grid-columns inline no wrapper
+  - Cabeçalho: eyebrow / heading / subheading e o side_text da direita
+    (cada um some se ficar em branco).
+  - section.blocks do tipo featured_collection: cada bloco aponta para
+    uma coleção. O card usa a featured_image dela.
+  - O card inteiro é um link; o "VER COLEÇÃO" é decorativo (não é um
+    <a> dentro de outro <a>, que seria HTML inválido).
+  - Settings: heading, subheading, eyebrow, side_text, columns_desktop.
 
   OBSERVAÇÕES:
-  Cada card é um bloco; adicione/remova coleções no theme editor.
+  - O degradê é um ::after sobre a imagem; o texto fica acima dele
+    via z-index, sempre em branco — por isso o contraste não depende
+    da foto.
+  - Proporção do card fixada em 3/4 (retrato), como no layout.
+  - Adicione/remova coleções pelos blocos no theme editor.
 {%- endcomment -%}
-<div class="collection-list page-width" data-section-id="{{ section.id }}" style="--grid-columns: {{ section.settings.columns_desktop }};">
-  {%- if section.settings.heading != blank -%}
-    <h2 class="collection-list__heading">{{ section.settings.heading | escape }}</h2>
-  {%- endif -%}
+<div class="collection-list" data-section-id="{{ section.id }}">
+  <div class="collection-list__inner">
+    {%- if section.settings.eyebrow != blank
+      or section.settings.heading != blank
+      or section.settings.subheading != blank
+      or section.settings.side_text != blank
+    -%}
+      <div class="collection-list__header">
+        <div class="collection-list__intro">
+          {%- if section.settings.eyebrow != blank -%}
+            <p class="collection-list__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+          {%- endif -%}
+          {%- if section.settings.heading != blank -%}
+            <h2 class="collection-list__heading">{{ section.settings.heading | escape }}</h2>
+          {%- endif -%}
+          {%- if section.settings.subheading != blank -%}
+            <p class="collection-list__subheading">{{ section.settings.subheading | escape }}</p>
+          {%- endif -%}
+        </div>
 
-  <ul class="collection-list__grid product-grid" role="list">
-    {%- for block in section.blocks -%}
-      {%- assign collection = collections[block.settings.collection] -%}
-      <li {{ block.shopify_attributes }}>
-        <a href="{{ collection.url | default: '#' }}" class="collection-card">
-          <div class="collection-card__media">
-            {%- if collection.featured_image -%}
-              {{
-                collection.featured_image
-                | image_url: width: 720
-                | image_tag:
-                  loading: 'lazy',
-                  class: 'collection-card__image',
-                  widths: '360, 540, 720',
-                  sizes: '(min-width: 1000px) 25vw, 50vw',
-                  alt: collection.title | escape
-              }}
-            {%- else -%}
-              {{ 'collection-1' | placeholder_svg_tag: 'collection-card__image placeholder-svg' }}
-            {%- endif -%}
-          </div>
-          <h3 class="collection-card__title">{{ collection.title | default: 'onboarding.collection_title' | t }}</h3>
-        </a>
-      </li>
-    {%- endfor -%}
-  </ul>
+        {%- if section.settings.side_text != blank -%}
+          <p class="collection-list__side">{{ section.settings.side_text | escape | newline_to_br }}</p>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+
+    <ul
+      class="collection-list__grid"
+      role="list"
+      style="--grid-columns: {{ section.settings.columns_desktop }};"
+    >
+      {%- for block in section.blocks -%}
+        {%- assign block_collection = collections[block.settings.collection] -%}
+        {%- assign card_title = block.settings.title | default: block_collection.title -%}
+        <li class="collection-list__item" {{ block.shopify_attributes }}>
+          <a href="{{ block_collection.url | default: '#' }}" class="collection-card">
+            <div class="collection-card__media">
+              {%- if block.settings.image != blank -%}
+                {{
+                  block.settings.image
+                  | image_url: width: 900
+                  | image_tag:
+                    loading: 'lazy',
+                    class: 'collection-card__image',
+                    widths: '300, 450, 600, 900',
+                    sizes: '(min-width: 1000px) 25vw, 50vw',
+                    alt: card_title | escape
+                }}
+              {%- elsif block_collection.featured_image -%}
+                {{
+                  block_collection.featured_image
+                  | image_url: width: 900
+                  | image_tag:
+                    loading: 'lazy',
+                    class: 'collection-card__image',
+                    widths: '300, 450, 600, 900',
+                    sizes: '(min-width: 1000px) 25vw, 50vw',
+                    alt: card_title | escape
+                }}
+              {%- else -%}
+                {{ 'collection-1' | placeholder_svg_tag: 'collection-card__image placeholder-svg' }}
+              {%- endif -%}
+            </div>
+
+            <div class="collection-card__content">
+              <span class="collection-card__mark">//</span>
+              <h3 class="collection-card__title">
+                {%- comment -%}
+                  Atenção: nada de `card_title | default: 'chave' | t` aqui — o filtro
+                  `t` cairia em cima do título já resolvido e devolveria
+                  "translation missing". O fallback precisa ser um if.
+                {%- endcomment -%}
+                {%- if card_title != blank -%}
+                  {{- card_title -}}
+                {%- else -%}
+                  {{- 'onboarding.collection_title' | t -}}
+                {%- endif -%}
+              </h3>
+              <span class="collection-card__cta">
+                {{- 'sections.collection_list.view_collection' | t -}}
+                <span class="collection-card__arrow" aria-hidden="true">&rarr;</span>
+              </span>
+            </div>
+          </a>
+        </li>
+      {%- endfor -%}
+    </ul>
+  </div>
 </div>
 
 <style>
-  .collection-list { padding-top: var(--spacing-sections); padding-bottom: var(--spacing-sections); }
-  .collection-list__heading { font-size: var(--f6); margin-bottom: 24px; }
-  .collection-card { display: block; text-decoration: none; color: inherit; }
-  .collection-card__media { position: relative; width: 100%; padding-bottom: 100%; overflow: hidden; border-radius: var(--media-radius); background-color: var(--color-background-contrast); }
-  .collection-card__image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-  .collection-card__title { margin-top: 12px; font-size: var(--f3); }
+  #shopify-section-{{ section.id }} .collection-list {
+    --mater-gutter: clamp(20px, 6vw, 100px);
+    padding: clamp(40px, 5vw, 78px) 0 clamp(30px, 4vw, 60px);
+    background-color: var(--color-background);
+  }
+  #shopify-section-{{ section.id }} .collection-list__inner {
+    padding: 0 var(--mater-gutter);
+  }
+
+  #shopify-section-{{ section.id }} .collection-list__header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: start;
+    gap: clamp(24px, 4vw, 60px);
+    margin-bottom: clamp(28px, 3.4vw, 56px);
+  }
+  #shopify-section-{{ section.id }} .collection-list__eyebrow {
+    margin: 0 0 clamp(8px, 1vw, 16px);
+    font-family: var(--font-heading-family);
+    font-size: clamp(0.72rem, 0.95vw, 1rem);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  #shopify-section-{{ section.id }} .collection-list__heading {
+    margin: 0;
+    font-family: var(--font-display-family);
+    font-weight: 400;
+    font-size: clamp(2.2rem, 5.3vw, 5.5rem);
+    line-height: 0.95;
+    letter-spacing: -0.005em;
+    text-transform: uppercase;
+  }
+  #shopify-section-{{ section.id }} .collection-list__subheading {
+    margin: clamp(10px, 1.2vw, 20px) 0 0;
+    font-family: var(--font-heading-family);
+    font-size: clamp(0.78rem, 1.05vw, 1.1rem);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  #shopify-section-{{ section.id }} .collection-list__side {
+    max-width: 20ch;
+    margin: clamp(10px, 1.6vw, 26px) 0 0;
+    font-family: var(--font-heading-family);
+    font-size: clamp(0.7rem, 0.9vw, 0.95rem);
+    line-height: 1.75;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  #shopify-section-{{ section.id }} .collection-list__side::after {
+    content: '';
+    display: block;
+    width: clamp(36px, 3.6vw, 60px);
+    height: 1px;
+    margin-top: 1.6em;
+    background-color: currentColor;
+  }
+
+  #shopify-section-{{ section.id }} .collection-list__grid {
+    display: grid;
+    grid-template-columns: repeat(var(--grid-columns, 4), 1fr);
+    gap: clamp(10px, 1.1vw, 18px);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  #shopify-section-{{ section.id }} .collection-card {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    text-decoration: none;
+    color: var(--cor-branco);
+    border-radius: var(--media-radius);
+  }
+  #shopify-section-{{ section.id }} .collection-card__media {
+    position: relative;
+    aspect-ratio: 3 / 4;
+    background-color: var(--color-background-contrast);
+  }
+  #shopify-section-{{ section.id }} .collection-card__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+  }
+  #shopify-section-{{ section.id }} .collection-card:hover .collection-card__image {
+    transform: scale(1.04);
+  }
+  /* Degradê que garante o contraste do texto, seja qual for a foto */
+  #shopify-section-{{ section.id }} .collection-card__media::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(7, 7, 7, 0.88) 0%, rgba(7, 7, 7, 0.55) 26%, rgba(7, 7, 7, 0) 55%);
+  }
+  #shopify-section-{{ section.id }} .collection-card__content {
+    position: absolute;
+    left: clamp(14px, 1.5vw, 26px);
+    right: clamp(14px, 1.5vw, 26px);
+    bottom: clamp(16px, 1.8vw, 30px);
+    z-index: 1;
+  }
+  #shopify-section-{{ section.id }} .collection-card__mark {
+    display: block;
+    font-family: var(--font-heading-family);
+    font-size: clamp(0.8rem, 1vw, 1.05rem);
+    line-height: 1;
+    opacity: 0.85;
+  }
+  #shopify-section-{{ section.id }} .collection-card__title {
+    margin: clamp(6px, 0.7vw, 12px) 0 clamp(10px, 1.1vw, 18px);
+    font-family: var(--font-display-family);
+    font-weight: 400;
+    font-size: clamp(1.3rem, 2.1vw, 2.2rem);
+    line-height: 1;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    color: inherit;
+  }
+  #shopify-section-{{ section.id }} .collection-card__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7em;
+    font-family: var(--font-heading-family);
+    font-size: clamp(0.68rem, 0.85vw, 0.9rem);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  #shopify-section-{{ section.id }} .collection-card__arrow {
+    transition: transform 0.25s ease;
+  }
+  #shopify-section-{{ section.id }} .collection-card:hover .collection-card__arrow {
+    transform: translateX(5px);
+  }
+
+  @media screen and (max-width: 999px) {
+    #shopify-section-{{ section.id }} .collection-list__grid { grid-template-columns: repeat(2, 1fr); }
+    #shopify-section-{{ section.id }} .collection-list__header { grid-template-columns: 1fr; }
+    #shopify-section-{{ section.id }} .collection-list__side { max-width: none; }
+  }
+  @media screen and (max-width: 559px) {
+    #shopify-section-{{ section.id }} .collection-list__grid { grid-template-columns: 1fr; }
+  }
 </style>
 
 {% schema %}
@@ -67,15 +270,25 @@
   "name": "t:sections.collection_list.name",
   "tag": "section",
   "settings": [
-    { "type": "text", "id": "heading", "default": "Collections", "label": "t:sections.collection_list.settings.heading.label" },
-    { "type": "range", "id": "columns_desktop", "min": 2, "max": 5, "step": 1, "default": 3, "label": "t:sections.collection_list.settings.columns_desktop.label" }
+    { "type": "text", "id": "eyebrow", "default": "// Coleções", "label": "t:sections.collection_list.settings.eyebrow.label" },
+    { "type": "text", "id": "heading", "default": "Nossas coleções", "label": "t:sections.collection_list.settings.heading.label" },
+    { "type": "text", "id": "subheading", "default": "Estilo, fé e propósito em cada detalhe.", "label": "t:sections.collection_list.settings.subheading.label" },
+    {
+      "type": "textarea",
+      "id": "side_text",
+      "default": "Camisetas que vão além do estilo. São expressão de uma fé que veste o seu dia a dia.",
+      "label": "t:sections.collection_list.settings.side_text.label"
+    },
+    { "type": "range", "id": "columns_desktop", "min": 2, "max": 5, "step": 1, "default": 4, "label": "t:sections.collection_list.settings.columns_desktop.label" }
   ],
   "blocks": [
     {
       "type": "featured_collection",
       "name": "t:sections.collection_list.blocks.featured_collection.name",
       "settings": [
-        { "type": "collection", "id": "collection", "label": "t:sections.collection_list.blocks.featured_collection.settings.collection.label" }
+        { "type": "collection", "id": "collection", "label": "t:sections.collection_list.blocks.featured_collection.settings.collection.label" },
+        { "type": "text", "id": "title", "label": "t:sections.collection_list.blocks.featured_collection.settings.title.label", "info": "t:sections.collection_list.blocks.featured_collection.settings.title.info" },
+        { "type": "image_picker", "id": "image", "label": "t:sections.collection_list.blocks.featured_collection.settings.image.label", "info": "t:sections.collection_list.blocks.featured_collection.settings.image.info" }
       ]
     }
   ],
@@ -83,9 +296,10 @@
     {
       "name": "t:sections.collection_list.name",
       "blocks": [
-        { "type": "featured_collection" },
-        { "type": "featured_collection" },
-        { "type": "featured_collection" }
+        { "type": "featured_collection", "settings": { "title": "Streetwear" } },
+        { "type": "featured_collection", "settings": { "title": "Pietrelcina" } },
+        { "type": "featured_collection", "settings": { "title": "Calcuta" } },
+        { "type": "featured_collection", "settings": { "title": "Acútis" } }
       ]
     }
   ]

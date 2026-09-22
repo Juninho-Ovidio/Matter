@@ -18,7 +18,7 @@
     "buttons_radius": 0,
     "inputs_radius": 0,
     "media_radius": 0,
-    "card_image_ratio": "portrait",
+    "card_image_ratio": "landscape",
     "card_show_vendor": false,
     "card_show_second_image": true,
     "cart_type": "drawer",

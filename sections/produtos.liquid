@@ -1,0 +1,111 @@
+{%- comment -%}
+  ============================================================
+  PRODUTOS — cabeçalho da área de produtos da home (Mater)
+  ============================================================
+
+  O QUE FAZ:
+  Abre a área de produtos com o título em display e uma linha de
+  apoio logo abaixo. Por enquanto é só o cabeçalho — a grade de
+  produtos ainda não entra aqui.
+
+  ONDE É USADA:
+  Na home (templates/index.json), logo abaixo do segundo divisor.
+  Tem preset, então também pode ser adicionada em qualquer página
+  pelo editor de temas.
+
+  PRINCIPAIS PARTES:
+  - heading: o título ("Todos os produtos"), em --font-display-family.
+  - subheading: o parágrafo de apoio.
+  - heading_tag: escolhe entre <h1> e <h2> (veja a nota abaixo).
+  Qualquer um dos textos some se ficar em branco.
+
+  SOBRE O NÍVEL DO TÍTULO:
+  O padrão é <h2>. Na home, o <h1> da página já é a headline do hero
+  ("Santidade em estilo"), e uma página com dois H1 confunde o Google
+  e a navegação por títulos de leitores de tela. O visual é idêntico
+  nos dois casos — o tamanho vem do CSS, não da tag. Se esta section
+  for usada numa página onde ela É o título principal, troque para
+  <h1> no editor.
+
+  OBSERVAÇÕES:
+  Usa o mesmo recuo lateral (--mater-gutter) e a mesma escala
+  tipográfica das outras sections, para alinhar com o hero, as
+  coleções e a página de coleção.
+{%- endcomment -%}
+<div class="produtos" data-section-id="{{ section.id }}">
+  <div class="produtos__inner">
+    {%- if section.settings.heading != blank -%}
+      {%- if section.settings.heading_tag == 'h1' -%}
+        <h1 class="produtos__heading">{{ section.settings.heading | escape }}</h1>
+      {%- else -%}
+        <h2 class="produtos__heading">{{ section.settings.heading | escape }}</h2>
+      {%- endif -%}
+    {%- endif -%}
+
+    {%- if section.settings.subheading != blank -%}
+      <p class="produtos__subheading">{{ section.settings.subheading | escape }}</p>
+    {%- endif -%}
+  </div>
+</div>
+
+<style>
+  #shopify-section-{{ section.id }} .produtos {
+    --mater-gutter: clamp(20px, 6vw, 100px);
+    background-color: var(--color-background);
+  }
+  #shopify-section-{{ section.id }} .produtos__inner {
+    padding: clamp(32px, 4vw, 70px) var(--mater-gutter) clamp(20px, 2.5vw, 40px);
+  }
+  #shopify-section-{{ section.id }} .produtos__heading {
+    margin: 0;
+    font-family: var(--font-display-family);
+    font-weight: 400;
+    font-size: clamp(2rem, 4.2vw, 4.4rem);
+    line-height: 0.98;
+    letter-spacing: -0.005em;
+    text-transform: uppercase;
+  }
+  #shopify-section-{{ section.id }} .produtos__subheading {
+    margin: clamp(10px, 1.1vw, 18px) 0 0;
+    font-size: clamp(0.85rem, 1vw, 1.05rem);
+    line-height: 1.5;
+    opacity: 0.6;
+  }
+</style>
+
+{% schema %}
+{
+  "name": "t:sections.produtos.name",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "default": "Todos os produtos",
+      "label": "t:sections.produtos.settings.heading.label"
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "default": "Vista sua fé e leve o que te inspira.",
+      "label": "t:sections.produtos.settings.subheading.label"
+    },
+    {
+      "type": "select",
+      "id": "heading_tag",
+      "options": [
+        { "value": "h2", "label": "t:sections.produtos.settings.heading_tag.options__1.label" },
+        { "value": "h1", "label": "t:sections.produtos.settings.heading_tag.options__2.label" }
+      ],
+      "default": "h2",
+      "label": "t:sections.produtos.settings.heading_tag.label",
+      "info": "t:sections.produtos.settings.heading_tag.info"
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.produtos.name"
+    }
+  ]
+}
+{% endschema %}

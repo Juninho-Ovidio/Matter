@@ -159,14 +159,15 @@ textarea.field__input {
   }
 }
 
-/* Product card */
+/* Product card (layout Mater) */
+.card-product { position: relative; }
 .card-product__link { text-decoration: none; color: inherit; display: block; }
 .card-product__media {
   position: relative;
   width: 100%;
   overflow: hidden;
   border-radius: var(--media-radius, 8px);
-  background-color: var(--color-background-contrast, #f2f3f8);
+  background-color: var(--color-background-contrast, #fff);
 }
 .card-product__image {
   position: absolute;
@@ -177,22 +178,72 @@ textarea.field__input {
 }
 .card-product__image--secondary { opacity: 0; transition: opacity 0.25s ease; }
 .card-product:hover .card-product__image--secondary { opacity: 1; }
+
+/* Selo unico no canto superior esquerdo: ESGOTADO / DESCONTO / NOVO */
 .card-product__badge {
   position: absolute;
   top: 10px;
   left: 10px;
-  padding: 3px 8px;
-  font-size: var(--f0, 0.7rem);
+  padding: 5px 9px;
+  font-family: var(--font-heading-family);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--color-accent-text, #fff);
-  background-color: var(--color-sale, #1cb744);
-  border-radius: 4px;
+  background-color: var(--color-accent, #070707);
+  border-radius: 2px;
 }
-.card-product__badge--sold-out { background-color: var(--color-border, #c2c2c2); color: var(--color-text, #000); }
-.card-product__info { padding: 12px 4px; }
-.card-product__vendor { display: block; font-size: var(--f0); opacity: 0.6; margin-bottom: 4px; }
-.card-product__title { font-size: var(--f2); font-weight: normal; margin-bottom: 6px; }
-.price--card { font-size: var(--f2); }
+.card-product__badge--sold-out {
+  color: var(--color-text, #070707);
+  background-color: var(--color-border, #c9c9c6);
+}
+
+/* Botao de favoritar — fica fora do <a>, sobreposto a imagem */
+.card-product__wish {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  color: var(--color-text, #070707);
+  background: none;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+.card-product__wish svg { width: 19px; height: 19px; }
+.card-product__wish:hover { background-color: rgba(255, 255, 255, 0.7); transform: scale(1.08); }
+/* Favoritado: coracao preenchido (estado vem de aria-pressed, via favoritos.js) */
+.card-product__wish[aria-pressed='true'] svg path { fill: currentColor; }
+
+.card-product__info { padding: 12px 2px 0; }
+.card-product__category {
+  display: block;
+  margin-bottom: 6px;
+  font-family: var(--font-heading-family);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.55;
+}
+.card-product__title {
+  margin: 0 0 6px;
+  font-family: var(--font-body-family);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.35;
+}
+.price--card { font-size: 14px; font-weight: 700; }
+.price--card .price__compare { margin-right: 6px; font-weight: 400; opacity: 0.45; }
+/* No card o desconto ja aparece no selo sobre a foto */
+.price--card .price__badge { display: none; }
 
 /* Rich text content (RTE) shared styles */
 .rte a { color: var(--color-accent); }
