@@ -140,10 +140,12 @@ cabeçalho/rodapé (permitem reordenar no editor).
 | `contact-form.liquid` | Formulário de contato nativo |
 | `main-password.liquid` | Página de senha |
 | `main-404.liquid` | Conteúdo do 404 |
-| `hero-inicio.liquid` | Hero da home: arte full-bleed da marca (tipografia dentro da imagem) + H1 acessível |
+| `hero-inicio.liquid` | Hero da home: foto full-bleed + copy em HTML por cima (headline, citação, "seja bem vindo") |
+| `divisor.liquid` | Faixa angular preta que separa sections; duas formas (tela1/tela2), cor e deslocamento configuráveis |
+| `produtos.liquid` | Cabeçalho da área de produtos da home (título + linha de apoio) |
 | `image-banner.liquid` | Banner hero (imagem + texto + botões) — home |
 | `featured-collection.liquid` | Coleção em destaque (grade de produtos) — home |
-| `collection-list.liquid` | Lista de coleções em cards — home |
+| `collection-list.liquid` | "Nossas coleções": cabeçalho + cards de coleção com degradê — home |
 | `rich-text.liquid` | Bloco de texto rico centralizado — home |
 | `related-products.liquid` | Produtos relacionados (API de recomendações) |
 
@@ -176,15 +178,23 @@ Pedaços reutilizáveis chamados via `{% render 'nome' %}`.
 | `base.css` | Estilos base compartilhados (grid, botões, inputs, acessibilidade) |
 | `fontes.css` | Placeholder para fontes próprias (por padrão usa fontes do Shopify) |
 | `carrinho.js` | Add-to-cart via AJAX + atualização do contador (com fallback nativo) |
+| `favoritos.js` | Botão de favoritar dos cards (localStorage, por navegador) |
 | `logo-mater.png` | Logo da marca (PNG transparente, 800px) — fallback do header quando `settings.logo` está vazio |
-| `hero-inicio-1000/1800/2600.jpg` | Arte do hero da home em 3 larguras (srcset) — versões otimizadas de `img/inicio-1.png` |
+| `hero-inicio-900/1400/1671.jpg` | Foto do hero em 3 larguras (srcset) — versões otimizadas de `img/inicio-1.png` |
+| `anton-regular-latin.woff2` / `-latin-ext.woff2` | Fonte Anton (display da marca), exposta como `--font-display-family` |
 | `site.webmanifest` | Manifesto PWA |
 
-> A pasta `img/` guarda os **originais** de design (o `inicio-1.png` tem
-> 16710×8500 e 63 MB). O Shopify só serve arquivos de `assets/`, e com limite de
-> 20 MB por arquivo — por isso o tema usa as versões otimizadas acima. Ao trocar
-> a arte, regere os três JPEGs ou envie a imagem pelo editor (a section
-> `hero-inicio` prioriza a imagem do editor e serve os tamanhos pela CDN).
+> A pasta `img/` guarda os **originais** de design. O Shopify só serve arquivos
+> de `assets/` (limite de 20 MB por arquivo), por isso o tema usa as versões
+> otimizadas acima. Ao trocar a arte, regere os três JPEGs ou envie a imagem
+> pelo editor — a section `hero-inicio` prioriza a imagem do editor e serve os
+> tamanhos pela CDN.
+>
+> Os divisores (`img/tela1-divisor.svg` e `tela2-divisor.svg`) **não** são lidos
+> de `img/`: o `<path>` de cada um está inline em `sections/divisor.liquid`, para
+> aceitar `currentColor` e permitir trocar a cor pelo editor. Se reeditar um SVG,
+> copie o novo `d=` para lá. A forma `tela2` teve a borda de baixo suavizada em
+> relação ao arquivo original, que tinha um degrau no meio da faixa.
 
 ### `config/`
 | Arquivo | Função |
