@@ -111,10 +111,11 @@
             <span>{{ section.settings.hours | escape }}</span>
           </li>
         {%- endif -%}
-        {%- if settings.social_instagram_link != blank -%}
+        {%- assign instagram_url = section.settings.instagram_url | default: settings.social_instagram_link -%}
+        {%- if instagram_url != blank -%}
           <li>
             {% render 'icon', name: 'instagram' %}
-            <a href="{{ settings.social_instagram_link }}" target="_blank" rel="noopener">Siga no Instagram</a>
+            <a href="{{ instagram_url }}" target="_blank" rel="noopener">Siga @matercatholicstore no Instagram</a>
           </li>
         {%- endif -%}
         <li>
@@ -243,6 +244,9 @@
 <style>
   #shopify-section-{{ section.id }} .contato {
     --mater-gutter: clamp(20px, 6vw, 100px);
+    /* Cantos arredondados da página de contato: cards maiores, campos e botões menores. */
+    --contato-radius: 18px;
+    --contato-radius-sm: 12px;
     padding: clamp(32px, 5vw, 80px) var(--mater-gutter) clamp(56px, 7vw, 110px);
     background-color: var(--color-background);
   }
@@ -304,6 +308,7 @@
     text-decoration: none;
     background-color: var(--color-background-contrast);
     border: 1px solid var(--color-border);
+    border-radius: var(--contato-radius);
     transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   }
   #shopify-section-{{ section.id }} .contato__channel:hover {
@@ -334,12 +339,13 @@
     text-transform: uppercase;
     color: #fff;
     background-color: #1a9e4b;
+    border-radius: 999px;
   }
   #shopify-section-{{ section.id }} .contato__channel-arrow { font-size: 22px; transition: transform 0.2s ease; }
   #shopify-section-{{ section.id }} .contato__channel:hover .contato__channel-arrow { transform: translateX(4px); }
 
   /* WhatsApp em destaque, com o verde que o cliente reconhece */
-  #shopify-section-{{ section.id }} .contato__channel--whatsapp { border-color: #25d366; box-shadow: inset 4px 0 0 #25d366; }
+  #shopify-section-{{ section.id }} .contato__channel--whatsapp { border-color: #25d366; border-width: 2px; }
   #shopify-section-{{ section.id }} .contato__channel--whatsapp .contato__channel-icon { color: #fff; background-color: #25d366; }
   #shopify-section-{{ section.id }} .contato__channel--whatsapp:hover { border-color: #1a9e4b; }
 
@@ -348,6 +354,7 @@
     padding: 14px 16px;
     font-size: 13px;
     border: 1px dashed #b91c1c;
+    border-radius: var(--contato-radius-sm);
     color: #b91c1c;
   }
 
@@ -361,6 +368,7 @@
     padding: clamp(24px, 3vw, 44px);
     background-color: var(--color-background-contrast);
     border: 1px solid var(--color-border);
+    border-radius: calc(var(--contato-radius) + 6px);
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.06);
   }
   #shopify-section-{{ section.id }} .contato__card-eyebrow {
@@ -389,6 +397,7 @@
     padding: 10px 14px;
     background-color: var(--color-background-contrast);
     border: 1px solid var(--color-border);
+    border-radius: var(--contato-radius-sm);
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
   }
   #shopify-section-{{ section.id }} .contato__field:focus-within { border-color: var(--color-text); box-shadow: 0 0 0 1px var(--color-text); }
@@ -443,6 +452,7 @@
     text-transform: uppercase;
     text-decoration: none;
     border: none;
+    border-radius: var(--contato-radius-sm);
     cursor: pointer;
     transition: opacity 0.15s ease, transform 0.15s ease;
   }
@@ -460,6 +470,7 @@
     font-size: 14px;
     color: #b91c1c;
     border: 1px solid #b91c1c;
+    border-radius: var(--contato-radius-sm);
   }
   #shopify-section-{{ section.id }} .contato__errors ul { margin: 6px 0 0; padding-left: 18px; }
 
@@ -594,6 +605,12 @@
       "id": "email",
       "label": "t:sections.contact_form.settings.email.label",
       "info": "t:sections.contact_form.settings.email.info"
+    },
+    {
+      "type": "text",
+      "id": "instagram_url",
+      "default": "https://www.instagram.com/matercatholicstore/",
+      "label": "t:sections.contact_form.settings.instagram_url.label"
     },
     {
       "type": "text",

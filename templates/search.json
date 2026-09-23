@@ -1,7 +1,17 @@
 {
   "sections": {
     "search": {
-      "type": "main-search"
+      "type": "main-collection",
+      "settings": {
+        "subheading": "",
+        "products_per_page": 16,
+        "columns_desktop": 4,
+        "enable_sorting": true,
+        "enable_filtering": true,
+        "trust_1": "Compra 100% segura",
+        "trust_2": "Pix e cartão de crédito",
+        "trust_3": "Enviamos para todo o Brasil"
+      }
     }
   },
   "order": ["search"]

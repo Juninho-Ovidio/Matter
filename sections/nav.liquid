@@ -235,6 +235,7 @@
     <div class="search-modal__inner">
       <form action="{{ routes.search_url }}" method="get" role="search" class="search-modal__form">
         <input type="hidden" name="options[prefix]" value="last">
+        <input type="hidden" name="type" value="product">
         <span class="search-modal__icon" aria-hidden="true">{% render 'icon', name: 'search' %}</span>
         <label class="visually-hidden" for="SearchModalInput-{{ section.id }}">{{ 'general.search.search' | t }}</label>
         <input
@@ -264,7 +265,7 @@
               {%- assign term = term | strip -%}
               {%- if term != blank -%}
                 <li style="--i: {{ forloop.index0 }};">
-                  <a class="search-modal__pill" href="{{ routes.search_url }}?q={{ term | url_encode }}&options%5Bprefix%5D=last">
+                  <a class="search-modal__pill" href="{{ routes.search_url }}?q={{ term | url_encode }}&type=product&options%5Bprefix%5D=last">
                     {{- term | escape -}}
                   </a>
                 </li>
@@ -757,7 +758,7 @@
     }
 
     function render(terms, products) {
-      var searchUrl = modal.dataset.searchUrl + '?q=' + encodeURIComponent(terms) + '&options%5Bprefix%5D=last';
+      var searchUrl = modal.dataset.searchUrl + '?q=' + encodeURIComponent(terms) + '&type=product&options%5Bprefix%5D=last';
       if (!products.length) {
         results.innerHTML =
           '<p class="search-modal__empty">' + escapeHtml(modal.dataset.strNoResults.replace('[terms]', terms)) + '</p>';

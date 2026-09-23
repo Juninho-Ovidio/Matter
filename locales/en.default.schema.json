@@ -26,7 +26,34 @@
       "settings": {
         "show_social": { "label": "Show social media icons" },
         "show_payment_icons": { "label": "Show payment icons" },
-        "enable_localization": { "label": "Enable country and language selectors" }
+        "enable_localization": { "label": "Enable country and language selectors" },
+        "show_banner": { "label": "Show image banner above the footer" },
+        "banner_image": {
+          "label": "Banner image",
+          "info": "Empty uses the T-shirt photo packaged with the theme. Wide photos (16:9) work best."
+        },
+        "banner_eyebrow": { "label": "Banner eyebrow" },
+        "banner_heading": { "label": "Banner heading" },
+        "instagram_url": {
+          "label": "Instagram link",
+          "info": "Used by the banner button and the footer icon. Empty uses the Instagram link from theme settings."
+        },
+        "instagram_button_label": { "label": "Instagram button label" },
+        "header_newsletter": { "content": "Newsletter" },
+        "show_newsletter": { "label": "Show newsletter" },
+        "newsletter_eyebrow": { "label": "Newsletter eyebrow" },
+        "newsletter_heading": { "label": "Newsletter heading" },
+        "newsletter_text": { "label": "Newsletter text" },
+        "header_columns": { "content": "Columns" },
+        "tagline": { "label": "Brand tagline" },
+        "menu": {
+          "label": "Navigation menu",
+          "info": "Empty shows Home, Collections, All products and Contact."
+        },
+        "whatsapp_number": { "label": "WhatsApp number (numbers only, with 55)" },
+        "whatsapp_display": { "label": "WhatsApp as shown" },
+        "email": { "label": "Email" },
+        "hours": { "label": "Opening hours" }
       },
       "blocks": {
         "brand": {
@@ -405,6 +432,7 @@
           "label": "Email shown",
           "info": "Empty uses the store email. Form messages always go to the store email."
         },
+        "instagram_url": { "label": "Instagram link" },
         "hours": { "label": "Opening hours" },
         "subjects": {
           "label": "Subject shortcuts",

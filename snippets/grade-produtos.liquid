@@ -1,0 +1,54 @@
+{%- comment -%}
+  ============================================================
+  grade-produtos — grade de cards + paginação da listagem (Mater)
+  ============================================================
+
+  O QUE FAZ:
+  Renderiza a grade de produtos (card-product-compra) e o rodapé
+  de paginação da section main-collection. Fica num snippet porque
+  a section pagina fontes diferentes — collection.products,
+  collections.all.products ou search.results — e o {% paginate %}
+  precisa envolver a fonte certa.
+
+  COMO USAR (dentro de um {% paginate %}):
+  {% render 'grade-produtos', items: collection.products, paginate: paginate, section_id: section.id, empty_url: url %}
+
+  PARÂMETROS:
+  - items: lista a percorrer. Itens que não são produto (artigos e
+    páginas da busca) são ignorados.
+  - paginate: objeto do {% paginate %}.
+  - section_id: id da section (ids únicos nos cards).
+  - empty_url: link do botão no estado vazio.
+  - empty_text: texto do estado vazio (opcional).
+{%- endcomment -%}
+{%- assign shown = 0 -%}
+<ul class="product-grid" role="list">
+  {%- for item in items -%}
+    {%- if item.object_type == 'product' or item.variants -%}
+      {%- assign shown = shown | plus: 1 -%}
+      <li class="product-grid__item">
+        {% render 'card-product-compra', card_product: item, id_prefix: section_id %}
+      </li>
+    {%- endif -%}
+  {%- endfor -%}
+</ul>
+
+{%- if shown == 0 -%}
+  <div class="collection__empty">
+    <p>{{ empty_text | default: 'Nenhum produto encontrado.' }}</p>
+    <a href="{{ empty_url | default: routes.all_products_collection_url }}" class="collection__empty-link">
+      Ver todos os produtos
+    </a>
+  </div>
+{%- endif -%}
+
+{%- if paginate.pages > 1 -%}
+  <div class="collection__footer">
+    {% render 'pagination', paginate: paginate %}
+    {%- if paginate.next -%}
+      <a href="{{ paginate.next.url }}" class="collection__more">
+        {{- 'sections.main_collection.show_more' | t -}}
+      </a>
+    {%- endif -%}
+  </div>
+{%- endif -%}

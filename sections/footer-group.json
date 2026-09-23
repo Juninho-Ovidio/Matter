@@ -3,7 +3,24 @@
   "name": "t:section_groups.footer.name",
   "sections": {
     "footer": {
-      "type": "footer"
+      "type": "footer",
+      "settings": {
+        "show_banner": true,
+        "banner_eyebrow": "// Coleção Mater",
+        "banner_heading": "Vista sua fé",
+        "instagram_url": "https://www.instagram.com/matercatholicstore/",
+        "instagram_button_label": "Siga @matercatholicstore",
+        "show_newsletter": true,
+        "newsletter_eyebrow": "// Newsletter",
+        "newsletter_heading": "Receba os lançamentos em primeira mão",
+        "newsletter_text": "Novas estampas, reposições e cupons exclusivos direto no seu e-mail.",
+        "tagline": "Camisetas que vão além do estilo. Expressão de uma fé que veste o seu dia a dia.",
+        "whatsapp_number": "5535920047872",
+        "whatsapp_display": "(35) 92004-7872",
+        "email": "mater.catholicstore@gmail.com",
+        "hours": "Seg a sex, das 9h às 18h",
+        "show_payment_icons": true
+      }
     }
   },
   "order": ["footer"]

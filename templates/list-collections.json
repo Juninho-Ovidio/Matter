@@ -1,7 +1,17 @@
 {
   "sections": {
     "list": {
-      "type": "main-list-collections"
+      "type": "main-collection",
+      "settings": {
+        "subheading": "Vista sua fé. Leve o que te inspira.",
+        "products_per_page": 16,
+        "columns_desktop": 4,
+        "enable_sorting": true,
+        "enable_filtering": true,
+        "trust_1": "Compra 100% segura",
+        "trust_2": "Pix e cartão de crédito",
+        "trust_3": "Enviamos para todo o Brasil"
+      }
     }
   },
   "order": ["list"]

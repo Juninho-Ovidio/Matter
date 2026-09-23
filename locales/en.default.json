@@ -178,7 +178,8 @@
       "empty": "Nenhum produto encontrado",
       "use_fewer_filters": "Use menos filtros ou limpe todos",
       "show_more": "Mostrar mais",
-      "all_title": "Todos os produtos"
+      "all_title": "Todos os produtos",
+      "collections_title": "Coleções"
     },
     "header": {
       "announcement": "Announcement",
