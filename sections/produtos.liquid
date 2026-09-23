@@ -115,7 +115,7 @@
 
 <style>
   #shopify-section-{{ section.id }} .produtos {
-    --mater-gutter: clamp(20px, 6vw, 100px);
+    --mater-gutter: var(--mater-gutter-fluid, clamp(20px, 6vw, 100px));
     background-color: var(--color-background);
   }
   #shopify-section-{{ section.id }} .produtos__inner {
@@ -170,14 +170,14 @@
     border-color: var(--color-accent);
   }
 
-  /* Os dois botões lado a lado pedem ~260px de card: abaixo de 1200px
-     a grade cai para no máximo 3 colunas, e abaixo de 1000px para 2. */
+  /* Abaixo de 1200px no máximo 3 colunas; 2 só abaixo de 700px. Em card
+     estreito os botões empilham sozinhos (@container em base.css). */
   @media screen and (max-width: 1199px) {
     #shopify-section-{{ section.id }} .produtos__grid {
       grid-template-columns: repeat({{ section.settings.columns_desktop | at_most: 3 }}, minmax(0, 1fr));
     }
   }
-  @media screen and (max-width: 999px) {
+  @media screen and (max-width: 699px) {
     #shopify-section-{{ section.id }} .produtos__grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }

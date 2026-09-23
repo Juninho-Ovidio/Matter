@@ -48,7 +48,8 @@
   centro/direita). Ao trocar as imagens, confira se o texto não caiu
   em cima de alguém. Todas são recortadas na proporção 1671:841.
 
-  NO MOBILE:
+  Abaixo de 1000px (celular, tablet e notebook com zoom) a copy sai
+  de cima da foto e passa a fluir logo
   Abaixo de 750px a copy sai de cima da foto e passa a fluir logo
   abaixo dela. Sobreposta ficaria ilegível numa arte tão horizontal
   (~1.99:1). Os indicadores ficam na base da foto.
@@ -278,7 +279,20 @@
     --mater-gutter: clamp(20px, 6vw, 100px);
     position: relative;
     width: 100%;
+    /* Zoom reduzido / telas ultralargas: o banner para em 1920px e fica
+       centralizado, em vez de a foto crescer sem fim e deixar os textos
+       (que têm tamanho máximo) pequenos e soltos sobre ela. */
+    max-width: var(--page-max, 1920px);
+    margin-left: auto;
+    margin-right: auto;
     background-color: var(--color-background);
+  }
+  /* Acima de 1920px as laterais da foto se dissolvem no fundo da página. */
+  @media screen and (min-width: 1921px) {
+    #shopify-section-{{ section.id }} .hero-inicio__slides {
+      -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+      mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+    }
   }
   #shopify-section-{{ section.id }} .hero-inicio__media {
     position: relative;
@@ -488,8 +502,10 @@
     background-color: currentColor;
   }
 
-  /* Abaixo de 750px a copy sai de cima da foto e vira fluxo normal. */
-  @media screen and (max-width: 749px) {
+  /* Abaixo de 1000px a copy sai de cima da foto e vira fluxo normal:
+     sobreposta, a citação ficava mais alta que a foto no tablet e era
+     cortada pelo divisor. */
+  @media screen and (max-width: 999px) {
     /* Indicadores viram barras horizontais na base da foto. */
     #shopify-section-{{ section.id }} .hero-inicio__dots {
       top: auto;
@@ -528,7 +544,7 @@
       position: static;
       display: flex;
       flex-direction: column;
-      padding: 28px var(--mater-gutter) 40px;
+      padding: 28px var(--mater-gutter) 72px; /* 72px: livra o divisor, que sobe 45px */
     }
     #shopify-section-{{ section.id }} .hero-inicio__headline,
     #shopify-section-{{ section.id }} .hero-inicio__quote,

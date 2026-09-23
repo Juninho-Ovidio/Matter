@@ -27,7 +27,7 @@
 {%- endcomment -%}
 <style>
   .section-main-product .product {
-    --mater-gutter: clamp(20px, 6vw, 100px);
+    --mater-gutter: var(--mater-gutter-fluid, clamp(20px, 6vw, 100px));
     display: grid;
     grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
     align-items: start;
@@ -257,6 +257,12 @@
     cursor: pointer;
   }
   .product__option-values { display: flex; flex-wrap: wrap; gap: 8px; }
+  /* Bolinhas de cor um pouco mais abaixo da legenda "Cor: ..." */
+  /* padding, não margin: a margem colapsaria com a da legenda (12px). */
+  .product__option--color .product__option-values { padding-top: 10px; }
+  .product__option--color { margin-bottom: 26px; }
+  /* Cor só informativa (produto sem variantes): a legenda é um <p>. */
+  .product__option--static .product__option-name { margin: 0 0 12px; }
 
   .product__swatch {
     position: relative;
@@ -360,13 +366,21 @@
   .product__provador-card:hover .product__provador-arrow { transform: translateX(4px); }
 
   /* Provador — modal */
+  /* Centralizado na tela: o reset do tema zera a margem de tudo e o
+     <dialog> depende de margin: auto + inset: 0 para ficar no meio. */
   .provador {
-    width: min(480px, calc(100vw - 32px));
-    max-height: calc(100vh - 32px);
+    position: fixed;
+    inset: 0;
+    width: min(600px, calc(100vw - 32px));
+    height: fit-content;
+    max-height: calc(100dvh - 32px);
+    margin: auto;
     padding: 0;
+    overflow-y: auto;
     color: var(--color-text);
     background-color: var(--color-background);
     border: none;
+    border-radius: 18px;
     box-shadow: 0 30px 80px rgba(0, 0, 0, 0.25);
   }
   .provador::backdrop { background-color: rgba(7, 7, 7, 0.5); backdrop-filter: blur(3px); }
@@ -375,7 +389,7 @@
     from { opacity: 0; transform: translateY(16px); }
     to { opacity: 1; transform: none; }
   }
-  .provador__box { position: relative; padding: clamp(24px, 4vw, 36px); }
+  .provador__box { position: relative; padding: clamp(24px, 4vw, 48px); }
   .provador__close {
     position: absolute;
     top: 14px;
@@ -404,11 +418,11 @@
     margin: 0 0 8px;
     font-family: var(--font-display-family);
     font-weight: 400;
-    font-size: clamp(1.8rem, 5vw, 2.4rem);
+    font-size: clamp(1.8rem, 5vw, 2.9rem);
     line-height: 1;
     text-transform: uppercase;
   }
-  .provador__intro { margin: 0 0 22px; font-size: 14px; line-height: 1.5; opacity: 0.75; }
+  .provador__intro { margin: 0 0 26px; font-size: 15px; line-height: 1.55; opacity: 0.75; }
   .provador__fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px; }
   .provador__field { display: grid; gap: 6px; }
   .provador__field span,
@@ -688,7 +702,7 @@
     display: flex;
     align-items: center;
     gap: 14px;
-    padding: 10px clamp(16px, 6vw, 100px);
+    padding: 10px var(--mater-gutter-fluid, clamp(16px, 6vw, 100px));
   }
   .product-sticky__image { width: 52px; height: 52px; object-fit: cover; flex: none; }
   .product-sticky__info { flex: 1; min-width: 0; }
@@ -719,5 +733,15 @@
     .product__trust li { flex-direction: row; justify-content: flex-start; text-align: left; padding: 12px 14px; }
     .product-sticky__image { display: none; }
     .product-sticky__button { padding: 10px 18px; font-size: 11px; }
+  }
+  @media screen and (max-width: 400px) {
+    .product-sticky__inner { gap: 10px; padding-left: 12px; padding-right: 12px; }
+    .product-sticky__meta span { display: none; }
+    .product-sticky__button { flex: none; padding: 10px 14px; letter-spacing: 0.06em; }
+  }
+  @media screen and (max-width: 340px) {
+    .product-sticky__inner { padding-left: 10px; padding-right: 10px; }
+    .product-sticky__title { font-size: 12px; }
+    .product-sticky__button { padding: 10px; font-size: 10px; letter-spacing: 0.04em; }
   }
 </style>

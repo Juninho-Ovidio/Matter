@@ -217,7 +217,7 @@
           l.classList.toggle('is-selected', l.contains(checked));
         });
         var label = fs.querySelector('[data-selected-value]');
-        if (label && checked) label.textContent = checked.value;
+        if (label && checked) label.textContent = checked.dataset.label || checked.value;
       });
 
       refreshAvailability(opts);
@@ -334,8 +334,11 @@
       function findSizeInput(size) {
         if (!sizeFieldset) return null;
         var target = String(size).trim().toLowerCase();
+        // Compara com o valor cadastrado (ex.: "L") e com o rótulo brasileiro
+        // mostrado (data-label, ex.: "G"), já que a tabela usa P/M/G/GG.
         return Array.prototype.find.call(sizeFieldset.querySelectorAll('input[type=radio]'), function (i) {
-          return i.value.trim().toLowerCase() === target;
+          return i.value.trim().toLowerCase() === target ||
+            String(i.dataset.label || '').trim().toLowerCase() === target;
         }) || null;
       }
 

@@ -168,6 +168,20 @@
   }
   .conta-pop__btn:hover { opacity: 0.88; }
   .conta-pop__btn--ghost { color: var(--color-text); background-color: transparent; border-color: var(--color-text); }
+  /* Celular: o botão da conta não fica na ponta direita, então o painel
+     ancorado nele vazaria pela esquerda. Aqui ele vira uma folha fixa
+     logo abaixo da navbar, com o mesmo recuo lateral da página. */
+  @media screen and (max-width: 749px) {
+    .conta-pop__panel {
+      position: fixed;
+      top: calc(var(--header-height, 64px) + 8px);
+      left: 16px;
+      right: 16px;
+      width: auto;
+      max-height: calc(100vh - var(--header-height, 64px) - 24px);
+      overflow-y: auto;
+    }
+  }
   @media (prefers-reduced-motion: reduce) { .conta-pop__panel { animation: none; } }
 </style>
 

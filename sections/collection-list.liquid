@@ -98,7 +98,8 @@
                   src="{{ art | append: '-900.jpg' | asset_url }}"
                   srcset="
                     {{ art | append: '-900.jpg' | asset_url }} 900w,
-                    {{ art | append: '-1400.jpg' | asset_url }} 1400w
+                    {{ art | append: '-1400.jpg' | asset_url }} 1400w,
+                    {{ art | append: '-1671.jpg' | asset_url }} 1671w
                   "
                   sizes="(min-width: 1000px) 55vw, (min-width: 560px) 106vw, 212vw"
                   class="collection-card__image collection-card__image--art"
@@ -151,7 +152,7 @@
 
 <style>
   #shopify-section-{{ section.id }} .collection-list {
-    --mater-gutter: clamp(20px, 6vw, 100px);
+    --mater-gutter: var(--mater-gutter-fluid, clamp(20px, 6vw, 100px));
     padding: clamp(40px, 5vw, 78px) 0 clamp(30px, 4vw, 60px);
     background-color: var(--color-background);
   }

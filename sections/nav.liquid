@@ -302,7 +302,7 @@
   }
   .header {
     /* Recuo lateral do cabeçalho: acompanha a viewport (design usa ~100px em 1670px). */
-    --mater-gutter: clamp(20px, 6vw, 100px);
+    --mater-gutter: var(--mater-gutter-fluid, clamp(20px, 6vw, 100px));
     position: relative;
     z-index: 10;
     background-color: var(--color-background);
@@ -445,7 +445,7 @@
   }
   /* ---------- Busca em tela cheia ---------- */
   .search-modal {
-    --mater-gutter: clamp(20px, 6vw, 100px);
+    --mater-gutter: var(--mater-gutter-fluid, clamp(20px, 6vw, 100px));
     position: fixed;
     inset: 0;
     z-index: 100;
@@ -701,6 +701,24 @@
     .header__inner { gap: 10px; min-height: 64px; }
     .header__logo-image { width: clamp(104px, 30vw, 150px); }
     .header__actions { gap: 8px; }
+  }
+  /* Celulares pequenos (e zoom alto): logo e botões menores para
+     burger + logo + 3 ações caberem em 320px. */
+  @media screen and (max-width: 400px) {
+    .header { --mater-gutter: 12px; }
+    .header__inner { gap: 6px; }
+    .header__logo-image { width: 92px; }
+    .header__actions { gap: 6px; }
+    .header__action-button { width: 40px; height: 40px; min-width: 40px; min-height: 40px; }
+    .header__action-button svg { width: 17px; height: 17px; }
+  }
+  /* Galaxy Fold fechado (280px) / zoom de 400%. */
+  @media screen and (max-width: 340px) {
+    .header { --mater-gutter: 10px; }
+    .header__logo-image { width: 76px; }
+    .header__actions { gap: 4px; }
+    .header__action-button { width: 36px; height: 36px; min-width: 36px; min-height: 36px; }
+    .header__action-button svg { width: 16px; height: 16px; }
   }
   @media screen and (min-width: 1001px) {
     .header__mobile-nav { display: none !important; }

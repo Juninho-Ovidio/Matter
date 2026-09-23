@@ -1,0 +1,41 @@
+{%- comment -%}
+  ============================================================
+  tamanho-br — rótulo brasileiro para um valor de tamanho
+  ============================================================
+  O QUE FAZ:
+  Ao vincular a opção "Tamanho" ao campo da categoria, o Shopify
+  entrega os valores no padrão americano (XS, S, M, L, XL...). Este
+  snippet devolve o rótulo usado no Brasil; valores já em português
+  (PP, P, G, GG...) ou desconhecidos saem como vieram.
+
+  COMO USAR:
+  {% render 'tamanho-br', valor: value %}
+
+  ORDEM:
+  Para listar os tamanhos do menor para o maior, percorra a lista
+  abaixo (a mesma usada nos cards e na página de produto):
+  'xxs,pp,xs,p,s,m,g,l,gg,xl,xg,xxl,eg,xgg,xxxl,egg,g1,g2,g3,g4'
+{%- endcomment -%}
+{%- liquid
+  assign chave = valor | strip | downcase
+  case chave
+    when 'xxs', '2xs'
+      echo 'PPP'
+    when 'xs', 'extra small'
+      echo 'PP'
+    when 's', 'small'
+      echo 'P'
+    when 'm', 'medium'
+      echo 'M'
+    when 'l', 'large'
+      echo 'G'
+    when 'xl', 'extra large'
+      echo 'GG'
+    when 'xxl', '2xl'
+      echo 'XG'
+    when 'xxxl', '3xl'
+      echo 'XGG'
+    else
+      echo valor | escape
+  endcase
+-%}

@@ -252,7 +252,9 @@
                     <div class="product__option-head">
                       <legend class="product__option-name">
                         {{ option.name | escape }}:
-                        <span class="product__option-value" data-selected-value>{{ option.selected_value | escape }}</span>
+                        <span class="product__option-value" data-selected-value>
+                          {%- if is_size -%}{%- render 'tamanho-br', valor: option.selected_value -%}{%- elsif is_color -%}{%- render 'traduz', texto: option.selected_value -%}{%- else -%}{{ option.selected_value | escape }}{%- endif -%}
+                        </span>
                       </legend>
                       {%- if is_size and section.blocks.size > 0 -%}
                         {%- for b in section.blocks -%}
@@ -267,7 +269,31 @@
                     </div>
 
                     <div class="product__option-values">
-                      {%- for value in option.values -%}
+                      {%- liquid
+                        # Tamanhos do menor para o maior (PP, P, M, G, GG...), mesmo se
+                        # cadastrados fora de ordem; valores fora da lista vão no fim.
+                        assign option_values = option.values
+                        if is_size
+                          assign size_order = 'xxs,2xs,ppp,xs,pp,s,p,m,l,g,xl,gg,xxl,2xl,xg,eg,xxxl,3xl,xgg,egg,g1,g2,g3,g4' | split: ','
+                          assign sorted_sizes = ''
+                          for key in size_order
+                            for v in option.values
+                              assign v_key = v | downcase | strip
+                              if v_key == key
+                                assign sorted_sizes = sorted_sizes | append: v | append: '|||'
+                              endif
+                            endfor
+                          endfor
+                          for v in option.values
+                            assign v_key = v | downcase | strip
+                            unless size_order contains v_key
+                              assign sorted_sizes = sorted_sizes | append: v | append: '|||'
+                            endunless
+                          endfor
+                          assign option_values = sorted_sizes | split: '|||'
+                        endif
+                      -%}
+                      {%- for value in option_values -%}
                         {%- liquid
                           assign option_disabled = true
                           assign value_media = nil
@@ -304,6 +330,7 @@
                             class="visually-hidden"
                             {% if option.selected_value == value %}checked{% endif %}
                             data-option-index="{{ option_index }}"
+                            data-label="{%- if is_size -%}{%- render 'tamanho-br', valor: value -%}{%- elsif is_color -%}{%- render 'traduz', texto: value -%}{%- else -%}{{ value | escape }}{%- endif -%}"
                           >
                           {%- if is_color -%}
                             {%- if value.swatch.color -%}
@@ -318,6 +345,8 @@
                               <span class="product__swatch-label">{{ value | escape }}</span>
                             {%- endif -%}
                             <span class="visually-hidden">{{ value | escape }}</span>
+                          {%- elsif is_size -%}
+                            <span class="product__swatch-label">{%- render 'tamanho-br', valor: value -%}</span>
                           {%- else -%}
                             <span class="product__swatch-label">{{ value | escape }}</span>
                           {%- endif -%}
@@ -327,6 +356,37 @@
                   </fieldset>
                 {%- endfor -%}
               </div>
+            {%- else -%}
+              {%- comment -%}
+                Produto sem variantes: mostra (só como informação) a cor
+                preenchida nos campos da categoria no admin. Para o cliente
+                ESCOLHER cor/tamanho é preciso criar variantes no produto.
+              {%- endcomment -%}
+              {%- assign category_colors = product.metafields.shopify['color-pattern'].value -%}
+              {%- if category_colors != blank -%}
+                <div class="product__variants" {{ block.shopify_attributes }}>
+                  <div class="product__option product__option--color product__option--static">
+                    <p class="product__option-name">
+                      Cor:
+                      <span class="product__option-value">
+                        {%- for color in category_colors -%}
+                          {%- render 'traduz', texto: color.label.value -%}{%- unless forloop.last %}, {% endunless -%}
+                        {%- endfor -%}
+                      </span>
+                    </p>
+                    <div class="product__option-values">
+                      {%- for color in category_colors -%}
+                        {%- assign color_hex = color.color.value.first | default: color.color.value -%}
+                        {%- if color_hex != blank -%}
+                          <span class="product__swatch product__swatch--color is-selected" title="{{ color.label.value | escape }}">
+                            <span class="product__swatch-color" style="background-color: {{ color_hex }};"></span>
+                          </span>
+                        {%- endif -%}
+                      {%- endfor -%}
+                    </div>
+                  </div>
+                </div>
+              {%- endif -%}
             {%- endunless -%}
 
             <script type="application/json" data-variant-json>

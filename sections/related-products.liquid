@@ -43,7 +43,7 @@
 
   <style>
     #shopify-section-{{ section.id }} .related-products {
-      --mater-gutter: clamp(20px, 6vw, 100px);
+      --mater-gutter: var(--mater-gutter-fluid, clamp(20px, 6vw, 100px));
       display: block;
       background-color: var(--color-background);
     }

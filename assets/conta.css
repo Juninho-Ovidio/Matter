@@ -12,7 +12,7 @@
 
 .conta,
 .conta-painel {
-  --mater-gutter: clamp(20px, 6vw, 100px);
+  --mater-gutter: var(--mater-gutter-fluid, clamp(20px, 6vw, 100px));
   --conta-radius: 18px;
   --conta-radius-sm: 12px;
   padding: clamp(28px, 4vw, 64px) var(--mater-gutter) clamp(56px, 7vw, 110px);

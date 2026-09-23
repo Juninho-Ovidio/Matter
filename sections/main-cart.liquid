@@ -270,7 +270,7 @@
 
 <style>
   #shopify-section-{{ section.id }} .mcart {
-    --mater-gutter: clamp(20px, 6vw, 100px);
+    --mater-gutter: var(--mater-gutter-fluid, clamp(20px, 6vw, 100px));
     --mcart-radius: 14px;
     --mcart-radius-sm: 8px;
     padding: 0 var(--mater-gutter) clamp(48px, 6vw, 96px);
@@ -715,6 +715,9 @@
     #shopify-section-{{ section.id }} .mcart__bar { flex-direction: column; align-items: flex-start; gap: 12px; }
     #shopify-section-{{ section.id }} .mcart__steps { gap: 8px; font-size: 12px; }
     #shopify-section-{{ section.id }} .mcart__steps li + li::before { width: 14px; }
+    #shopify-section-{{ section.id }} .mcart__steps { flex-wrap: wrap; row-gap: 8px; }
+    #shopify-section-{{ section.id }} .mcart__steps li { gap: 6px; }
+    #shopify-section-{{ section.id }} .mcart__steps span { width: 24px; height: 24px; font-size: 11px; }
     #shopify-section-{{ section.id }} .mcart__item-top { flex-direction: column; gap: 6px; }
     #shopify-section-{{ section.id }} .mcart__item-price { justify-items: start; }
     #shopify-section-{{ section.id }} .mcart__rate { grid-template-columns: auto 1fr auto; }

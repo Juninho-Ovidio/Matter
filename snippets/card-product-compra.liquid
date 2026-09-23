@@ -28,8 +28,11 @@
     O valor do botão só vai no POST quando ELE é clicado, então o
     Shopify adiciona e já redireciona para o checkout. O carrinho.js
     ignora esse botão (data-buy-now) para não virar AJAX.
-  - Produto com mais de uma variante (tamanhos): aparece um <select>
-    com as variantes disponíveis, acima dos botões.
+  - Produto com variantes: as bolinhas de cor (ao lado do preço) e os
+    botões de tamanho PP/P/M/G/GG (acima dos botões de compra) escolhem
+    a variante; o assets/card-variantes.js grava o id no input escondido
+    e risca o que estiver esgotado. Tamanhos em inglês (XS, S, L...)
+    aparecem no padrão brasileiro via snippet 'tamanho-br'.
   - Esgotado: botões desabilitados.
 
   SELO E FAVORITOS:
@@ -89,8 +92,8 @@
           | image_tag:
             loading: 'lazy',
             class: 'card-compra__image card-compra__image--primary',
-            widths: '240, 360, 540, 720',
-            sizes: '(min-width: 1200px) 25vw, (min-width: 1000px) 33vw, 50vw',
+            widths: '240, 360, 540, 720, 900, 1080, 1260',
+            sizes: '(min-width: 1400px) 25vw, (min-width: 700px) 33vw, 50vw',
             alt: ''
         }}
         {%- if settings.card_show_second_image and card_product.media[1] -%}
@@ -100,8 +103,8 @@
             | image_tag:
               loading: 'lazy',
               class: 'card-compra__image card-compra__image--secondary',
-              widths: '240, 360, 540, 720',
-              sizes: '(min-width: 1200px) 25vw, (min-width: 1000px) 33vw, 50vw',
+              widths: '240, 360, 540, 720, 900, 1080, 1260',
+              sizes: '(min-width: 1400px) 25vw, (min-width: 700px) 33vw, 50vw',
               alt: ''
           }}
         {%- endif -%}
@@ -132,6 +135,86 @@
     <div class="card-compra__info">
       <div class="card-compra__meta">
         {% render 'price', product: card_product, use_variant: false, show_compare: true, price_class: 'card-compra__price' %}
+
+        {%- comment -%}
+          Cores ao lado do preço. Fonte, em ordem:
+          1. opção "Cor"/"Color" das variantes (swatch do Shopify, ou o
+             de/para por nome);
+          2. sem variantes de cor: a cor preenchida nos campos da
+             categoria (metacampo shopify.color-pattern).
+          Mostra até 5 bolinhas + "+N".
+        {%- endcomment -%}
+        {%- liquid
+          assign card_color_names = 'preto,branco,bege,cinza,azul,verde,vermelho,amarelo,rosa,roxo,laranja,marrom,off white,off-white,creme,areia,caqui,chumbo,grafite,marinho,azul marinho,verde militar,vinho,black,white,beige,gray,grey,navy,sand' | split: ','
+          assign card_color_hexes = '#070707,#ffffff,#d9c9a8,#9a9a97,#1c4ed8,#15803d,#b91c1c,#eab308,#ec4899,#7c3aed,#ea580c,#78350f,#f3efe7,#f3efe7,#efe6d2,#d8c7a5,#b8a67e,#4b4b4b,#3a3a3a,#1e2a4a,#1e2a4a,#4b5320,#6b1d2a,#070707,#ffffff,#d9c9a8,#9a9a97,#9a9a97,#1e2a4a,#d8c7a5' | split: ','
+          assign card_color_option = nil
+          for option in card_product.options_with_values
+            assign opt_key = option.name | downcase
+            if opt_key == 'cor' or opt_key contains 'color' or opt_key contains 'colour' or opt_key == 'cores'
+              assign card_color_option = option
+              break
+            endif
+          endfor
+          assign card_category_colors = card_product.metafields.shopify['color-pattern'].value
+        -%}
+        {%- if card_color_option or card_category_colors != blank -%}
+          {%- if card_color_option -%}
+            {%- assign color_index = card_color_option.position | minus: 1 -%}
+          {%- endif -%}
+          <ul
+            class="card-compra__colors"
+            {% if card_color_option %}role="radiogroup" data-card-option="{{ color_index }}"{% else %}role="list"{% endif %}
+            aria-label="Cores disponíveis"
+          >
+            {%- if card_color_option -%}
+              {%- for value in card_color_option.values -%}
+                {%- if forloop.index > 5 -%}
+                  <li class="card-compra__color-more"><a href="{{ card_product.url }}">+{{ forloop.length | minus: 5 }}</a></li>
+                  {%- break -%}
+                {%- endif -%}
+                {%- liquid
+                  assign dot_hex = value.swatch.color
+                  if dot_hex == blank
+                    assign value_key = value | downcase | strip
+                    for name in card_color_names
+                      if name == value_key
+                        assign dot_hex = card_color_hexes[forloop.index0]
+                        break
+                      endif
+                    endfor
+                  endif
+                -%}
+                {%- capture color_label -%}{% render 'traduz', texto: value %}{%- endcapture -%}
+                <li>
+                  <button
+                    type="button"
+                    class="card-compra__color{% if current_variant.options[color_index] == value %} is-selected{% endif %}"
+                    role="radio"
+                    aria-checked="{% if current_variant.options[color_index] == value %}true{% else %}false{% endif %}"
+                    data-value="{{ value | escape }}"
+                    title="{{ color_label | strip }}"
+                    style="{% if dot_hex != blank %}background-color: {{ dot_hex }};{% elsif value.swatch.image %}background-image: url({{ value.swatch.image | image_url: width: 40 }});{% endif %}"
+                  >
+                    <span class="visually-hidden">{{ color_label | strip }}</span>
+                  </button>
+                </li>
+              {%- endfor -%}
+            {%- else -%}
+              {%- for color in card_category_colors -%}
+                {%- if forloop.index > 5 -%}
+                  <li class="card-compra__color-more">+{{ forloop.length | minus: 5 }}</li>
+                  {%- break -%}
+                {%- endif -%}
+                {%- assign dot_hex = color.color.value.first | default: color.color.value -%}
+                {%- capture color_label -%}{% render 'traduz', texto: color.label.value %}{%- endcapture -%}
+                <li class="card-compra__color" title="{{ color_label | strip }}" style="{% if dot_hex != blank %}background-color: {{ dot_hex }};{% elsif color.image.value %}background-image: url({{ color.image.value | image_url: width: 40 }});{% endif %}">
+                  <span class="visually-hidden">{{ color_label | strip }}</span>
+                </li>
+              {%- endfor -%}
+            {%- endif -%}
+          </ul>
+        {%- endif -%}
+
         {%- if card_category != blank -%}
           <span class="card-compra__tag">{{ card_category | escape }}</span>
         {%- endif -%}
@@ -149,25 +232,83 @@
         {%- if card_product.has_only_default_variant -%}
           <input type="hidden" name="id" value="{{ current_variant.id }}">
         {%- else -%}
-          <label class="visually-hidden" for="CardVariant-{{ id_prefix }}-{{ card_product.id }}">
-            {{ card_product.options | join: ' / ' | escape }}
-          </label>
-          <select
-            name="id"
-            id="CardVariant-{{ id_prefix }}-{{ card_product.id }}"
-            class="card-compra__select"
-          >
-            {%- for variant in card_product.variants -%}
-              <option
-                value="{{ variant.id }}"
-                {% if variant == current_variant %}selected{% endif %}
-                {% unless variant.available %}disabled{% endunless %}
-              >
-                {{- variant.title | escape -}}
-                {%- unless variant.available %} — {{ 'products.product.sold_out' | t }}{% endunless -%}
-              </option>
-            {%- endfor -%}
-          </select>
+          {%- comment -%}
+            Variantes: o id vai num input escondido que o
+            assets/card-variantes.js atualiza conforme o cliente escolhe
+            a cor (bolinhas acima) e o tamanho (botões abaixo). Sem JS
+            vale a variante inicial (a primeira disponível).
+          {%- endcomment -%}
+          <input type="hidden" name="id" value="{{ current_variant.id }}" data-card-variant-id>
+          <script type="application/json" data-card-variants>
+            [
+              {%- for variant in card_product.variants -%}
+                {"id": {{ variant.id }}, "options": {{ variant.options | json }}, "available": {{ variant.available | json }}}
+                {%- unless forloop.last -%},{%- endunless -%}
+              {%- endfor -%}
+            ]
+          </script>
+
+          {%- liquid
+            assign card_size_option = nil
+            for option in card_product.options_with_values
+              assign opt_key = option.name | downcase
+              if opt_key contains 'tamanho' or opt_key contains 'size'
+                assign card_size_option = option
+                break
+              endif
+            endfor
+          -%}
+          {%- if card_size_option -%}
+            {%- liquid
+              # Ordem do menor para o maior (valores fora da lista vão no fim, na ordem do admin).
+              assign size_order = 'xxs,2xs,ppp,xs,pp,s,p,m,l,g,xl,gg,xxl,2xl,xg,eg,xxxl,3xl,xgg,egg,g1,g2,g3,g4' | split: ','
+              assign sorted_sizes = ''
+              for key in size_order
+                for value in card_size_option.values
+                  assign value_key = value | downcase | strip
+                  if value_key == key
+                    assign sorted_sizes = sorted_sizes | append: value | append: '|||'
+                  endif
+                endfor
+              endfor
+              for value in card_size_option.values
+                assign value_key = value | downcase | strip
+                unless size_order contains value_key
+                  assign sorted_sizes = sorted_sizes | append: value | append: '|||'
+                endunless
+              endfor
+              assign sorted_sizes = sorted_sizes | split: '|||'
+              assign size_index = card_size_option.position | minus: 1
+            -%}
+            <div
+              class="card-compra__sizes"
+              role="radiogroup"
+              aria-label="{{ card_size_option.name | escape }}"
+              data-card-option="{{ size_index }}"
+            >
+              {%- for value in sorted_sizes -%}
+                {%- liquid
+                  assign size_available = false
+                  for variant in card_product.variants
+                    if variant.options[size_index] == value and variant.available
+                      assign size_available = true
+                      break
+                    endif
+                  endfor
+                -%}
+                <button
+                  type="button"
+                  class="card-compra__size{% if current_variant.options[size_index] == value %} is-selected{% endif %}{% unless size_available %} is-unavailable{% endunless %}"
+                  role="radio"
+                  aria-checked="{% if current_variant.options[size_index] == value %}true{% else %}false{% endif %}"
+                  data-value="{{ value | escape }}"
+                  title="{% render 'tamanho-br', valor: value %}{% unless size_available %} — {{ 'products.product.sold_out' | t }}{% endunless %}"
+                >
+                  {%- render 'tamanho-br', valor: value -%}
+                </button>
+              {%- endfor -%}
+            </div>
+          {%- endif -%}
         {%- endif -%}
 
         <div class="card-compra__actions">
@@ -175,6 +316,8 @@
             type="submit"
             name="add"
             class="card-compra__btn card-compra__btn--secondary"
+            data-label-add="{{ 'products.product.add_short' | t | escape }}"
+            data-label-soldout="{{ 'products.product.sold_out' | t | escape }}"
             {% unless card_product.available %}disabled{% endunless %}
           >
             {%- if card_product.available -%}

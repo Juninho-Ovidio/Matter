@@ -243,7 +243,7 @@
 
 <style>
   #shopify-section-{{ section.id }} .contato {
-    --mater-gutter: clamp(20px, 6vw, 100px);
+    --mater-gutter: var(--mater-gutter-fluid, clamp(20px, 6vw, 100px));
     /* Cantos arredondados da página de contato: cards maiores, campos e botões menores. */
     --contato-radius: 18px;
     --contato-radius-sm: 12px;

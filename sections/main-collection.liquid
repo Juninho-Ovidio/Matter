@@ -36,7 +36,8 @@
   - Grade: product-grid renderizando o snippet 'card-product-compra'
     (o mesmo card da home, com Adicionar / Comprar agora), seguida do
     snippet 'pagination' e do link "mostrar mais". 4 colunas só a
-    partir de 1400px; abaixo disso 3, e 2 abaixo de 1000px.
+    partir de 1400px; abaixo disso 3, e 2 abaixo de 700px. Em card
+    estreito os botões empilham sozinhos (@container em base.css).
   - Mobile (<1000px): com JS a sidebar recolhe atrás do botão
     "Filtrar (n)"; sem JS ela continua aberta acima da grade.
   - Rótulos de filtro e de ordenação passam pelo snippet 'traduz'
@@ -478,7 +479,7 @@
 
 <style>
   #shopify-section-{{ section.id }} .collection {
-    --mater-gutter: clamp(20px, 6vw, 100px);
+    --mater-gutter: var(--mater-gutter-fluid, clamp(20px, 6vw, 100px));
     padding: clamp(28px, 3vw, 48px) 0 clamp(40px, 5vw, 80px);
     background-color: var(--color-background);
   }
@@ -910,8 +911,8 @@
   @media screen and (max-width: 999px) {
     #shopify-section-{{ section.id }} .collection__layout { grid-template-columns: 1fr; }
     #shopify-section-{{ section.id }} .collection__sidebar { border-bottom: 1px solid var(--color-border); }
-    #shopify-section-{{ section.id }} .collection__top { grid-template-columns: 1fr; align-items: start; }
-    #shopify-section-{{ section.id }} .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    #shopify-section-{{ section.id }} .collection__top { grid-template-columns: minmax(0, 1fr); align-items: start; }
+    #shopify-section-{{ section.id }} .product-grid { grid-template-columns: repeat({{ section.settings.columns_desktop | at_most: 3 }}, minmax(0, 1fr)); }
     #shopify-section-{{ section.id }} .collection__footer { flex-direction: column; gap: 18px; }
     #shopify-section-{{ section.id }} .collection__more { position: static; }
 
@@ -924,6 +925,9 @@
   }
   @media screen and (min-width: 1000px) {
     #shopify-section-{{ section.id }} .collection__filter-toggle { display: none !important; }
+  }
+  @media screen and (max-width: 699px) {
+    #shopify-section-{{ section.id }} .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
   @media screen and (max-width: 749px) {
     #shopify-section-{{ section.id }} .collection__trust {

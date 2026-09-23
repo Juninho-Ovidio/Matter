@@ -268,7 +268,7 @@
 
 <style>
   .mfooter {
-    --mater-gutter: clamp(20px, 6vw, 100px);
+    --mater-gutter: var(--mater-gutter-fluid, clamp(20px, 6vw, 100px));
     --footer-bg: var(--color-accent, #070707);
     --footer-fg: var(--color-accent-text, #fff);
     color: var(--footer-fg);
@@ -385,7 +385,8 @@
     font-family: var(--font-display-family);
     font-weight: 400;
     font-size: clamp(1.6rem, 2.6vw, 2.6rem);
-    line-height: 0.95;
+    /* 1.05: com 0.95 o til/acento da 2ª linha ("MÃO") batia na 1ª. */
+    line-height: 1.05;
     text-transform: uppercase;
   }
   .mfooter__news-text { max-width: 30em; margin: 8px 0 0; font-size: 14px; line-height: 1.5; opacity: 0.7; }
