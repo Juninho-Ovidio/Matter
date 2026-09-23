@@ -692,8 +692,8 @@
   @media screen and (min-width: 1000px) {
     #shopify-section-{{ section.id }} .collection__sidebar {
       position: sticky;
-      top: 24px;
-      max-height: calc(100vh - 48px);
+      top: calc(var(--header-height, 0px) + 24px);
+      max-height: calc(100vh - var(--header-height, 0px) - 48px);
       overflow-y: auto;
     }
   }

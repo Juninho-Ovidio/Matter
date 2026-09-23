@@ -18,7 +18,10 @@
   - Cabeçalho: eyebrow / heading / subheading e o side_text da direita
     (cada um some se ficar em branco).
   - section.blocks do tipo featured_collection: cada bloco aponta para
-    uma coleção. O card usa a featured_image dela.
+    uma coleção. Imagem do card, em ordem de prioridade: a imagem
+    enviada no bloco; nos 4 primeiros cards, as artes do tema
+    (assets/hero-inicio*.jpg, originais em img/inicio-1..4.png); a
+    featured_image da coleção; um placeholder.
   - O card inteiro é um link; o "VER COLEÇÃO" é decorativo (não é um
     <a> dentro de outro <a>, que seria HTML inválido).
   - Settings: heading, subheading, eyebrow, side_text, columns_desktop.
@@ -78,6 +81,32 @@
                     sizes: '(min-width: 1000px) 25vw, 50vw',
                     alt: card_title | escape
                 }}
+              {%- elsif forloop.index <= 4 -%}
+                {%- comment -%}
+                  Ordem das artes casada com os cards: 1 São Miguel, 2 Pietrelcina,
+                  3 Calcuta (arte 4), 4 Acútis (arte 3).
+                {%- endcomment -%}
+                {%- liquid
+                  assign art_index = '1,2,4,3' | split: ',' | slice: forloop.index0 | first
+                  if art_index == '1'
+                    assign art = 'hero-inicio'
+                  else
+                    assign art = 'hero-inicio-' | append: art_index
+                  endif
+                -%}
+                <img
+                  src="{{ art | append: '-900.jpg' | asset_url }}"
+                  srcset="
+                    {{ art | append: '-900.jpg' | asset_url }} 900w,
+                    {{ art | append: '-1400.jpg' | asset_url }} 1400w
+                  "
+                  sizes="(min-width: 1000px) 55vw, (min-width: 560px) 106vw, 212vw"
+                  class="collection-card__image collection-card__image--art"
+                  width="900"
+                  height="453"
+                  loading="lazy"
+                  alt="{{ card_title | escape }}"
+                >
               {%- elsif block_collection.featured_image -%}
                 {{
                   block_collection.featured_image
@@ -209,6 +238,29 @@
   }
   #shopify-section-{{ section.id }} .collection-card:hover .collection-card__image {
     transform: scale(1.04);
+  }
+  /* Artes do tema (img/inicio-1..4): foto paisagem com os dois modelos.
+     Ancorada no rodapé e centrada no par de modelos (~58% da largura);
+     o topo que sobra é preenchido com o cinza da parede da foto. */
+  #shopify-section-{{ section.id }} .collection-card__media:has(.collection-card__image--art) {
+    background-color: #e3e3e1;
+  }
+  #shopify-section-{{ section.id }} .collection-card__image--art {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: auto;
+    max-width: none;
+    height: 86%;
+    object-fit: initial;
+    /* Some a emenda entre o topo da foto e o cinza de fundo */
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 4%);
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 4%);
+    transform: translateX(-58%);
+    transform-origin: 58% 100%;
+  }
+  #shopify-section-{{ section.id }} .collection-card:hover .collection-card__image--art {
+    transform: translateX(-58%) scale(1.04);
   }
   /* Degradê que garante o contraste do texto, seja qual for a foto */
   #shopify-section-{{ section.id }} .collection-card__media::after {

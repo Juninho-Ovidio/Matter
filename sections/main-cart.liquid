@@ -69,8 +69,11 @@
   {%- else -%}
     {%- form 'cart', cart, class: 'mcart__form', id: 'CartForm' -%}
       <div class="mcart__layout">
-        {%- comment -%} ---------------- Coluna esquerda ---------------- {%- endcomment -%}
-        <div class="mcart__main">
+        {%- comment -%}
+          Cabeçalho fora das colunas: assim o resumo começa na mesma
+          altura de "1. Seus produtos".
+        {%- endcomment -%}
+        <div class="mcart__head">
           <p class="mcart__eyebrow">Checkout</p>
           <h1 class="mcart__title">Meu carrinho</h1>
           <p class="mcart__lead">
@@ -87,6 +90,10 @@
               <div class="mcart__free-track"><span style="width: {{ progress }}%;"></span></div>
             </div>
           {%- endif -%}
+        </div>
+
+        {%- comment -%} ---------------- Coluna esquerda ---------------- {%- endcomment -%}
+        <div class="mcart__main">
 
           {%- comment -%} 1. Itens {%- endcomment -%}
           <h2 class="mcart__step-title">
@@ -264,8 +271,18 @@
 <style>
   #shopify-section-{{ section.id }} .mcart {
     --mater-gutter: clamp(20px, 6vw, 100px);
+    --mcart-radius: 14px;
+    --mcart-radius-sm: 8px;
     padding: 0 var(--mater-gutter) clamp(48px, 6vw, 96px);
     background-color: var(--color-background);
+  }
+  /* Conteúdo com largura máxima e centralizado na tela */
+  #shopify-section-{{ section.id }} .mcart__bar,
+  #shopify-section-{{ section.id }} .mcart__form,
+  #shopify-section-{{ section.id }} .mcart__empty {
+    max-width: 1180px;
+    margin-left: auto;
+    margin-right: auto;
   }
 
   /* Etapas */
@@ -330,9 +347,17 @@
   #shopify-section-{{ section.id }} .mcart__layout {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(320px, 0.72fr);
+    grid-template-areas:
+      'head .'
+      'main summary';
     align-items: start;
-    gap: clamp(28px, 4vw, 60px);
+    column-gap: clamp(28px, 4vw, 60px);
   }
+  #shopify-section-{{ section.id }} .mcart__head { grid-area: head; }
+  #shopify-section-{{ section.id }} .mcart__main { grid-area: main; }
+  /* Mesmo respiro do título "1. Seus produtos" — os dois começam alinhados */
+  #shopify-section-{{ section.id }} .mcart__summary { grid-area: summary; margin-top: clamp(28px, 3vw, 40px); }
+  #shopify-section-{{ section.id }} .mcart__main > .mcart__step-title:first-child { border-top: 0; padding-top: 0; }
 
   #shopify-section-{{ section.id }} .mcart__eyebrow {
     margin: 0 0 6px;
@@ -558,7 +583,7 @@
   /* Resumo */
   #shopify-section-{{ section.id }} .mcart__summary {
     position: sticky;
-    top: 24px;
+    top: calc(var(--header-height, 0px) + 24px);
     padding: clamp(22px, 2.4vw, 32px);
     background-color: var(--color-background-contrast);
     border: 1px solid var(--color-border);
@@ -665,8 +690,25 @@
     background-color: var(--color-accent);
   }
 
+  #shopify-section-{{ section.id }} .mcart__empty { text-align: center; }
+
+  /* Cantos arredondados */
+  #shopify-section-{{ section.id }} .mcart__item,
+  #shopify-section-{{ section.id }} .mcart__summary,
+  #shopify-section-{{ section.id }} .mcart__free,
+  #shopify-section-{{ section.id }} .mcart__rate { border-radius: var(--mcart-radius); }
+  #shopify-section-{{ section.id }} .mcart__item-media,
+  #shopify-section-{{ section.id }} .mcart__qty,
+  #shopify-section-{{ section.id }} .mcart__field,
+  #shopify-section-{{ section.id }} .mcart__btn-light,
+  #shopify-section-{{ section.id }} .mcart__coupon-row input,
+  #shopify-section-{{ section.id }} .mcart__note textarea,
+  #shopify-section-{{ section.id }} .mcart__checkout,
+  #shopify-section-{{ section.id }} .mcart__cta { border-radius: var(--mcart-radius-sm); }
+  #shopify-section-{{ section.id }} .mcart__qty { overflow: hidden; }
+
   @media screen and (max-width: 999px) {
-    #shopify-section-{{ section.id }} .mcart__layout { grid-template-columns: 1fr; }
+    #shopify-section-{{ section.id }} .mcart__layout { grid-template-columns: 1fr; grid-template-areas: 'head' 'main' 'summary'; }
     #shopify-section-{{ section.id }} .mcart__summary { position: static; }
   }
   @media screen and (max-width: 749px) {

@@ -1,0 +1,191 @@
+{%- comment -%}
+  ============================================================
+  conta-popover — painel do ícone de usuário no navbar (Mater)
+  ============================================================
+
+  O QUE FAZ:
+  O ícone de usuário vira um botão que abre um painel:
+  - Deslogado: chamada, benefícios de ter conta e botões
+    "Entrar" / "Criar conta" (os dois levam ao login do Shopify —
+    nas contas novas o cadastro acontece no mesmo fluxo, com
+    código no e-mail ou Google, se ativado no admin).
+  - Logado: "Olá, nome", atalhos para Meus pedidos / Perfil e Sair.
+
+  Usa <details> (abre sem JS). O JS só fecha ao clicar fora ou
+  apertar Esc.
+
+  USO: {% render 'conta-popover' %} dentro de .header__actions.
+{%- endcomment -%}
+
+<details class="conta-pop" data-conta-pop>
+  <summary class="header__action-button tap-target" aria-label="{% if customer %}Minha conta{% else %}Entrar ou criar conta{% endif %}">
+    {% render 'icon', name: 'account' %}
+    {%- if customer -%}<span class="conta-pop__dot" aria-hidden="true"></span>{%- endif -%}
+  </summary>
+
+  <div class="conta-pop__panel">
+    {%- if customer -%}
+      <p class="conta-pop__eyebrow">// Minha conta</p>
+      <p class="conta-pop__title">Olá{% if customer.first_name != blank %}, {{ customer.first_name | escape }}{% endif %}!</p>
+      <p class="conta-pop__text">{{ customer.email | escape }}</p>
+
+      <nav class="conta-pop__links" aria-label="Minha conta">
+        <a href="{{ routes.account_url }}">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 7h14l-1 13H6L5 7Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 7a3 3 0 0 1 6 0" stroke="currentColor" stroke-width="1.8"/></svg>
+          Meus pedidos
+          <span aria-hidden="true">→</span>
+        </a>
+        <a href="{{ routes.account_url }}">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          Meus dados e endereços
+          <span aria-hidden="true">→</span>
+        </a>
+      </nav>
+
+      <a class="conta-pop__btn conta-pop__btn--ghost" href="{{ routes.account_logout_url }}">Sair</a>
+    {%- else -%}
+      <p class="conta-pop__eyebrow">// Minha conta</p>
+      <p class="conta-pop__title">Entre ou crie sua conta</p>
+      <p class="conta-pop__text">Sem senha: você recebe um código no seu e-mail.</p>
+
+      <ul class="conta-pop__perks" role="list">
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Acompanhe seus pedidos
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Compre mais rápido com seus dados salvos
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Lançamentos e ofertas em primeira mão
+        </li>
+      </ul>
+
+      <a class="conta-pop__btn" href="{{ routes.account_login_url }}">
+        Entrar
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <a class="conta-pop__btn conta-pop__btn--ghost" href="{{ routes.account_login_url }}">Criar conta grátis</a>
+    {%- endif -%}
+  </div>
+</details>
+
+<style>
+  .conta-pop { position: relative; }
+  .conta-pop > summary { list-style: none; }
+  .conta-pop > summary::-webkit-details-marker { display: none; }
+  .conta-pop[open] > summary { color: var(--color-accent-text); background-color: var(--color-accent); }
+  .conta-pop__dot {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 9px;
+    height: 9px;
+    background-color: #1a9e4b;
+    border: 2px solid var(--color-background-contrast);
+    border-radius: 50%;
+  }
+  .conta-pop__panel {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    z-index: 60;
+    width: min(330px, calc(100vw - 32px));
+    padding: 22px;
+    color: var(--color-text);
+    text-align: left;
+    background-color: var(--color-background-contrast);
+    border: 1px solid var(--color-border);
+    border-radius: 18px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.16);
+    animation: conta-pop-in 0.18s ease;
+  }
+  @keyframes conta-pop-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+  .conta-pop__eyebrow {
+    margin: 0 0 6px;
+    font-family: var(--font-heading-family);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    opacity: 0.6;
+  }
+  .conta-pop__title {
+    margin: 0;
+    font-family: var(--font-display-family);
+    font-size: 1.7rem;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+  .conta-pop__text { margin: 8px 0 0; font-size: 13px; line-height: 1.5; opacity: 0.7; overflow-wrap: anywhere; }
+  .conta-pop__perks { display: grid; gap: 8px; margin: 16px 0 18px; padding: 0; list-style: none; font-size: 13px; }
+  .conta-pop__perks li { display: flex; align-items: center; gap: 10px; }
+  .conta-pop__perks svg {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    padding: 3px;
+    color: var(--color-accent-text);
+    background-color: var(--color-accent);
+    border-radius: 50%;
+  }
+  .conta-pop__links { display: grid; gap: 6px; margin: 16px 0; }
+  .conta-pop__links a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    font-size: 14px;
+    color: inherit;
+    text-decoration: none;
+    background-color: var(--color-background);
+    border-radius: 12px;
+    transition: background-color 0.15s ease;
+  }
+  .conta-pop__links a:hover { background-color: var(--color-border); }
+  .conta-pop__links svg { flex: none; width: 18px; height: 18px; }
+  .conta-pop__links span { margin-left: auto; }
+  .conta-pop__btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 50px;
+    margin-top: 8px;
+    font-family: var(--font-heading-family);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-accent-text);
+    text-decoration: none;
+    background-color: var(--color-accent);
+    border: 1px solid var(--color-accent);
+    border-radius: 12px;
+    transition: opacity 0.15s ease;
+  }
+  .conta-pop__btn:hover { opacity: 0.88; }
+  .conta-pop__btn--ghost { color: var(--color-text); background-color: transparent; border-color: var(--color-text); }
+  @media (prefers-reduced-motion: reduce) { .conta-pop__panel { animation: none; } }
+</style>
+
+<script>
+  (function () {
+    var pops = document.querySelectorAll('[data-conta-pop]');
+    document.addEventListener('click', function (e) {
+      pops.forEach(function (pop) {
+        if (pop.open && !pop.contains(e.target)) pop.open = false;
+      });
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape') return;
+      pops.forEach(function (pop) {
+        if (!pop.open) return;
+        pop.open = false;
+        pop.querySelector('summary').focus();
+      });
+    });
+  })();
+</script>

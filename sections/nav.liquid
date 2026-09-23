@@ -28,7 +28,8 @@
     demonstração (INÍCIO / COLEÇÃO / CONTATO) — veja FALLBACK abaixo.
   - header__actions: lupa que abre a busca em tela cheia
     (SearchModal, veja o bloco BUSCA EM TELA CHEIA), conta (só se
-    customer_accounts_enabled) e carrinho com contador
+    customer_accounts_enabled; abre o painel do snippet
+    conta-popover) e carrinho com contador
     data-cart-count baseado em cart.item_count. O contador fica
     oculto (hidden) enquanto o carrinho está vazio; assets/carrinho.js
     religa/desliga o atributo conforme o total muda.
@@ -154,9 +155,7 @@
       </a>
 
       {%- if shop.customer_accounts_enabled -%}
-        <a href="{{ routes.account_url }}" class="header__action-button tap-target" aria-label="{{ 'customer.account.title' | t }}">
-          {% render 'icon', name: 'account' %}
-        </a>
+        {% render 'conta-popover' %}
       {%- endif -%}
 
       <a href="{{ routes.cart_url }}" class="header__action-button header__cart tap-target" aria-label="{{ 'templates.cart.cart' | t }}">
@@ -281,6 +280,26 @@
 </div>
 
 <style>
+  /* Navbar fixa: o sticky vai no wrapper da section (.section-header),
+     que é filho direto do <body> — no .header não funcionaria, porque o
+     pai dele tem só a altura do próprio header. */
+  .section-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .header {
+    transition: box-shadow 0.25s ease;
+  }
+  /* Sombra discreta só depois que a página rolou (classe via JS). */
+  .header.is-scrolled {
+    box-shadow: 0 1px 0 var(--color-border), 0 6px 20px rgba(7, 7, 7, 0.06);
+  }
+  /* Menu mobile aberto não passa da altura da tela. */
+  .header__mobile-nav {
+    max-height: calc(100vh - var(--header-height, 64px));
+    overflow-y: auto;
+  }
   .header {
     /* Recuo lateral do cabeçalho: acompanha a viewport (design usa ~100px em 1670px). */
     --mater-gutter: clamp(20px, 6vw, 100px);
@@ -692,6 +711,18 @@
   (function () {
     var section = document.querySelector('.header[data-section-id="{{ section.id }}"]');
     if (!section) return;
+
+    /* Navbar fixa: sombra ao rolar e --header-height para quem também
+       usa sticky (resumo do carrinho, filtros da coleção) ficar abaixo dela. */
+    var root = document.documentElement;
+    function onScroll() { section.classList.toggle('is-scrolled', window.scrollY > 4); }
+    function setHeight() { root.style.setProperty('--header-height', section.offsetHeight + 'px'); }
+    onScroll();
+    setHeight();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    if ('ResizeObserver' in window) new ResizeObserver(setHeight).observe(section);
+    else window.addEventListener('resize', setHeight);
+
     var toggle = section.querySelector('.header__menu-toggle');
     var nav = document.getElementById('MobileNav-{{ section.id }}');
     if (toggle && nav) {

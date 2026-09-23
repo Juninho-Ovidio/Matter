@@ -50,6 +50,16 @@
     empacotada assets/footer-camisetas-*.jpg (original em img/Camisasas.png).
   {%- endcomment -%}
   {%- if section.settings.show_banner -%}
+    {%- comment -%}
+      Divisor da marca (img/tela1-divisor.svg, mesmo path do tela1 em
+      sections/divisor.liquid) sobre a borda de cima da foto. Fica fora do
+      .mfooter__banner porque ele tem overflow: hidden e cortaria a faixa.
+    {%- endcomment -%}
+    <div class="mfooter__divisor">
+      <svg viewBox="0 0 1673 79" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+        <path d="M1673 65.7629L847.5 79L0 65.7629V30.7791H847.5L1673 2.02656e-06V65.7629Z" fill="currentColor"/>
+      </svg>
+    </div>
     <div class="mfooter__banner">
       {%- if section.settings.banner_image != blank -%}
         {{
@@ -265,6 +275,22 @@
     background-color: var(--footer-bg);
   }
   .mfooter a { color: inherit; text-decoration: none; }
+
+  /* Divisor sobre a foto: sobe metade para fora do footer, mordendo a
+     section de cima, e a outra metade fica sobre a imagem. */
+  .mfooter { position: relative; }
+  .mfooter__divisor {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 2;
+    line-height: 0;
+    color: var(--footer-bg);
+    transform: translateY(-55%);
+    pointer-events: none;
+  }
+  .mfooter__divisor svg { display: block; width: 100%; height: auto; }
 
   /* 0. Faixa de imagem */
   .mfooter__banner {
