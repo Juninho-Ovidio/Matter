@@ -42,6 +42,9 @@
   function handleSubmit(event) {
     var form = event.target;
     if (!form.matches('form[action$="/cart/add"], form[data-type="add-to-cart-form"]')) return;
+    // "Comprar agora" (card de compra): deixa o POST nativo seguir, com
+    // return_to=/checkout, para o Shopify levar direto ao checkout.
+    if (event.submitter && event.submitter.hasAttribute('data-buy-now')) return;
 
     event.preventDefault();
     var button = form.querySelector('[type="submit"], [name="add"]');

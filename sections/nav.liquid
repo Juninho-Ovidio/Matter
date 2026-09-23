@@ -26,7 +26,8 @@
     menu desktop com até 3 níveis (link > child > grandchild).
     Se o menu do admin ainda não existir, renderiza um menu de
     demonstração (INÍCIO / COLEÇÃO / CONTATO) — veja FALLBACK abaixo.
-  - header__actions: busca (details com painel), conta (só se
+  - header__actions: lupa que abre a busca em tela cheia
+    (SearchModal, veja o bloco BUSCA EM TELA CHEIA), conta (só se
     customer_accounts_enabled) e carrinho com contador
     data-cart-count baseado em cart.item_count. O contador fica
     oculto (hidden) enquanto o carrinho está vazio; assets/carrinho.js
@@ -138,24 +139,19 @@
     </a>
 
     <div class="header__actions">
-      <details class="header__search">
-        <summary class="header__action-button tap-target" aria-label="{{ 'general.search.search' | t }}">
-          {% render 'icon', name: 'search' %}
-        </summary>
-        <div class="header__search-panel">
-          <form action="{{ routes.search_url }}" method="get" role="search" class="header__search-form">
-            <input
-              type="search"
-              name="q"
-              value="{{ search.terms | escape }}"
-              placeholder="{{ 'general.search.placeholder' | t }}"
-              aria-label="{{ 'general.search.search' | t }}"
-              class="field__input"
-            >
-            <button type="submit" class="visually-hidden">{{ 'general.search.submit' | t }}</button>
-          </form>
-        </div>
-      </details>
+      {%- comment -%}
+        Sem JS é um link comum para /search. Com JS abre o SearchModal.
+      {%- endcomment -%}
+      <a
+        href="{{ routes.search_url }}"
+        class="header__action-button tap-target"
+        data-search-open
+        aria-controls="SearchModal-{{ section.id }}"
+        aria-expanded="false"
+        aria-label="{{ 'general.search.search' | t }}"
+      >
+        {% render 'icon', name: 'search' %}
+      </a>
 
       {%- if shop.customer_accounts_enabled -%}
         <a href="{{ routes.account_url }}" class="header__action-button tap-target" aria-label="{{ 'customer.account.title' | t }}">
@@ -204,6 +200,83 @@
       {%- endfor -%}
     {%- endif -%}
   </ul>
+</div>
+
+{%- comment -%}
+  ------------------------------------------------------------
+  BUSCA EM TELA CHEIA
+  Painel que desce do topo sobre um fundo escurecido:
+  - campo grande em Anton, com ícone e botão de fechar;
+  - "Buscas populares" (setting search_suggestions, separado por vírgula);
+  - resultados ao digitar, via Predictive Search API do Shopify
+    ({{ routes.predictive_search_url }}.json), até 4 produtos
+    + link "ver todos os resultados".
+  Fecha com ESC, clique fora ou no X; trava o scroll da página e
+  devolve o foco para a lupa ao fechar. Enter sem JS/sem resultados
+  envia o formulário normal para /search.
+  ------------------------------------------------------------
+{%- endcomment -%}
+<div
+  class="search-modal"
+  id="SearchModal-{{ section.id }}"
+  role="dialog"
+  aria-modal="true"
+  aria-label="{{ 'general.search.search' | t }}"
+  data-predictive-url="{{ routes.predictive_search_url }}"
+  data-search-url="{{ routes.search_url }}"
+  data-str-view-all="{{ 'general.search.view_all' | t | escape }}"
+  data-str-no-results="{{ 'general.search.no_results_short' | t | escape }}"
+  data-str-products="{{ 'general.search.products_heading' | t | escape }}"
+  hidden
+>
+  <div class="search-modal__backdrop" data-search-close></div>
+
+  <div class="search-modal__panel">
+    <div class="search-modal__inner">
+      <form action="{{ routes.search_url }}" method="get" role="search" class="search-modal__form">
+        <input type="hidden" name="options[prefix]" value="last">
+        <span class="search-modal__icon" aria-hidden="true">{% render 'icon', name: 'search' %}</span>
+        <label class="visually-hidden" for="SearchModalInput-{{ section.id }}">{{ 'general.search.search' | t }}</label>
+        <input
+          type="search"
+          name="q"
+          id="SearchModalInput-{{ section.id }}"
+          class="search-modal__input"
+          value="{{ search.terms | escape }}"
+          placeholder="{{ 'general.search.modal_placeholder' | t }}"
+          autocomplete="off"
+          autocorrect="off"
+          spellcheck="false"
+          enterkeyhint="search"
+        >
+        <button type="submit" class="visually-hidden">{{ 'general.search.submit' | t }}</button>
+        <button type="button" class="search-modal__close" data-search-close aria-label="{{ 'general.search.close' | t }}">
+          {% render 'icon', name: 'close' %}
+        </button>
+      </form>
+
+      {%- assign suggestions = section.settings.search_suggestions | split: ',' -%}
+      {%- if suggestions.size > 0 -%}
+        <div class="search-modal__popular" data-search-popular>
+          <p class="search-modal__eyebrow">{{ 'general.search.popular' | t }}</p>
+          <ul class="search-modal__pills" role="list">
+            {%- for term in suggestions -%}
+              {%- assign term = term | strip -%}
+              {%- if term != blank -%}
+                <li style="--i: {{ forloop.index0 }};">
+                  <a class="search-modal__pill" href="{{ routes.search_url }}?q={{ term | url_encode }}&options%5Bprefix%5D=last">
+                    {{- term | escape -}}
+                  </a>
+                </li>
+              {%- endif -%}
+            {%- endfor -%}
+          </ul>
+        </div>
+      {%- endif -%}
+
+      <div class="search-modal__results" data-search-results aria-live="polite"></div>
+    </div>
+  </div>
 </div>
 
 <style>
@@ -350,22 +423,210 @@
     background-color: var(--color-accent);
     border-radius: 9px;
   }
-  .header__search { position: relative; }
-  .header__search summary { list-style: none; }
-  .header__search summary::-webkit-details-marker { display: none; }
-  .header__search-panel {
-    position: absolute;
-    top: calc(100% + 8px);
-    right: 0;
-    width: 320px;
-    max-width: 90vw;
-    padding: 12px;
-    background-color: var(--color-background-contrast);
-    border: 1px solid var(--color-border);
-    border-radius: var(--inputs-radius);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-    z-index: 20;
+  /* ---------- Busca em tela cheia ---------- */
+  .search-modal {
+    --mater-gutter: clamp(20px, 6vw, 100px);
+    position: fixed;
+    inset: 0;
+    z-index: 100;
   }
+  .search-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background-color: rgba(7, 7, 7, 0.45);
+    backdrop-filter: blur(3px);
+    opacity: 0;
+    transition: opacity 0.35s ease;
+  }
+  .search-modal__panel {
+    position: relative;
+    max-height: 100%;
+    overflow-y: auto;
+    background-color: var(--color-background);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18);
+    transform: translateY(-100%);
+    transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .search-modal.is-open .search-modal__backdrop { opacity: 1; }
+  .search-modal.is-open .search-modal__panel { transform: translateY(0); }
+
+  .search-modal__inner {
+    padding: clamp(28px, 4vw, 56px) var(--mater-gutter) clamp(32px, 4vw, 60px);
+  }
+
+  .search-modal__form {
+    display: flex;
+    align-items: center;
+    gap: clamp(12px, 1.5vw, 22px);
+    margin: 0;
+    padding-bottom: clamp(12px, 1.4vw, 20px);
+    border-bottom: 1px solid var(--color-text);
+  }
+  .search-modal__icon { display: inline-flex; flex: none; }
+  .search-modal__icon svg { width: clamp(22px, 2.4vw, 34px); height: auto; }
+  .search-modal__input {
+    flex: 1;
+    min-width: 0;
+    padding: 0;
+    font-family: var(--font-display-family);
+    font-size: clamp(1.8rem, 4.4vw, 4.4rem);
+    font-weight: 400;
+    line-height: 1.1;
+    letter-spacing: -0.005em;
+    text-transform: uppercase;
+    color: var(--color-text);
+    background: none;
+    border: none;
+    outline: none;
+  }
+  .search-modal__input::placeholder { color: var(--color-text); opacity: 0.25; }
+  .search-modal__input::-webkit-search-cancel-button { display: none; }
+  .search-modal__input:focus-visible { outline: none; }
+  .search-modal__close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 46px;
+    height: 46px;
+    padding: 0;
+    color: var(--color-text);
+    background-color: var(--color-background-contrast);
+    border: none;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    cursor: pointer;
+    transition: transform 0.25s ease, color 0.2s ease, background-color 0.2s ease;
+  }
+  .search-modal__close svg { width: 18px; height: 18px; }
+  .search-modal__close:hover {
+    color: var(--color-accent-text);
+    background-color: var(--color-accent);
+    transform: rotate(90deg);
+  }
+
+  .search-modal__eyebrow {
+    margin: clamp(22px, 2.6vw, 38px) 0 14px;
+    font-family: var(--font-heading-family);
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    opacity: 0.6;
+  }
+  .search-modal__pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .search-modal__pill {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 8px 20px;
+    font-family: var(--font-heading-family);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-text);
+    text-decoration: none;
+    background-color: var(--color-background-contrast);
+    border: 1px solid transparent;
+    border-radius: 999px;
+    transition: color 0.2s ease, background-color 0.2s ease;
+  }
+  .search-modal__pill:hover {
+    color: var(--color-accent-text);
+    background-color: var(--color-accent);
+  }
+  /* Pílulas e resultados entram em cascata depois que o painel desce. */
+  .search-modal__pills li,
+  .search-modal__result {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  .search-modal.is-open .search-modal__pills li,
+  .search-modal.is-open .search-modal__result {
+    opacity: 1;
+    transform: none;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    transition-delay: calc(0.2s + var(--i, 0) * 0.05s);
+  }
+
+  .search-modal__results:empty { display: none; }
+  .search-modal__results-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .search-modal__view-all {
+    font-family: var(--font-heading-family);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: inherit;
+    white-space: nowrap;
+    text-underline-offset: 4px;
+  }
+  .search-modal__grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(12px, 1.4vw, 22px);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .search-modal__result a {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+  }
+  .search-modal__result-media {
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    background-color: var(--color-background-contrast);
+  }
+  .search-modal__result-media img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+  }
+  .search-modal__result a:hover img { transform: scale(1.04); }
+  .search-modal__result-title {
+    display: block;
+    margin-top: 10px;
+    overflow: hidden;
+    font-size: 14px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .search-modal__result-price { display: block; margin-top: 4px; font-size: 14px; font-weight: 700; }
+  .search-modal__empty { margin: clamp(22px, 2.6vw, 38px) 0 0; font-size: 15px; opacity: 0.7; }
+
+  .search-modal__results.is-loading { opacity: 0.5; transition: opacity 0.2s; }
+
+  @media screen and (max-width: 749px) {
+    .search-modal { --mater-gutter: 16px; }
+    .search-modal__close { width: 40px; height: 40px; }
+    .search-modal__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  /* "Reduzir movimento": sem deslizar, o painel só aparece com fade. */
+  @media (prefers-reduced-motion: reduce) {
+    .search-modal__panel {
+      opacity: 0;
+      transform: none;
+      transition: opacity 0.3s ease;
+    }
+    .search-modal.is-open .search-modal__panel { opacity: 1; transform: none; }
+    .search-modal__pills li,
+    .search-modal__result { transform: none; }
+  }
+  body.search-modal-open { overflow: hidden; }
   .header__menu-toggle {
     display: none;
     justify-self: start;
@@ -440,6 +701,138 @@
       });
     }
   })();
+
+  /* ---------- Busca em tela cheia ---------- */
+  (function () {
+    var modal = document.getElementById('SearchModal-{{ section.id }}');
+    var opener = document.querySelector('.header[data-section-id="{{ section.id }}"] [data-search-open]');
+    if (!modal || !opener) return;
+
+    var input = modal.querySelector('.search-modal__input');
+    var results = modal.querySelector('[data-search-results]');
+    var popular = modal.querySelector('[data-search-popular]');
+    var closeTimer, debounceTimer, controller;
+    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    function open(event) {
+      if (event) event.preventDefault();
+      clearTimeout(closeTimer);
+      modal.hidden = false;
+      document.body.classList.add('search-modal-open');
+      opener.setAttribute('aria-expanded', 'true');
+      // Um frame depois de tirar o hidden, para a transição rodar.
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () { modal.classList.add('is-open'); });
+      });
+      input.focus({ preventScroll: true });
+      input.select();
+      if (popular) popular.hidden = input.value.trim().length > 0;
+      if (input.value.trim()) search(input.value.trim());
+    }
+
+    function close() {
+      if (modal.hidden) return;
+      modal.classList.remove('is-open');
+      opener.setAttribute('aria-expanded', 'false');
+      document.body.classList.remove('search-modal-open');
+      closeTimer = setTimeout(function () { modal.hidden = true; }, reduced.matches ? 0 : 450);
+      opener.focus({ preventScroll: true });
+    }
+
+    function money(value) {
+      var currency = (window.Shopify && Shopify.currency && Shopify.currency.active) || 'BRL';
+      var number = Number(value);
+      if (isNaN(number)) return value;
+      try {
+        return new Intl.NumberFormat(document.documentElement.lang || 'pt-BR', { style: 'currency', currency: currency }).format(number);
+      } catch (e) {
+        return value;
+      }
+    }
+
+    function escapeHtml(text) {
+      var div = document.createElement('div');
+      div.textContent = text == null ? '' : String(text);
+      return div.innerHTML;
+    }
+
+    function render(terms, products) {
+      var searchUrl = modal.dataset.searchUrl + '?q=' + encodeURIComponent(terms) + '&options%5Bprefix%5D=last';
+      if (!products.length) {
+        results.innerHTML =
+          '<p class="search-modal__empty">' + escapeHtml(modal.dataset.strNoResults.replace('[terms]', terms)) + '</p>';
+        return;
+      }
+      var items = products.map(function (p, i) {
+        var img = p.featured_image && p.featured_image.url
+          ? '<img src="' + p.featured_image.url + (p.featured_image.url.indexOf('?') > -1 ? '&' : '?') + 'width=400" alt="" loading="lazy" width="400" height="400">'
+          : '';
+        return '<li class="search-modal__result" style="--i:' + i + '">' +
+          '<a href="' + p.url + '">' +
+          '<div class="search-modal__result-media">' + img + '</div>' +
+          '<span class="search-modal__result-title">' + escapeHtml(p.title) + '</span>' +
+          '<span class="search-modal__result-price">' + escapeHtml(money(p.price)) + '</span>' +
+          '</a></li>';
+      }).join('');
+      results.innerHTML =
+        '<div class="search-modal__results-head">' +
+          '<p class="search-modal__eyebrow">' + escapeHtml(modal.dataset.strProducts) + '</p>' +
+          '<a class="search-modal__view-all" href="' + searchUrl + '">' + escapeHtml(modal.dataset.strViewAll) + ' →</a>' +
+        '</div>' +
+        '<ul class="search-modal__grid" role="list">' + items + '</ul>';
+    }
+
+    function search(terms) {
+      if (controller) controller.abort();
+      controller = 'AbortController' in window ? new AbortController() : null;
+      results.classList.add('is-loading');
+
+      var url = modal.dataset.predictiveUrl + '.json' +
+        '?q=' + encodeURIComponent(terms) +
+        '&resources%5Btype%5D=product&resources%5Blimit%5D=4&resources%5Boptions%5D%5Bunavailable_products%5D=last';
+
+      fetch(url, { signal: controller ? controller.signal : undefined, headers: { Accept: 'application/json' } })
+        .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+        .then(function (data) {
+          if (input.value.trim() !== terms) return;
+          var products = (data.resources && data.resources.results && data.resources.results.products) || [];
+          render(terms, products);
+        })
+        .catch(function (err) {
+          if (err && err.name === 'AbortError') return;
+          results.innerHTML = '';
+        })
+        .finally(function () { results.classList.remove('is-loading'); });
+    }
+
+    input.addEventListener('input', function () {
+      var terms = input.value.trim();
+      clearTimeout(debounceTimer);
+      if (popular) popular.hidden = terms.length > 0;
+      if (!terms) {
+        if (controller) controller.abort();
+        results.innerHTML = '';
+        return;
+      }
+      debounceTimer = setTimeout(function () { search(terms); }, 250);
+    });
+
+    opener.addEventListener('click', open);
+    modal.querySelectorAll('[data-search-close]').forEach(function (el) {
+      el.addEventListener('click', close);
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') close();
+      // Mantém o Tab dentro do painel enquanto ele está aberto.
+      if (e.key === 'Tab' && !modal.hidden) {
+        var focusables = modal.querySelectorAll('input:not([type=hidden]), button:not(.visually-hidden), a[href]');
+        var first = focusables[0];
+        var last = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    });
+  })();
 </script>
 
 {% schema %}
@@ -452,6 +845,13 @@
       "id": "menu",
       "default": "main-menu",
       "label": "t:sections.header.settings.menu.label"
+    },
+    {
+      "type": "text",
+      "id": "search_suggestions",
+      "default": "São Miguel Arcanjo, Pietrelcina, Calcuta, Acútis",
+      "label": "t:sections.header.settings.search_suggestions.label",
+      "info": "t:sections.header.settings.search_suggestions.info"
     },
     {
       "type": "header",

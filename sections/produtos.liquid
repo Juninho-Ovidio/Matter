@@ -1,12 +1,12 @@
 {%- comment -%}
   ============================================================
-  PRODUTOS — cabeçalho da área de produtos da home (Mater)
+  PRODUTOS — área "Todos os produtos" da home (Mater)
   ============================================================
 
   O QUE FAZ:
   Abre a área de produtos com o título em display e uma linha de
-  apoio logo abaixo. Por enquanto é só o cabeçalho — a grade de
-  produtos ainda não entra aqui.
+  apoio, seguidos de uma grade de cards de produto e do botão
+  "Ver todos os produtos".
 
   ONDE É USADA:
   Na home (templates/index.json), logo abaixo do segundo divisor.
@@ -17,7 +17,20 @@
   - heading: o título ("Todos os produtos"), em --font-display-family.
   - subheading: o parágrafo de apoio.
   - heading_tag: escolhe entre <h1> e <h2> (veja a nota abaixo).
+  - Grade: renderiza o snippet 'card-product-compra' — foto, preço +
+    categoria, nome, descrição e os botões Adicionar / Comprar agora.
+    Selo e favoritar seguem a mesma regra do card da página de coleção.
+  - Cores: as do tema (Configurações do tema → Cores). Estilos do
+    card em assets/base.css.
+  - Quantidade de produtos = colunas × fileiras (padrão 4 × 4 = 16).
+  - collection: coleção de origem. Em branco, usa TODOS os produtos
+    da loja (collections.all).
+  - button_label: texto do botão que leva para a coleção completa.
   Qualquer um dos textos some se ficar em branco.
+
+  SEM PRODUTOS:
+  Se a coleção estiver vazia (loja nova, ambiente de dev), a grade
+  mostra cards de exemplo com placeholder, para o layout aparecer.
 
   SOBRE O NÍVEL DO TÍTULO:
   O padrão é <h2>. Na home, o <h1> da página já é a headline do hero
@@ -27,23 +40,75 @@
   for usada numa página onde ela É o título principal, troque para
   <h1> no editor.
 
+  RESPONSIVO:
+  - Desktop: as colunas do setting (padrão 4).
+  - 1000–1199px: no máximo 3 colunas (os 2 botões precisam de espaço).
+  - Abaixo de 1000px: 2 colunas (a mesma quantidade de produtos,
+    distribuída em mais fileiras); abaixo de 750px os botões empilham.
+
   OBSERVAÇÕES:
   Usa o mesmo recuo lateral (--mater-gutter) e a mesma escala
   tipográfica das outras sections, para alinhar com o hero, as
   coleções e a página de coleção.
 {%- endcomment -%}
-<div class="produtos" data-section-id="{{ section.id }}">
+{%- liquid
+  assign source = section.settings.collection
+  if source == blank
+    assign source = collections.all
+  endif
+  assign products_limit = section.settings.columns_desktop | times: section.settings.rows
+  if source.url != blank
+    assign view_all_url = source.url
+  else
+    assign view_all_url = routes.all_products_collection_url
+  endif
+-%}
+<div
+  class="produtos"
+  data-section-id="{{ section.id }}"
+  style="--grid-columns: {{ section.settings.columns_desktop }};"
+>
   <div class="produtos__inner">
-    {%- if section.settings.heading != blank -%}
-      {%- if section.settings.heading_tag == 'h1' -%}
-        <h1 class="produtos__heading">{{ section.settings.heading | escape }}</h1>
-      {%- else -%}
-        <h2 class="produtos__heading">{{ section.settings.heading | escape }}</h2>
-      {%- endif -%}
+    {%- if section.settings.heading != blank or section.settings.subheading != blank -%}
+      <div class="produtos__header">
+        {%- if section.settings.heading != blank -%}
+          {%- if section.settings.heading_tag == 'h1' -%}
+            <h1 class="produtos__heading">{{ section.settings.heading | escape }}</h1>
+          {%- else -%}
+            <h2 class="produtos__heading">{{ section.settings.heading | escape }}</h2>
+          {%- endif -%}
+        {%- endif -%}
+
+        {%- if section.settings.subheading != blank -%}
+          <p class="produtos__subheading">{{ section.settings.subheading | escape }}</p>
+        {%- endif -%}
+      </div>
     {%- endif -%}
 
-    {%- if section.settings.subheading != blank -%}
-      <p class="produtos__subheading">{{ section.settings.subheading | escape }}</p>
+    <ul class="produtos__grid" role="list">
+      {%- if source.products_count > 0 -%}
+        {%- for product in source.products limit: products_limit -%}
+          <li class="produtos__item">
+            {% render 'card-product-compra', card_product: product, id_prefix: section.id %}
+          </li>
+        {%- endfor -%}
+      {%- else -%}
+        {%- comment -%} Loja sem produtos: cards de exemplo só para o layout aparecer. {%- endcomment -%}
+        {%- for i in (1..products_limit) -%}
+          {%- assign placeholder_index = i | modulo: 6 | plus: 1 -%}
+          <li class="produtos__item">
+            {% render 'card-product-compra', placeholder_index: placeholder_index %}
+          </li>
+        {%- endfor -%}
+      {%- endif -%}
+    </ul>
+
+    {%- if section.settings.button_label != blank and source.products_count > products_limit -%}
+      <div class="produtos__footer">
+        <a href="{{ view_all_url }}" class="button button--secondary produtos__button">
+          {{- section.settings.button_label | escape -}}
+        </a>
+      </div>
     {%- endif -%}
   </div>
 </div>
@@ -54,7 +119,10 @@
     background-color: var(--color-background);
   }
   #shopify-section-{{ section.id }} .produtos__inner {
-    padding: clamp(32px, 4vw, 70px) var(--mater-gutter) clamp(20px, 2.5vw, 40px);
+    padding: clamp(32px, 4vw, 70px) var(--mater-gutter) clamp(48px, 6vw, 100px);
+  }
+  #shopify-section-{{ section.id }} .produtos__header {
+    margin-bottom: clamp(24px, 3vw, 48px);
   }
   #shopify-section-{{ section.id }} .produtos__heading {
     margin: 0;
@@ -70,6 +138,49 @@
     font-size: clamp(0.85rem, 1vw, 1.05rem);
     line-height: 1.5;
     opacity: 0.6;
+  }
+
+  /* Mesma grade da página de coleção: colunas iguais e gaps fluidos. */
+  #shopify-section-{{ section.id }} .produtos__grid {
+    display: grid;
+    grid-template-columns: repeat(var(--grid-columns, 4), minmax(0, 1fr));
+    gap: clamp(28px, 3vw, 48px) clamp(12px, 1.4vw, 22px);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  #shopify-section-{{ section.id }} .produtos__item { min-width: 0; }
+
+  #shopify-section-{{ section.id }} .produtos__footer {
+    display: flex;
+    justify-content: center;
+    margin-top: clamp(32px, 4vw, 64px);
+  }
+  #shopify-section-{{ section.id }} .produtos__button {
+    min-width: 240px;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+  }
+  #shopify-section-{{ section.id }} .produtos__button:hover {
+    opacity: 1;
+    color: var(--color-accent-text);
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+
+  /* Os dois botões lado a lado pedem ~260px de card: abaixo de 1200px
+     a grade cai para no máximo 3 colunas, e abaixo de 1000px para 2. */
+  @media screen and (max-width: 1199px) {
+    #shopify-section-{{ section.id }} .produtos__grid {
+      grid-template-columns: repeat({{ section.settings.columns_desktop | at_most: 3 }}, minmax(0, 1fr));
+    }
+  }
+  @media screen and (max-width: 999px) {
+    #shopify-section-{{ section.id }} .produtos__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
   }
 </style>
 
@@ -100,6 +211,38 @@
       "default": "h2",
       "label": "t:sections.produtos.settings.heading_tag.label",
       "info": "t:sections.produtos.settings.heading_tag.info"
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "t:sections.produtos.settings.collection.label",
+      "info": "t:sections.produtos.settings.collection.info"
+    },
+    {
+      "type": "range",
+      "id": "columns_desktop",
+      "min": 2,
+      "max": 5,
+      "step": 1,
+      "default": 4,
+      "label": "t:sections.produtos.settings.columns_desktop.label"
+    },
+    {
+      "type": "range",
+      "id": "rows",
+      "min": 1,
+      "max": 6,
+      "step": 1,
+      "default": 4,
+      "label": "t:sections.produtos.settings.rows.label",
+      "info": "t:sections.produtos.settings.rows.info"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "default": "Ver todos os produtos",
+      "label": "t:sections.produtos.settings.button_label.label",
+      "info": "t:sections.produtos.settings.button_label.info"
     }
   ],
   "presets": [

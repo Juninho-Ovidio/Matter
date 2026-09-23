@@ -5,12 +5,30 @@
       "blocks": {
         "vendor": { "type": "vendor" },
         "title": { "type": "title" },
-        "price": { "type": "price" },
+        "price": {
+          "type": "price",
+          "settings": { "installments": 0, "interest_free": false, "pix_discount": 0 }
+        },
         "variant_picker": { "type": "variant_picker" },
-        "quantity": { "type": "quantity" },
+        "provador": {
+          "type": "provador",
+          "settings": {
+            "title": "Provador virtual",
+            "subtitle": "Descubra seu tamanho ideal em 10 segundos",
+            "size_rules": "P | 155-168 | 50-63\nM | 165-176 | 60-74\nG | 172-184 | 72-86\nGG | 180-192 | 84-100\nXGG | 186-200 | 96-115"
+          }
+        },
         "buy_buttons": {
           "type": "buy_buttons",
-          "settings": { "show_dynamic_checkout": true }
+          "settings": { "show_dynamic_checkout": false }
+        },
+        "trust": {
+          "type": "trust",
+          "settings": {
+            "trust_1": "Compra 100% segura",
+            "trust_2": "Enviamos para todo o Brasil",
+            "trust_3": "Troca fácil"
+          }
         },
         "description": { "type": "description" },
         "share": { "type": "share" }
@@ -20,8 +38,9 @@
         "title",
         "price",
         "variant_picker",
-        "quantity",
+        "provador",
         "buy_buttons",
+        "trust",
         "description",
         "share"
       ]

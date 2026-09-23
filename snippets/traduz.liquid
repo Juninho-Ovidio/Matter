@@ -1,0 +1,61 @@
+{%- comment -%}
+  ============================================================
+  traduz — traduz rótulos que o Shopify gera no idioma da loja
+  ============================================================
+
+  O QUE FAZ:
+  Filtros (Search & Discovery) e opções de ordenação vêm com o
+  texto do idioma padrão da loja. Se a loja ainda está em inglês,
+  eles aparecem como "Availability", "In stock", "Featured"...
+  Este snippet devolve a versão em português; o que não estiver
+  na lista sai como veio.
+
+  COMO USAR:
+  {% render 'traduz', texto: filter.label %}
+
+  OBSERVAÇÃO:
+  O ideal é mudar o idioma padrão da loja para Português no admin
+  (Configurações → Idiomas). Aí o Shopify já entrega tudo em
+  português e este snippet simplesmente não encontra nada para trocar.
+{%- endcomment -%}
+{%- liquid
+  assign chave = texto | strip | downcase
+  case chave
+    when 'availability'
+      echo 'Disponibilidade'
+    when 'in stock'
+      echo 'Em estoque'
+    when 'out of stock'
+      echo 'Esgotado'
+    when 'price'
+      echo 'Preço'
+    when 'product type'
+      echo 'Categoria'
+    when 'vendor', 'brand'
+      echo 'Marca'
+    when 'size'
+      echo 'Tamanho'
+    when 'color', 'colour'
+      echo 'Cor'
+    when 'featured'
+      echo 'Destaques'
+    when 'best selling'
+      echo 'Mais vendidos'
+    when 'alphabetically, a-z'
+      echo 'Nome, A–Z'
+    when 'alphabetically, z-a'
+      echo 'Nome, Z–A'
+    when 'price, low to high'
+      echo 'Menor preço'
+    when 'price, high to low'
+      echo 'Maior preço'
+    when 'date, old to new'
+      echo 'Mais antigos'
+    when 'date, new to old'
+      echo 'Lançamentos'
+    when 'relevance'
+      echo 'Relevância'
+    else
+      echo texto | escape
+  endcase
+-%}

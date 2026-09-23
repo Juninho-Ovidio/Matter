@@ -160,9 +160,11 @@
     letter-spacing: 0.1em;
     text-transform: uppercase;
   }
+  /* As quebras de linha vêm do texto (4 linhas); nowrap impede quebras
+     extras, e a coluna "auto" do header fica com a largura da maior linha. */
   #shopify-section-{{ section.id }} .collection-list__side {
-    max-width: 20ch;
     margin: clamp(10px, 1.6vw, 26px) 0 0;
+    white-space: nowrap;
     font-family: var(--font-heading-family);
     font-size: clamp(0.7rem, 0.9vw, 0.95rem);
     line-height: 1.75;
@@ -258,10 +260,11 @@
   @media screen and (max-width: 999px) {
     #shopify-section-{{ section.id }} .collection-list__grid { grid-template-columns: repeat(2, 1fr); }
     #shopify-section-{{ section.id }} .collection-list__header { grid-template-columns: 1fr; }
-    #shopify-section-{{ section.id }} .collection-list__side { max-width: none; }
   }
   @media screen and (max-width: 559px) {
     #shopify-section-{{ section.id }} .collection-list__grid { grid-template-columns: 1fr; }
+    /* Em telas bem estreitas deixa quebrar para não vazar da tela. */
+    #shopify-section-{{ section.id }} .collection-list__side { white-space: normal; }
   }
 </style>
 
@@ -276,7 +279,7 @@
     {
       "type": "textarea",
       "id": "side_text",
-      "default": "Camisetas que vão além do estilo. São expressão de uma fé que veste o seu dia a dia.",
+      "default": "Camisetas que vão além\ndo estilo. São expressão\nde uma fé que veste\no seu dia a dia.",
       "label": "t:sections.collection_list.settings.side_text.label"
     },
     { "type": "range", "id": "columns_desktop", "min": 2, "max": 5, "step": 1, "default": 4, "label": "t:sections.collection_list.settings.columns_desktop.label" }
@@ -296,7 +299,7 @@
     {
       "name": "t:sections.collection_list.name",
       "blocks": [
-        { "type": "featured_collection", "settings": { "title": "Streetwear" } },
+        { "type": "featured_collection", "settings": { "title": "São Miguel Arcanjo" } },
         { "type": "featured_collection", "settings": { "title": "Pietrelcina" } },
         { "type": "featured_collection", "settings": { "title": "Calcuta" } },
         { "type": "featured_collection", "settings": { "title": "Acútis" } }

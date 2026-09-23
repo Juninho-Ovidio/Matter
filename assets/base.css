@@ -245,6 +245,168 @@ textarea.field__input {
 /* No card o desconto ja aparece no selo sobre a foto */
 .price--card .price__badge { display: none; }
 
+/* ------------------------------------------------------------
+   Card de compra (snippets/card-product-compra.liquid)
+   Foto em quadro arredondado → preço + pílula de categoria → nome
+   → descrição → [Adicionar] [Comprar agora].
+   Cores do tema: "Comprar agora" em --color-accent (preto),
+   "Adicionar" e a pílula em --color-background-contrast (branco).
+   ------------------------------------------------------------ */
+.card-compra {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.card-compra__media {
+  position: relative;
+  display: block;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: 14px;
+  background-color: var(--color-background-contrast, #fff);
+}
+.card-compra__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease, opacity 0.3s ease;
+}
+.card-compra__image--secondary { opacity: 0; }
+.card-compra:hover .card-compra__image--secondary { opacity: 1; }
+.card-compra:hover .card-compra__image { transform: scale(1.03); }
+.card-compra .placeholder-svg { fill: currentColor; opacity: 0.2; }
+
+.card-compra__info {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding-top: 18px;
+}
+.card-compra__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+.card-compra__price {
+  font-size: clamp(1.25rem, 1.7vw, 1.65rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+.card-compra__price .price__compare {
+  margin-right: 6px;
+  font-size: 0.6em;
+  font-weight: 400;
+  opacity: 0.45;
+}
+.card-compra__price .price__badge { display: none; }
+.card-compra__tag {
+  padding: 4px 11px;
+  font-size: 11px;
+  line-height: 1.4;
+  white-space: nowrap;
+  color: var(--color-text, #070707);
+  background-color: var(--color-background-contrast, #fff);
+  border-radius: 999px;
+}
+.card-compra__title {
+  margin: 16px 0 6px;
+  overflow: hidden;
+  font-family: var(--font-body-family);
+  font-size: clamp(1rem, 1.15vw, 1.15rem);
+  font-weight: 500;
+  line-height: 1.3;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.card-compra__title a { color: inherit; text-decoration: none; }
+.card-compra__title a:hover { text-decoration: underline; text-underline-offset: 3px; }
+/* 2 linhas fixas: os botões ficam na mesma altura em toda a fileira. */
+.card-compra__desc {
+  display: -webkit-box;
+  min-height: 2.9em;
+  margin: 0;
+  overflow: hidden;
+  font-size: 12.5px;
+  line-height: 1.45;
+  opacity: 0.7;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.card-compra__form { margin-top: auto; padding-top: 18px; }
+.card-compra--placeholder .card-compra__actions { margin-top: auto; padding-top: 18px; }
+.card-compra__select {
+  width: 100%;
+  min-height: 40px;
+  margin-bottom: 10px;
+  padding: 8px 34px 8px 14px;
+  font-family: var(--font-body-family);
+  font-size: 13px;
+  color: var(--color-text, #070707);
+  background-color: var(--color-background-contrast, #fff);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='m4 6 4 4 4-4' stroke='%23070707' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  border: 1px solid var(--color-border, #c9c9c6);
+  border-radius: 10px;
+  appearance: none;
+  cursor: pointer;
+}
+.card-compra__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.card-compra__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 10px 12px;
+  font-family: var(--font-body-family);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease, opacity 0.15s ease;
+}
+.card-compra__btn--secondary {
+  color: var(--color-text, #070707);
+  background-color: var(--color-background-contrast, #fff);
+  box-shadow: inset 0 0 0 1px var(--color-border, #c9c9c6);
+}
+.card-compra__btn--primary {
+  color: var(--color-accent-text, #fff);
+  background-color: var(--color-accent, #070707);
+}
+.card-compra__btn:hover { transform: translateY(-1px); }
+/* "Adicionar" inverte para o preto do tema no hover; "Comprar agora" clareia. */
+.card-compra__btn--secondary:hover {
+  color: var(--color-accent-text, #fff);
+  background-color: var(--color-accent, #070707);
+  box-shadow: none;
+}
+.card-compra__btn--primary:hover { opacity: 0.85; }
+.card-compra__btn:active { transform: translateY(0); }
+.card-compra__btn[aria-busy='true'] { opacity: 0.6; pointer-events: none; }
+.card-compra__btn:disabled { opacity: 0.45; cursor: not-allowed; filter: none; transform: none; }
+
+@media screen and (max-width: 749px) {
+  .card-compra__info { padding-top: 14px; }
+  .card-compra__title { margin-top: 12px; }
+  .card-compra__actions { grid-template-columns: 1fr; gap: 8px; }
+  .card-compra__btn { min-height: 42px; font-size: 13px; }
+}
+
 /* Rich text content (RTE) shared styles */
 .rte a { color: var(--color-accent); }
 .rte img { max-width: 100%; height: auto; border-radius: var(--media-radius); }

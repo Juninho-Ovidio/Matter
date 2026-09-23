@@ -20,7 +20,13 @@
       "results_with_count": "{{ count }} result for \"{{ terms }}\"",
       "results_with_count_plural": "{{ count }} results for \"{{ terms }}\"",
       "no_results": "No results found for \"{{ terms }}\". Check the spelling or use a different word or phrase.",
-      "reset": "Clear search term"
+      "reset": "Clear search term",
+      "modal_placeholder": "O que você procura?",
+      "popular": "// Buscas populares",
+      "products_heading": "// Produtos",
+      "view_all": "Ver todos os resultados",
+      "no_results_short": "Nenhum produto encontrado para “[terms]”.",
+      "close": "Fechar busca"
     },
     "pagination": {
       "label": "Pagination",
@@ -72,6 +78,8 @@
   "products": {
     "product": {
       "add_to_cart": "Adicionar ao carrinho",
+      "add_short": "Adicionar",
+      "buy_now": "Comprar agora",
       "sold_out": "Esgotado",
       "unavailable": "Indisponível",
       "on_sale": "Desconto",
@@ -118,17 +126,18 @@
       "choose_product_options": "Choose options for {{ product_name }}"
     },
     "facets": {
-      "sort_by_label": "Sort by:",
-      "filter_by_label": "Filter:",
-      "filter_button": "Filter",
-      "clear": "Clear",
-      "clear_all": "Remove all",
-      "apply": "Apply",
-      "reset": "Reset",
-      "from": "From",
-      "to": "To",
-      "product_count": "{{ product_count }} of {{ count }} products",
-      "product_count_simple": "{{ count }} products"
+      "sort_by_label": "Ordenar por:",
+      "filter_by_label": "Filtrar:",
+      "filter_button": "Filtrar",
+      "clear": "Remover filtro",
+      "clear_all": "Limpar filtros",
+      "apply": "Aplicar",
+      "reset": "Limpar",
+      "from": "De",
+      "to": "Até",
+      "product_count": "{{ product_count }} de {{ count }} produtos",
+      "product_count_simple": "{{ count }} produtos",
+      "product_count_one": "1 produto"
     }
   },
   "templates": {
@@ -166,9 +175,10 @@
   },
   "sections": {
     "main_collection": {
-      "empty": "No products found",
-      "use_fewer_filters": "Use fewer filters or remove all",
-      "show_more": "Mostrar mais"
+      "empty": "Nenhum produto encontrado",
+      "use_fewer_filters": "Use menos filtros ou limpe todos",
+      "show_more": "Mostrar mais",
+      "all_title": "Todos os produtos"
     },
     "header": {
       "announcement": "Announcement",

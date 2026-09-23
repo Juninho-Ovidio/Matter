@@ -24,8 +24,19 @@
     numéricos. Preserva o sort ativo via input hidden.
   - Filtros de cor ganham um disco colorido antes do rótulo, a
     partir do nome do valor (veja SWATCHES abaixo).
-  - Grade: product-grid renderizando o snippet 'card-product',
-    seguida do snippet 'pagination' e do link "mostrar mais".
+  - Faixa de confiança (trust_1..3, some se ficar em branco) entre o
+    cabeçalho e a grade — confirme que os textos batem com a loja.
+  - Chips dos filtros ativos acima da grade, cada um remove o filtro.
+  - Grade: product-grid renderizando o snippet 'card-product-compra'
+    (o mesmo card da home, com Adicionar / Comprar agora), seguida do
+    snippet 'pagination' e do link "mostrar mais". 4 colunas só a
+    partir de 1400px; abaixo disso 3, e 2 abaixo de 1000px.
+  - Mobile (<1000px): com JS a sidebar recolhe atrás do botão
+    "Filtrar (n)"; sem JS ela continua aberta acima da grade.
+  - Rótulos de filtro e de ordenação passam pelo snippet 'traduz'
+    (a loja em inglês entrega "Availability", "Featured"...).
+  - A coleção "all" ganha o título "Todos os produtos" em vez do
+    "Products" padrão do Shopify.
   - Estado vazio (collection__empty) quando não há produtos.
 
   FILTROS SÃO CONFIGURADOS NO ADMIN:
@@ -54,6 +65,25 @@
   assign swatch_hexes = '#070707,#ffffff,#d9c9a8,#9a9a97,#1c4ed8,#15803d,#b91c1c,#eab308,#ec4899,#7c3aed,#ea580c,#78350f,#f3efe7,#efe6d2' | split: ','
 -%}
 
+{%- liquid
+  # A coleção automática "all" vem do Shopify com o nome "Products".
+  assign collection_title = collection.title
+  if collection.handle == 'all'
+    assign collection_title = 'sections.main_collection.all_title' | t
+  endif
+
+  # Quantos filtros estão ativos (para o botão "Filtrar (n)" e os chips).
+  assign active_count = 0
+  for filter in collection.filters
+    assign active_count = active_count | plus: filter.active_values.size
+    if filter.type == 'price_range'
+      if filter.min_value.value or filter.max_value.value
+        assign active_count = active_count | plus: 1
+      endif
+    endif
+  endfor
+-%}
+
 {%- paginate collection.products by section.settings.products_per_page -%}
   <div
     class="collection"
@@ -66,10 +96,10 @@
           <nav class="collection__breadcrumb" aria-label="{{ 'general.breadcrumbs.home' | t }}">
             <a href="{{ routes.root_url }}">{{ 'general.breadcrumbs.home' | t }}</a>
             <span aria-hidden="true">/</span>
-            <span aria-current="page">{{ collection.title | escape }}</span>
+            <span aria-current="page">{{ collection_title | escape }}</span>
           </nav>
 
-          <h1 class="collection__title">{{ collection.title | escape }}</h1>
+          <h1 class="collection__title">{{ collection_title | escape }}</h1>
 
           {%- if section.settings.subheading != blank -%}
             <p class="collection__subtitle">{{ section.settings.subheading | escape }}</p>
@@ -77,8 +107,25 @@
         </div>
 
         <div class="collection__tools">
+          {%- if section.settings.enable_filtering and collection.filters.size > 0 -%}
+            <button
+              type="button"
+              class="collection__filter-toggle"
+              aria-controls="CollectionSidebar-{{ section.id }}"
+              aria-expanded="false"
+              hidden
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              {{ 'products.facets.filter_button' | t }}
+              {%- if active_count > 0 %} <span class="collection__filter-count">{{ active_count }}</span>{% endif -%}
+            </button>
+          {%- endif -%}
           <span class="collection__count">
-            {{- 'products.facets.product_count_simple' | t: count: collection.products_count -}}
+            {%- if collection.products_count == 1 -%}
+              {{- 'products.facets.product_count_one' | t -}}
+            {%- else -%}
+              {{- 'products.facets.product_count_simple' | t: count: collection.products_count -}}
+            {%- endif -%}
           </span>
 
           {%- if section.settings.enable_sorting -%}
@@ -119,7 +166,7 @@
               >
                 {%- for option in collection.sort_options -%}
                   <option value="{{ option.value }}" {% if option.value == collection.sort_by %}selected{% endif %}>
-                    {{ option.name }}
+                    {% render 'traduz', texto: option.name %}
                   </option>
                 {%- endfor -%}
               </select>
@@ -131,9 +178,33 @@
         </div>
       </div>
 
+      {%- comment -%} Faixa de confiança: tira objeções antes da grade. {%- endcomment -%}
+      {%- if section.settings.trust_1 != blank or section.settings.trust_2 != blank or section.settings.trust_3 != blank -%}
+        <ul class="collection__trust" role="list">
+          {%- if section.settings.trust_1 != blank -%}
+            <li class="collection__trust-item">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6l-8-3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="m8.5 12 2.5 2.5 4.5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>{{ section.settings.trust_1 | escape }}</span>
+            </li>
+          {%- endif -%}
+          {%- if section.settings.trust_2 != blank -%}
+            <li class="collection__trust-item">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M3 10h18M7 15h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <span>{{ section.settings.trust_2 | escape }}</span>
+            </li>
+          {%- endif -%}
+          {%- if section.settings.trust_3 != blank -%}
+            <li class="collection__trust-item">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="7" cy="17.5" r="1.8" stroke="currentColor" stroke-width="1.6"/><circle cx="17" cy="17.5" r="1.8" stroke="currentColor" stroke-width="1.6"/></svg>
+              <span>{{ section.settings.trust_3 | escape }}</span>
+            </li>
+          {%- endif -%}
+        </ul>
+      {%- endif -%}
+
       <div class="collection__layout">
         {%- if section.settings.enable_filtering and collection.filters.size > 0 -%}
-          <aside class="collection__sidebar">
+          <aside class="collection__sidebar" id="CollectionSidebar-{{ section.id }}">
             <form method="get" class="collection__filters" id="CollectionFilters-{{ section.id }}">
               {%- if collection.sort_by != blank -%}
                 <input type="hidden" name="sort_by" value="{{ collection.sort_by }}">
@@ -148,7 +219,7 @@
 
                 <details class="collection__filter" open>
                   <summary class="collection__filter-summary">
-                    <span>{{ filter.label | escape }}</span>
+                    <span>{% render 'traduz', texto: filter.label %}</span>
                     <span class="collection__filter-chevron" aria-hidden="true">
                       {% render 'icon', name: 'chevron' %}
                     </span>
@@ -186,7 +257,8 @@
                                     ></span>
                                   {%- endif -%}
                                 {%- endif -%}
-                                <span class="collection__check-label">{{ value.label | escape }}</span>
+                                <span class="collection__check-label">{% render 'traduz', texto: value.label %}</span>
+                                <span class="collection__check-count">{{ value.count }}</span>
                               </label>
                             </li>
                           {%- endfor -%}
@@ -248,6 +320,39 @@
         {%- endif -%}
 
         <div class="collection__main">
+          {%- comment -%} Chips dos filtros ativos: um clique remove o filtro. {%- endcomment -%}
+          {%- if active_count > 0 -%}
+            <ul class="collection__active" role="list">
+              {%- for filter in collection.filters -%}
+                {%- for value in filter.active_values -%}
+                  <li>
+                    <a class="collection__chip" href="{{ value.url_to_remove }}">
+                      {% render 'traduz', texto: value.label %}
+                      {% render 'icon', name: 'close' %}
+                      <span class="visually-hidden">{{ 'products.facets.clear' | t }}</span>
+                    </a>
+                  </li>
+                {%- endfor -%}
+                {%- if filter.type == 'price_range' -%}
+                  {%- if filter.min_value.value or filter.max_value.value -%}
+                    <li>
+                      <a class="collection__chip" href="{{ filter.url_to_remove }}">
+                        {{- filter.min_value.value | default: 0 | money }} – {{ filter.max_value.value | default: filter.range_max | money -}}
+                        {% render 'icon', name: 'close' %}
+                        <span class="visually-hidden">{{ 'products.facets.clear' | t }}</span>
+                      </a>
+                    </li>
+                  {%- endif -%}
+                {%- endif -%}
+              {%- endfor -%}
+              <li>
+                <a class="collection__chip collection__chip--clear" href="{{ collection.url }}{% if collection.sort_by != blank %}?sort_by={{ collection.sort_by }}{% endif %}">
+                  {{- 'products.facets.clear_all' | t -}}
+                </a>
+              </li>
+            </ul>
+          {%- endif -%}
+
           {%- if collection.products.size == 0 -%}
             <div class="collection__empty">
               <p>{{ 'sections.main_collection.empty' | t }}</p>
@@ -259,7 +364,7 @@
             <ul class="product-grid" role="list">
               {%- for product in collection.products -%}
                 <li class="product-grid__item">
-                  {% render 'card-product', card_product: product %}
+                  {% render 'card-product-compra', card_product: product, id_prefix: section.id %}
                 </li>
               {%- endfor -%}
             </ul>
@@ -464,6 +569,113 @@
     padding: 0;
   }
 
+  /* Grade com o card de compra: 4 colunas só onde os 2 botões cabem. */
+  @media screen and (max-width: 1399px) {
+    #shopify-section-{{ section.id }} .product-grid {
+      grid-template-columns: repeat({{ section.settings.columns_desktop | at_most: 3 }}, minmax(0, 1fr));
+    }
+  }
+  #shopify-section-{{ section.id }} .product-grid { row-gap: clamp(30px, 3vw, 48px); }
+  #shopify-section-{{ section.id }} .product-grid__item { min-width: 0; }
+
+  /* Faixa de confiança */
+  #shopify-section-{{ section.id }} .collection__trust {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 28px;
+    margin: 0 0 clamp(22px, 2.4vw, 36px);
+    padding: 14px 18px;
+    list-style: none;
+    background-color: var(--color-background-contrast);
+  }
+  #shopify-section-{{ section.id }} .collection__trust-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-heading-family);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  #shopify-section-{{ section.id }} .collection__trust-item svg { flex: none; }
+
+  /* Sidebar acompanha a rolagem no desktop. */
+  @media screen and (min-width: 1000px) {
+    #shopify-section-{{ section.id }} .collection__sidebar {
+      position: sticky;
+      top: 24px;
+      max-height: calc(100vh - 48px);
+      overflow-y: auto;
+    }
+  }
+  #shopify-section-{{ section.id }} .collection__check-count {
+    margin-left: auto;
+    font-size: 11px;
+    opacity: 0.45;
+  }
+
+  /* Chips dos filtros ativos */
+  #shopify-section-{{ section.id }} .collection__active {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 clamp(16px, 1.8vw, 26px);
+    padding: 0;
+    list-style: none;
+  }
+  #shopify-section-{{ section.id }} .collection__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 34px;
+    padding: 6px 14px;
+    font-size: 12px;
+    color: var(--color-accent-text);
+    text-decoration: none;
+    background-color: var(--color-accent);
+    border-radius: 999px;
+    transition: opacity 0.15s ease;
+  }
+  #shopify-section-{{ section.id }} .collection__chip:hover { opacity: 0.8; }
+  #shopify-section-{{ section.id }} .collection__chip svg { width: 10px; height: 10px; }
+  #shopify-section-{{ section.id }} .collection__chip--clear {
+    color: var(--color-text);
+    background: none;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  /* Botão "Filtrar" (só no mobile, e só com JS — sem JS a sidebar fica sempre aberta). */
+  #shopify-section-{{ section.id }} .collection__filter-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 8px 16px;
+    font-family: var(--font-heading-family);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-text);
+    background-color: var(--color-background-contrast);
+    border: 1px solid var(--color-border);
+    cursor: pointer;
+  }
+  #shopify-section-{{ section.id }} .collection__filter-toggle[hidden] { display: none; }
+  #shopify-section-{{ section.id }} .collection__filter-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    font-size: 11px;
+    letter-spacing: 0;
+    color: var(--color-accent-text);
+    background-color: var(--color-accent);
+    border-radius: 10px;
+  }
+
   #shopify-section-{{ section.id }} .collection__empty { padding: 60px 0; text-align: center; font-size: var(--f3); }
   #shopify-section-{{ section.id }} .collection__empty .button { margin-top: 20px; }
 
@@ -523,8 +735,43 @@
     #shopify-section-{{ section.id }} .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     #shopify-section-{{ section.id }} .collection__footer { flex-direction: column; gap: 18px; }
     #shopify-section-{{ section.id }} .collection__more { position: static; }
+
+    /* Com JS a sidebar vira um painel recolhível aberto pelo botão "Filtrar". */
+    #shopify-section-{{ section.id }} .collection.is-enhanced .collection__sidebar { display: none; }
+    #shopify-section-{{ section.id }} .collection.is-enhanced.is-filters-open .collection__sidebar { display: block; }
+    #shopify-section-{{ section.id }} .collection__tools { flex-wrap: wrap; }
+    #shopify-section-{{ section.id }} .collection__sort { flex: 1; }
+    #shopify-section-{{ section.id }} .collection__sort-select { width: 100%; min-width: 0; }
+  }
+  @media screen and (min-width: 1000px) {
+    #shopify-section-{{ section.id }} .collection__filter-toggle { display: none !important; }
+  }
+  @media screen and (max-width: 749px) {
+    #shopify-section-{{ section.id }} .collection__trust {
+      flex-direction: column;
+      gap: 8px;
+      padding: 12px 14px;
+    }
   }
 </style>
+
+<script>
+  (function () {
+    var root = document.querySelector('#shopify-section-{{ section.id }} .collection');
+    if (!root) return;
+    var toggle = root.querySelector('.collection__filter-toggle');
+    var sidebar = document.getElementById('CollectionSidebar-{{ section.id }}');
+    if (!toggle || !sidebar) return;
+
+    root.classList.add('is-enhanced');
+    toggle.hidden = false;
+    toggle.addEventListener('click', function () {
+      var open = root.classList.toggle('is-filters-open');
+      toggle.setAttribute('aria-expanded', String(open));
+      if (open) sidebar.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  })();
+</script>
 
 {% schema %}
 {
@@ -567,6 +814,29 @@
       "id": "enable_filtering",
       "default": true,
       "label": "t:sections.main_collection.settings.enable_filtering.label"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.main_collection.settings.header_trust.content",
+      "info": "t:sections.main_collection.settings.header_trust.info"
+    },
+    {
+      "type": "text",
+      "id": "trust_1",
+      "default": "Compra 100% segura",
+      "label": "t:sections.main_collection.settings.trust_1.label"
+    },
+    {
+      "type": "text",
+      "id": "trust_2",
+      "default": "Pix e cartão de crédito",
+      "label": "t:sections.main_collection.settings.trust_2.label"
+    },
+    {
+      "type": "text",
+      "id": "trust_3",
+      "default": "Enviamos para todo o Brasil",
+      "label": "t:sections.main_collection.settings.trust_3.label"
     }
   ]
 }

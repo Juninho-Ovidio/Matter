@@ -3,6 +3,7 @@
     "hero": {
       "type": "hero-inicio",
       "settings": {
+        "interval": 4,
         "heading": "Santidade\nem estilo",
         "eyebrow": "// Streetwear",
         "quote": "\"Ninguém te despreze por seres jovem.\nAo contrário, torna-te modelo para os\nfiéis, no modo de falar e de viver,\nna caridade, na fé, na castidade.\nEnquanto eu não chegar, aplica-te\nà leitura, à exortação, ao ensino.\"",
@@ -18,7 +19,7 @@
     "colecoes": {
       "type": "collection-list",
       "blocks": {
-        "b1": { "type": "featured_collection", "settings": { "title": "Streetwear" } },
+        "b1": { "type": "featured_collection", "settings": { "title": "São Miguel Arcanjo" } },
         "b2": { "type": "featured_collection", "settings": { "title": "Pietrelcina" } },
         "b3": { "type": "featured_collection", "settings": { "title": "Calcuta" } },
         "b4": { "type": "featured_collection", "settings": { "title": "Acútis" } }
@@ -28,7 +29,7 @@
         "eyebrow": "// Coleções",
         "heading": "Nossas coleções",
         "subheading": "Estilo, fé e propósito em cada detalhe.",
-        "side_text": "Camisetas que vão além do estilo. São expressão de uma fé que veste o seu dia a dia.",
+        "side_text": "Camisetas que vão além\ndo estilo. São expressão\nde uma fé que veste\no seu dia a dia.",
         "columns_desktop": 4
       }
     },
@@ -41,7 +42,10 @@
       "settings": {
         "heading": "Todos os produtos",
         "subheading": "Vista sua fé e leve o que te inspira.",
-        "heading_tag": "h2"
+        "heading_tag": "h2",
+        "columns_desktop": 4,
+        "rows": 4,
+        "button_label": "Ver todos os produtos"
       }
     }
   },

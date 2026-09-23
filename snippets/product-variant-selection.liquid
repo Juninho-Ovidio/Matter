@@ -1,117 +1,96 @@
 {%- comment -%}
   ============================================================
-  product-variant-selection — seleção de variante (client-side)
+  product-variant-selection — interatividade da página de produto
   ============================================================
 
   O QUE FAZ:
-  Script que controla a seleção de variante na página de produto, sem
-  depender de app: atualiza o id da variante (input hidden), o preço
-  (HTML pré-renderizado por variante), o estado do botão "adicionar ao
-  carrinho", troca a mídia em destaque e mantém ?variant na URL.
-  Também controla os botões +/- do seletor de quantidade.
+  - Variantes: ao trocar COR / TAMANHO atualiza o id da variante,
+    a legenda ("Cor: Preto"), os valores riscados (esgotados para a
+    combinação), preço, parcelas, Pix, aviso de estoque baixo, os
+    botões (principal e barra fixa), a foto da galeria e ?variant na URL.
+  - Galeria: trilho com scroll-snap; miniaturas, setas e contador
+    acompanham a foto visível.
+  - Provador virtual: <dialog> com altura, peso e caimento; cruza
+    com as regras "TAM | alt-min-alt-max | peso-min-peso-max" do
+    block provador e recomenda/seleciona o tamanho. As medidas ficam
+    no localStorage para o cliente não digitar de novo.
+  - Barra fixa: aparece quando os botões principais saem da tela
+    por cima (o cliente rolou para baixo).
+  - Quantidade: botões +/-.
 
   COMO USAR:
   {% render 'product-variant-selection', section_id: section.id, product_form_id: product_form_id %}
 
-  PARÂMETROS:
-  - section_id: id da section (para achar [data-section-id] e a galeria).
-  - product_form_id: id do <form> de compra do produto.
-
   OBSERVAÇÕES:
-  Depende de marcações no HTML da section: [data-variant-json] com o JSON
-  das variantes, .product__option com radios, .product-variant-id,
-  .product__add-to-cart, .product__price e a galeria #ProductMedia-{section_id}.
+  Depende da marcação de sections/main-product.liquid.
 {%- endcomment -%}
 <script>
   (function () {
-    var section = document.querySelector('[data-section-id="{{ section_id }}"]');
+    var section = document.querySelector('.product[data-section-id="{{ section_id }}"]');
     if (!section) return;
     var form = document.getElementById('{{ product_form_id }}');
-    var jsonEl = section.querySelector('[data-variant-json]');
-    if (!form || !jsonEl) return;
+    var sticky = document.querySelector('[data-product-sticky]');
 
-    var variants;
-    try { variants = JSON.parse(jsonEl.textContent); } catch (e) { return; }
+    var ADD = {{ 'products.product.add_to_cart' | t | json }};
+    var SOLD_OUT = {{ 'products.product.sold_out' | t | json }};
+    var UNAVAILABLE = {{ 'products.product.unavailable' | t | json }};
 
-    var idInput = form.querySelector('.product-variant-id');
-    var addButton = form.querySelector('.product__add-to-cart');
-    var addButtonText = addButton ? addButton.querySelector('span') : null;
-    var priceContainer = section.querySelector('.product__price');
-    var gallery = document.getElementById('ProductMedia-{{ section_id }}');
-
-    var ADD = '{{ 'products.product.add_to_cart' | t }}';
-    var SOLD_OUT = '{{ 'products.product.sold_out' | t }}';
-    var UNAVAILABLE = '{{ 'products.product.unavailable' | t }}';
-
-    function selectedOptions() {
-      var opts = [];
-      section.querySelectorAll('.product__option').forEach(function (fieldset) {
-        var checked = fieldset.querySelector('input[type="radio"]:checked');
-        if (checked) opts.push(checked.value);
-      });
-      return opts;
-    }
-
-    function findVariant(opts) {
-      return variants.find(function (v) {
-        return v.options.length === opts.length && v.options.every(function (o, i) { return o === opts[i]; });
-      });
-    }
-
-    function setButton(disabled, text) {
-      if (!addButton) return;
-      if (disabled) { addButton.setAttribute('disabled', 'disabled'); }
-      else { addButton.removeAttribute('disabled'); }
-      if (addButtonText && text) { addButtonText.textContent = text; }
-    }
-
-    function updateUI() {
-      var variant = findVariant(selectedOptions());
-
-      if (!variant) {
-        setButton(true, UNAVAILABLE);
-        if (idInput) { idInput.setAttribute('disabled', 'disabled'); }
-        return;
+    function money(cents) {
+      var currency = (window.Shopify && Shopify.currency && Shopify.currency.active) || 'BRL';
+      try {
+        return new Intl.NumberFormat(document.documentElement.lang || 'pt-BR', { style: 'currency', currency: currency }).format(cents / 100);
+      } catch (e) {
+        return (cents / 100).toFixed(2);
       }
+    }
 
-      if (idInput) { idInput.value = variant.id; idInput.removeAttribute('disabled'); }
-      setButton(!variant.available, variant.available ? ADD : SOLD_OUT);
+    /* ---------------- Galeria ---------------- */
+    var track = document.getElementById('ProductMedia-{{ section_id }}');
+    var thumbs = section.querySelectorAll('[data-thumb-index]');
+    var counter = section.querySelector('[data-gallery-current]');
+    var slides = track ? track.querySelectorAll('.product__media-item') : [];
 
-      // Replace the whole price block with the store-formatted HTML for this variant.
-      if (priceContainer && variant.price_html) {
-        var existing = priceContainer.querySelector('.price');
-        if (existing) {
-          var tmp = document.createElement('div');
-          tmp.innerHTML = variant.price_html;
-          var fresh = tmp.querySelector('.price');
-          if (fresh) { existing.replaceWith(fresh); }
+    function goTo(index, smooth) {
+      if (!track || !slides[index]) return;
+      track.scrollTo({ left: slides[index].offsetLeft - track.offsetLeft, behavior: smooth === false ? 'auto' : 'smooth' });
+    }
+    function currentIndex() {
+      if (!track || !track.clientWidth) return 0;
+      return Math.round(track.scrollLeft / track.clientWidth);
+    }
+    function syncGallery() {
+      var i = currentIndex();
+      thumbs.forEach(function (t, n) { t.classList.toggle('is-active', n === i); });
+      if (counter) counter.textContent = i + 1;
+      var active = thumbs[i];
+      if (active && active.parentElement) {
+        var p = active.parentElement;
+        var left = active.offsetLeft - p.offsetLeft;
+        if (left < p.scrollLeft || left + active.offsetWidth > p.scrollLeft + p.clientWidth) {
+          p.scrollTo({ left: left - 8, behavior: 'smooth' });
         }
       }
-
-      // Swap the featured media to the one tied to this variant.
-      if (gallery && variant.featured_media_id) {
-        var target = gallery.querySelector('[data-media-id="' + variant.featured_media_id + '"]');
-        if (target) { target.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
-      }
-
-      // Keep the URL shareable.
-      if (window.history && history.replaceState) {
-        var url = new URL(window.location.href);
-        url.searchParams.set('variant', variant.id);
-        history.replaceState({}, '', url.toString());
-      }
+    }
+    if (track) {
+      var raf;
+      track.addEventListener('scroll', function () {
+        cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(syncGallery);
+      }, { passive: true });
+      thumbs.forEach(function (t) {
+        t.addEventListener('click', function () { goTo(Number(t.dataset.thumbIndex)); });
+      });
+      var prev = section.querySelector('[data-gallery-prev]');
+      var next = section.querySelector('[data-gallery-next]');
+      if (prev) prev.addEventListener('click', function () { goTo(Math.max(0, currentIndex() - 1)); });
+      if (next) next.addEventListener('click', function () { goTo(Math.min(slides.length - 1, currentIndex() + 1)); });
+      track.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowRight') { e.preventDefault(); goTo(Math.min(slides.length - 1, currentIndex() + 1)); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(Math.max(0, currentIndex() - 1)); }
+      });
     }
 
-    section.querySelectorAll('.product__option input[type="radio"]').forEach(function (input) {
-      input.addEventListener('change', function () {
-        var option = input.closest('.product__option');
-        option.querySelectorAll('.product__swatch').forEach(function (l) { l.classList.remove('is-selected'); });
-        var label = input.closest('.product__swatch');
-        if (label) label.classList.add('is-selected');
-        updateUI();
-      });
-    });
-
+    /* ---------------- Quantidade ---------------- */
     section.querySelectorAll('.quantity-selector').forEach(function (sel) {
       var input = sel.querySelector('.quantity__input');
       var plus = sel.querySelector('[name="plus"]');
@@ -119,5 +98,274 @@
       if (plus) plus.addEventListener('click', function () { input.value = parseInt(input.value || '1', 10) + 1; });
       if (minus) minus.addEventListener('click', function () { input.value = Math.max(1, parseInt(input.value || '1', 10) - 1); });
     });
+
+    /* ---------------- Variantes ---------------- */
+    var jsonEl = section.querySelector('[data-variant-json]');
+    var variants = [];
+    try { variants = JSON.parse(jsonEl.textContent); } catch (e) {}
+
+    var idInput = form && form.querySelector('.product-variant-id');
+    var fieldsets = section.querySelectorAll('.product__option');
+    var priceBox = section.querySelector('.product__price');
+    var stockEl = section.querySelector('[data-stock]');
+    var cartButtons = document.querySelectorAll('.product__add-to-cart, .product-sticky__button');
+    var buyButton = section.querySelector('[data-buy-now]');
+
+    function selectedOptions() {
+      var opts = [];
+      fieldsets.forEach(function (fs) {
+        var checked = fs.querySelector('input[type="radio"]:checked');
+        opts.push(checked ? checked.value : null);
+      });
+      return opts;
+    }
+
+    function findVariant(opts) {
+      return variants.find(function (v) {
+        return v.options.every(function (o, i) { return o === opts[i]; });
+      });
+    }
+
+    // Risca o valor quando NÃO existe variante disponível com ele + as outras escolhas atuais.
+    function refreshAvailability(opts) {
+      fieldsets.forEach(function (fs, index) {
+        fs.querySelectorAll('input[type="radio"]').forEach(function (input) {
+          var candidate = opts.slice();
+          candidate[index] = input.value;
+          var ok = variants.some(function (v) {
+            return v.available && v.options.every(function (o, i) { return o === candidate[i]; });
+          });
+          input.closest('.product__swatch').classList.toggle('is-unavailable', !ok);
+        });
+      });
+    }
+
+    function setButtons(variant) {
+      var available = variant && variant.available;
+      var label = !variant ? UNAVAILABLE : (available ? ADD : SOLD_OUT);
+      cartButtons.forEach(function (b) {
+        b.disabled = !available;
+        var span = b.querySelector('span');
+        if (span) span.textContent = label;
+      });
+      if (buyButton) buyButton.disabled = !available;
+    }
+
+    function updatePrice(variant) {
+      if (!priceBox || !variant) return;
+      var existing = priceBox.querySelector('.price');
+      if (existing && variant.price_html) {
+        var tmp = document.createElement('div');
+        tmp.innerHTML = variant.price_html;
+        var fresh = tmp.querySelector('.price');
+        if (fresh) existing.replaceWith(fresh);
+      }
+      var n = Number(priceBox.dataset.installments);
+      var inst = priceBox.querySelector('[data-installments-text] strong');
+      if (inst && n > 1) inst.textContent = n + 'x de ' + money(Math.floor(variant.price / n));
+      var pix = Number(priceBox.dataset.pix);
+      var pixEl = priceBox.querySelector('[data-pix-text] strong');
+      if (pixEl && pix > 0) pixEl.textContent = money(Math.floor(variant.price * (100 - pix) / 100));
+    }
+
+    function updateStock(variant) {
+      if (!stockEl) return;
+      var limit = Number(stockEl.dataset.threshold) || 5;
+      var s = variant && variant.stock;
+      var show = variant && variant.available && typeof s === 'number' && s > 0 && s <= limit;
+      stockEl.hidden = !show;
+      if (show) stockEl.querySelector('[data-stock-text]').textContent = s === 1 ? 'Última unidade!' : 'Últimas ' + s + ' unidades';
+    }
+
+    function updateSticky(variant) {
+      if (!sticky || !variant) return;
+      var v = sticky.querySelector('[data-sticky-variant]');
+      var p = sticky.querySelector('[data-sticky-price]');
+      if (v) v.textContent = variant.options.filter(function (o) { return o !== 'Default Title'; }).join(' / ');
+      if (p) p.textContent = money(variant.price);
+    }
+
+    function updateMedia(variant) {
+      if (!variant || !variant.featured_media_id || !track) return;
+      var target = track.querySelector('[data-media-id="' + variant.featured_media_id + '"]');
+      if (target) goTo(Number(target.dataset.index));
+    }
+
+    function onChange(changedFieldset) {
+      var opts = selectedOptions();
+      var variant = findVariant(opts);
+
+      // Se a combinação não existe (ex.: trocou a cor e o tamanho não tem nela),
+      // ajusta as outras opções para a primeira variante disponível com a nova escolha.
+      if (!variant && changedFieldset) {
+        var idx = Number(changedFieldset.dataset.optionIndex);
+        var fallback = variants.find(function (v) { return v.available && v.options[idx] === opts[idx]; }) ||
+          variants.find(function (v) { return v.options[idx] === opts[idx]; });
+        if (fallback) {
+          fieldsets.forEach(function (fs, i) {
+            var input = fs.querySelector('input[value="' + CSS.escape(fallback.options[i]) + '"]');
+            if (input) input.checked = true;
+          });
+          opts = selectedOptions();
+          variant = fallback;
+        }
+      }
+
+      fieldsets.forEach(function (fs) {
+        var checked = fs.querySelector('input[type="radio"]:checked');
+        fs.querySelectorAll('.product__swatch').forEach(function (l) {
+          l.classList.toggle('is-selected', l.contains(checked));
+        });
+        var label = fs.querySelector('[data-selected-value]');
+        if (label && checked) label.textContent = checked.value;
+      });
+
+      refreshAvailability(opts);
+      setButtons(variant);
+
+      if (!variant) {
+        if (idInput) idInput.disabled = true;
+        return;
+      }
+      if (idInput) { idInput.value = variant.id; idInput.disabled = !variant.available; }
+      updatePrice(variant);
+      updateStock(variant);
+      updateSticky(variant);
+      if (changedFieldset && changedFieldset.classList.contains('product__option--color')) updateMedia(variant);
+
+      if (window.history && history.replaceState) {
+        var url = new URL(window.location.href);
+        url.searchParams.set('variant', variant.id);
+        history.replaceState({}, '', url.toString());
+      }
+    }
+
+    fieldsets.forEach(function (fs) {
+      fs.addEventListener('change', function () { onChange(fs); });
+    });
+    if (fieldsets.length) refreshAvailability(selectedOptions());
+
+    /* ---------------- Provador virtual ---------------- */
+    var dialog = section.querySelector('[data-provador]');
+    if (dialog) {
+      var STORE_KEY = 'mater-provador';
+      var heightIn = dialog.querySelector('[data-provador-height]');
+      var weightIn = dialog.querySelector('[data-provador-weight]');
+      var result = dialog.querySelector('[data-provador-result]');
+      var sizeOut = dialog.querySelector('[data-provador-size]');
+      var noteOut = dialog.querySelector('[data-provador-note]');
+      var applyBtn = dialog.querySelector('[data-provador-apply]');
+      var sizeFieldset = section.querySelector('.product__option--size');
+      var recommended = null;
+
+      // "P | 155-168 | 50-63" → { size, hMin, hMax, wMin, wMax }
+      var rules = (dialog.dataset.rules || '').split(/\n+/).map(function (line) {
+        var parts = line.split('|').map(function (s) { return s.trim(); });
+        if (parts.length < 3) return null;
+        var h = parts[1].split('-').map(Number);
+        var w = parts[2].split('-').map(Number);
+        if (h.length < 2 || w.length < 2 || h.concat(w).some(isNaN)) return null;
+        return { size: parts[0], hMin: h[0], hMax: h[1], wMin: w[0], wMax: w[1] };
+      }).filter(Boolean);
+
+      function distance(value, min, max) {
+        if (value < min) return (min - value) / Math.max(1, max - min);
+        if (value > max) return (value - max) / Math.max(1, max - min);
+        return 0;
+      }
+
+      function open() {
+        try {
+          var saved = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+          if (saved) {
+            if (!heightIn.value) heightIn.value = saved.h || '';
+            if (!weightIn.value) weightIn.value = saved.w || '';
+            var fitInput = dialog.querySelector('input[type=radio][value="' + saved.f + '"]');
+            if (fitInput) fitInput.checked = true;
+          }
+        } catch (e) {}
+        if (dialog.showModal) dialog.showModal(); else dialog.setAttribute('open', '');
+        (heightIn.value ? weightIn : heightIn).focus();
+      }
+      function close() {
+        if (dialog.close) dialog.close(); else dialog.removeAttribute('open');
+      }
+
+      function calc() {
+        var h = Number(heightIn.value);
+        var w = Number(weightIn.value);
+        if (!h || !w) {
+          (!h ? heightIn : weightIn).focus();
+          return;
+        }
+        var fitEl = dialog.querySelector('input[type=radio]:checked');
+        var fit = fitEl ? Number(fitEl.value) : 0;
+        try { localStorage.setItem(STORE_KEY, JSON.stringify({ h: h, w: w, f: fit })); } catch (e) {}
+
+        if (!rules.length) return;
+        var best = 0, bestScore = Infinity;
+        rules.forEach(function (r, i) {
+          // Peso pesa um pouco mais que altura no caimento de camiseta.
+          var score = distance(h, r.hMin, r.hMax) + distance(w, r.wMin, r.wMax) * 1.3;
+          if (score < bestScore) { bestScore = score; best = i; }
+        });
+        best = Math.min(rules.length - 1, Math.max(0, best + fit));
+        recommended = rules[best].size;
+
+        sizeOut.textContent = recommended;
+        var fitName = fit < 0 ? 'mais justa' : fit > 0 ? 'oversized' : 'regular';
+        var input = findSizeInput(recommended);
+        if (!input) {
+          noteOut.textContent = 'Este produto não tem o tamanho ' + recommended + '. Confira a tabela de medidas.';
+          applyBtn.hidden = true;
+        } else if (input.closest('.product__swatch').classList.contains('is-unavailable')) {
+          noteOut.textContent = 'Para um caimento ' + fitName + '. Esse tamanho está esgotado nesta cor.';
+          applyBtn.hidden = true;
+        } else {
+          noteOut.textContent = 'Para um caimento ' + fitName + ', com ' + h + ' cm e ' + w + ' kg.';
+          applyBtn.hidden = false;
+        }
+        result.hidden = false;
+
+        var summary = section.querySelector('[data-provador-summary]');
+        if (summary) summary.textContent = 'Seu tamanho ideal: ' + recommended;
+      }
+
+      function findSizeInput(size) {
+        if (!sizeFieldset) return null;
+        var target = String(size).trim().toLowerCase();
+        return Array.prototype.find.call(sizeFieldset.querySelectorAll('input[type=radio]'), function (i) {
+          return i.value.trim().toLowerCase() === target;
+        }) || null;
+      }
+
+      section.querySelectorAll('[data-provador-open]').forEach(function (b) { b.addEventListener('click', open); });
+      dialog.querySelector('[data-provador-close]').addEventListener('click', close);
+      dialog.addEventListener('click', function (e) { if (e.target === dialog) close(); });
+      dialog.querySelector('[data-provador-calc]').addEventListener('click', calc);
+      [heightIn, weightIn].forEach(function (i) {
+        i.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); calc(); } });
+      });
+      applyBtn.addEventListener('click', function () {
+        var input = findSizeInput(recommended);
+        if (input) {
+          input.checked = true;
+          onChange(sizeFieldset);
+        }
+        close();
+      });
+    }
+
+    /* ---------------- Barra fixa ---------------- */
+    var buyBox = section.querySelector('[data-buy-buttons]');
+    if (sticky && buyBox && 'IntersectionObserver' in window) {
+      new IntersectionObserver(function (entries) {
+        var e = entries[0];
+        var show = !e.isIntersecting && e.boundingClientRect.top < 0;
+        sticky.classList.toggle('is-visible', show);
+        sticky.setAttribute('aria-hidden', String(!show));
+        sticky.querySelector('button').tabIndex = show ? 0 : -1;
+      }).observe(buyBox);
+    }
   })();
 </script>

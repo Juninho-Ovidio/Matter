@@ -1,0 +1,200 @@
+{%- comment -%}
+  ============================================================
+  card-product-compra — card de produto com compra direta (Mater)
+  ============================================================
+
+  O QUE FAZ:
+  Card de vitrine com ações no próprio card:
+  foto num quadro arredondado → preço grande + categoria em pílula
+  → nome → descrição curta → [Adicionar] [Comprar agora].
+
+  COMO USAR:
+  {% render 'card-product-compra', card_product: product, id_prefix: section.id %}
+  Sem card_product, renderiza um card de exemplo (placeholder),
+  útil quando a loja ainda não tem produtos:
+  {% render 'card-product-compra', placeholder_index: 3 %}
+
+  PARÂMETROS:
+  - card_product: objeto product.
+  - id_prefix: normalmente section.id; deixa o id do <select> único
+    se o mesmo produto aparecer em duas sections da página.
+  - placeholder_index: 1..6, só usado sem card_product.
+
+  AÇÕES:
+  - Os dois botões ficam no mesmo {% form 'product' %}.
+  - "Adicionar": submit normal. O assets/carrinho.js intercepta e
+    adiciona via AJAX, sem sair da página.
+  - "Comprar agora": botão com name="return_to" value="/checkout".
+    O valor do botão só vai no POST quando ELE é clicado, então o
+    Shopify adiciona e já redireciona para o checkout. O carrinho.js
+    ignora esse botão (data-buy-now) para não virar AJAX.
+  - Produto com mais de uma variante (tamanhos): aparece um <select>
+    com as variantes disponíveis, acima dos botões.
+  - Esgotado: botões desabilitados.
+
+  SELO E FAVORITOS:
+  Mesma regra do snippet card-product (ESGOTADO > DESCONTO > NOVO) e
+  o mesmo botão de favoritar tratado por assets/favoritos.js.
+
+  OBSERVAÇÕES:
+  - A categoria vem de product.type, com fallback no vendor — exceto
+    quando o vendor é o próprio nome da loja (aí a pílula some).
+  - A descrição é o texto do produto sem HTML, cortado em ~16
+    palavras e limitado a 2 linhas no CSS.
+  - Estilos em assets/base.css, bloco "Card de compra".
+{%- endcomment -%}
+{%- if card_product == blank -%}
+  {%- assign ph = placeholder_index | default: 1 -%}
+  <div class="card-compra card-compra--placeholder" aria-hidden="true">
+    <div class="card-compra__media">
+      {{ 'product-' | append: ph | placeholder_svg_tag: 'card-compra__image placeholder-svg' }}
+    </div>
+    <div class="card-compra__info">
+      <div class="card-compra__meta">
+        <span class="card-compra__price">R$ 129,90</span>
+        <span class="card-compra__tag">Camiseta</span>
+      </div>
+      <p class="card-compra__title">Nome do produto</p>
+      <p class="card-compra__desc">Descrição curta do produto, com o destaque da estampa e do tecido.</p>
+      <div class="card-compra__actions">
+        <span class="card-compra__btn card-compra__btn--secondary">{{ 'products.product.add_short' | t }}</span>
+        <span class="card-compra__btn card-compra__btn--primary">{{ 'products.product.buy_now' | t }}</span>
+      </div>
+    </div>
+  </div>
+{%- else -%}
+  {%- liquid
+    # Vendor igual ao nome da loja não diz nada ao cliente: sem tipo, sem pílula.
+    assign card_category = card_product.type
+    if card_category == blank and card_product.vendor != shop.name
+      assign card_category = card_product.vendor
+    endif
+    assign card_desc = card_product.description | strip_html | strip_newlines | truncatewords: 16
+    assign current_variant = card_product.selected_or_first_available_variant
+    assign is_new = false
+    for tag in card_product.tags
+      assign tag_down = tag | downcase
+      if tag_down == 'novo' or tag_down == 'new'
+        assign is_new = true
+        break
+      endif
+    endfor
+  -%}
+  <div class="card-compra">
+    <a href="{{ card_product.url }}" class="card-compra__media" tabindex="-1" aria-hidden="true">
+      {%- if card_product.featured_media -%}
+        {{
+          card_product.featured_media
+          | image_url: width: 720
+          | image_tag:
+            loading: 'lazy',
+            class: 'card-compra__image card-compra__image--primary',
+            widths: '240, 360, 540, 720',
+            sizes: '(min-width: 1200px) 25vw, (min-width: 1000px) 33vw, 50vw',
+            alt: ''
+        }}
+        {%- if settings.card_show_second_image and card_product.media[1] -%}
+          {{
+            card_product.media[1]
+            | image_url: width: 720
+            | image_tag:
+              loading: 'lazy',
+              class: 'card-compra__image card-compra__image--secondary',
+              widths: '240, 360, 540, 720',
+              sizes: '(min-width: 1200px) 25vw, (min-width: 1000px) 33vw, 50vw',
+              alt: ''
+          }}
+        {%- endif -%}
+      {%- else -%}
+        {{ 'product-1' | placeholder_svg_tag: 'card-compra__image placeholder-svg' }}
+      {%- endif -%}
+
+      {%- if card_product.available == false -%}
+        <span class="card-product__badge card-product__badge--sold-out">{{ 'products.product.sold_out' | t }}</span>
+      {%- elsif card_product.compare_at_price > card_product.price -%}
+        <span class="card-product__badge card-product__badge--sale">{{ 'products.product.on_sale' | t }}</span>
+      {%- elsif is_new -%}
+        <span class="card-product__badge card-product__badge--new">{{ 'products.product.new' | t }}</span>
+      {%- endif -%}
+    </a>
+
+    <button
+      type="button"
+      class="card-product__wish"
+      data-wishlist-toggle
+      data-product-id="{{ card_product.id }}"
+      aria-pressed="false"
+      aria-label="{{ 'products.product.add_to_wishlist' | t: product: card_product.title | escape }}"
+    >
+      {% render 'icon', name: 'heart' %}
+    </button>
+
+    <div class="card-compra__info">
+      <div class="card-compra__meta">
+        {% render 'price', product: card_product, use_variant: false, show_compare: true, price_class: 'card-compra__price' %}
+        {%- if card_category != blank -%}
+          <span class="card-compra__tag">{{ card_category | escape }}</span>
+        {%- endif -%}
+      </div>
+
+      <h3 class="card-compra__title">
+        <a href="{{ card_product.url }}">{{ card_product.title | escape }}</a>
+      </h3>
+
+      {%- if card_desc != blank -%}
+        <p class="card-compra__desc">{{ card_desc | escape }}</p>
+      {%- endif -%}
+
+      {%- form 'product', card_product, class: 'card-compra__form', novalidate: 'novalidate' -%}
+        {%- if card_product.has_only_default_variant -%}
+          <input type="hidden" name="id" value="{{ current_variant.id }}">
+        {%- else -%}
+          <label class="visually-hidden" for="CardVariant-{{ id_prefix }}-{{ card_product.id }}">
+            {{ card_product.options | join: ' / ' | escape }}
+          </label>
+          <select
+            name="id"
+            id="CardVariant-{{ id_prefix }}-{{ card_product.id }}"
+            class="card-compra__select"
+          >
+            {%- for variant in card_product.variants -%}
+              <option
+                value="{{ variant.id }}"
+                {% if variant == current_variant %}selected{% endif %}
+                {% unless variant.available %}disabled{% endunless %}
+              >
+                {{- variant.title | escape -}}
+                {%- unless variant.available %} — {{ 'products.product.sold_out' | t }}{% endunless -%}
+              </option>
+            {%- endfor -%}
+          </select>
+        {%- endif -%}
+
+        <div class="card-compra__actions">
+          <button
+            type="submit"
+            name="add"
+            class="card-compra__btn card-compra__btn--secondary"
+            {% unless card_product.available %}disabled{% endunless %}
+          >
+            {%- if card_product.available -%}
+              {{ 'products.product.add_short' | t }}
+            {%- else -%}
+              {{ 'products.product.sold_out' | t }}
+            {%- endif -%}
+          </button>
+          <button
+            type="submit"
+            name="return_to"
+            value="/checkout"
+            class="card-compra__btn card-compra__btn--primary"
+            data-buy-now
+            {% unless card_product.available %}disabled{% endunless %}
+          >
+            {{- 'products.product.buy_now' | t -}}
+          </button>
+        </div>
+      {%- endform -%}
+    </div>
+  </div>
+{%- endif -%}

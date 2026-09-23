@@ -12,6 +12,10 @@
       "name": "Header",
       "settings": {
         "menu": { "label": "Menu" },
+        "search_suggestions": {
+          "label": "Popular searches",
+          "info": "Shown when the search opens. Separate terms with commas."
+        },
         "header__localization": { "content": "Localization" },
         "enable_country_selector": { "label": "Enable country/region selector" },
         "enable_language_selector": { "label": "Enable language selector" }
@@ -55,7 +59,7 @@
       }
     },
     "produtos": {
-      "name": "Products heading",
+      "name": "All products",
       "settings": {
         "heading": { "label": "Heading" },
         "subheading": { "label": "Subheading" },
@@ -64,6 +68,19 @@
           "info": "Use H1 only where this is the page's main heading. On the home page the hero already holds the H1.",
           "options__1": { "label": "H2 (recommended)" },
           "options__2": { "label": "H1" }
+        },
+        "collection": {
+          "label": "Collection",
+          "info": "Leave empty to show all products in the store."
+        },
+        "columns_desktop": { "label": "Columns on desktop" },
+        "rows": {
+          "label": "Rows",
+          "info": "Products shown = columns × rows. On mobile the same products go in 2 columns."
+        },
+        "button_label": {
+          "label": "Button label",
+          "info": "Links to the full collection. Only shows when there are more products than fit in the grid."
         }
       }
     },
@@ -97,13 +114,8 @@
     "hero_inicio": {
       "name": "Hero (home)",
       "settings": {
-        "image": {
-          "label": "Image",
-          "info": "Full-width photo. Leave empty to use the photo packaged with the theme. Keep the left side clear — the headline and quote sit there."
-        },
-        "image_mobile": {
-          "label": "Image (mobile)",
-          "info": "Optional vertical crop used below 750px. Without it, the copy moves below the photo on small screens."
+        "interval": {
+          "label": "Time per slide"
         },
         "image_alt": {
           "label": "Image alt text",
@@ -125,6 +137,21 @@
         },
         "welcome": {
           "label": "Welcome note (top right)"
+        }
+      },
+      "blocks": {
+        "slide": {
+          "name": "Slide",
+          "settings": {
+            "image": {
+              "label": "Image",
+              "info": "Full-width photo, cropped to about 2:1. Keep the left side clear — the headline and quote sit there. With no slides added, the 4 photos packaged with the theme are used."
+            },
+            "image_alt": {
+              "label": "Image alt text",
+              "info": "Defaults to the section's alt text."
+            }
+          }
         }
       }
     },
@@ -221,8 +248,44 @@
       "blocks": {
         "vendor": { "name": "Vendor" },
         "title": { "name": "Title" },
-        "price": { "name": "Price" },
+        "price": {
+          "name": "Price",
+          "settings": {
+            "installments": {
+              "label": "Installments shown",
+              "info": "Shows \"or Nx of R$ …\" under the price. 0 hides it. Match what your checkout actually offers."
+            },
+            "interest_free": { "label": "Installments are interest-free" },
+            "pix_discount": {
+              "label": "Pix discount",
+              "info": "Shows the Pix price. 0 hides it. Only use it if the discount is really applied at checkout."
+            }
+          }
+        },
         "variant_picker": { "name": "Variant picker" },
+        "provador": {
+          "name": "Virtual fitting room",
+          "settings": {
+            "title": { "label": "Title" },
+            "subtitle": { "label": "Subtitle" },
+            "size_rules": {
+              "label": "Size rules",
+              "info": "One size per line: SIZE | height min-max (cm) | weight min-max (kg). The size must match the product's size option (P, M, G...). Replace the example ranges with your real size chart."
+            },
+            "size_chart": {
+              "label": "Size chart",
+              "info": "Optional. Shown inside the fitting room. Paste a table with the shirt measurements."
+            }
+          }
+        },
+        "trust": {
+          "name": "Trust badges",
+          "settings": {
+            "trust_1": { "label": "Badge 1 (shield)" },
+            "trust_2": { "label": "Badge 2 (truck)" },
+            "trust_3": { "label": "Badge 3 (exchange)" }
+          }
+        },
         "quantity": { "name": "Quantity selector" },
         "buy_buttons": {
           "name": "Buy buttons",
@@ -259,7 +322,14 @@
         "products_per_page": { "label": "Products per page" },
         "columns_desktop": { "label": "Number of columns on desktop" },
         "enable_sorting": { "label": "Enable sorting" },
-        "enable_filtering": { "label": "Enable filtering" }
+        "enable_filtering": { "label": "Enable filtering" },
+        "header_trust": {
+          "content": "Trust bar",
+          "info": "Short reassurances shown above the products. Leave a field empty to hide it — make sure each one is true for your store."
+        },
+        "trust_1": { "label": "Item 1 (shield icon)" },
+        "trust_2": { "label": "Item 2 (card icon)" },
+        "trust_3": { "label": "Item 3 (truck icon)" }
       }
     },
     "collection_banner": {
@@ -272,7 +342,15 @@
     "main_cart": {
       "name": "Cart",
       "settings": {
-        "show_note": { "label": "Enable order note" }
+        "show_note": { "label": "Enable order note" },
+        "free_shipping_threshold": {
+          "label": "Free shipping from",
+          "info": "Shows a progress bar toward free shipping. 0 hides it. Must match the free shipping rate set in Settings → Shipping."
+        },
+        "show_express": {
+          "label": "Show express checkout buttons",
+          "info": "Shop Pay, Google Pay, etc. under \"Finalizar compra\", when enabled in your payments."
+        }
       }
     },
     "main_list_collections": {

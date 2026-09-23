@@ -4,11 +4,12 @@
   ============================================================
 
   O QUE FAZ:
-  Banner de abertura em largura total: a foto ocupa toda a largura,
-  preservando a proporção original, e a copy fica POR CIMA dela em
-  HTML de verdade — headline, eyebrow, citação bíblica e o "seja bem
-  vindo" do canto direito. Nada de texto dentro da imagem: tudo é
-  selecionável, traduzível, editável pelo lojista e lido pelo Google.
+  Banner de abertura em largura total com SLIDESHOW: as fotos se
+  alternam sozinhas com crossfade + um zoom lento (efeito Ken Burns),
+  e a copy fica fixa POR CIMA delas em HTML de verdade — headline,
+  eyebrow, citação bíblica e o "seja bem vindo" do canto direito.
+  Nada de texto dentro da imagem: tudo é selecionável, traduzível,
+  editável pelo lojista e lido pelo Google.
 
   ONDE É USADA:
   Primeira section da home (templates/index.json). Tem preset, então
@@ -16,87 +17,145 @@
 
   PRINCIPAIS PARTES:
   - <h1> real com a headline (único H1 da home).
-  - Imagem eager + fetchpriority high (é o hero, carrega primeiro).
-  - Fonte da imagem, em ordem:
-    1. section.settings.image — enviada pelo lojista no editor;
-       serve versões responsivas pela CDN do Shopify.
-    2. assets/hero-inicio-*.jpg — arte da marca empacotada no tema,
-       em 3 larguras (900 / 1400 / 1671) para montar o srcset.
-  - image_mobile (opcional): versão vertical para telas estreitas.
+  - Slides:
+    1. Blocos "Slide" — cada um com uma imagem enviada pelo lojista;
+       servem versões responsivas pela CDN do Shopify.
+    2. Sem blocos, usa as 4 artes empacotadas no tema:
+       assets/hero-inicio-*.jpg (slide 1) e hero-inicio-{2,3,4}-*.jpg,
+       cada uma em 3 larguras (900 / 1400 / 1671) para o srcset.
+       Os originais em alta ficam em img/inicio-1..4.png.
+  - Só o primeiro slide é eager + fetchpriority high; os demais lazy.
+  - Autoplay por timer em JS (setTimeout), independente de animação
+    CSS — assim troca mesmo com as animações do sistema desligadas.
+    Pausa com a aba oculta e com um bloco selecionado no editor,
+    retomando do tempo que faltava.
+  - Indicadores (barras) com progresso: puramente visuais, a animação
+    da barra ativa dura o mesmo intervalo do timer.
+
+  EFEITO:
+  - Crossfade de 1.2s entre slides (opacity).
+  - O slide ativo começa em scale(1.08) e desce até 1 durante todo o
+    tempo em que fica na tela.
+  - prefers-reduced-motion: continua trocando com fade, só sem zoom.
 
   POSICIONAMENTO DA COPY:
   No desktop os blocos são absolutos, com top em PORCENTAGEM da
-  altura do hero (11% / 39% / 56% / 6.5%) e os tamanhos de fonte em
+  altura do hero (11% / 56% / 6.5%) e os tamanhos de fonte em
   vw com clamp. Assim a composição inteira escala junto com a foto e
   continua batendo com o layout em qualquer largura.
 
-  A copy pressupõe uma foto com a ESQUERDA livre (os modelos ao
-  centro/direita). Ao trocar a imagem, confira se o texto não caiu
-  em cima de alguém.
+  A copy pressupõe fotos com a ESQUERDA livre (os modelos ao
+  centro/direita). Ao trocar as imagens, confira se o texto não caiu
+  em cima de alguém. Todas são recortadas na proporção 1671:841.
 
   NO MOBILE:
   Abaixo de 750px a copy sai de cima da foto e passa a fluir logo
   abaixo dela. Sobreposta ficaria ilegível numa arte tão horizontal
-  (~1.99:1). Para manter a sobreposição no celular, envie uma arte
-  vertical em "Imagem (mobile)".
+  (~1.99:1). Os indicadores ficam na base da foto.
 
   OBSERVAÇÕES:
   - A headline usa --font-display-family (Anton, veja assets/fontes.css).
   - O fundo usa --color-background, a mesma cor da arte (#e5e5e4),
     para não aparecer emenda entre header e hero.
-  - Os originais em alta ficam em img/; o tema serve os otimizados
-    de assets/.
+  - O divisor seguinte sobe 45px sobre o hero; por isso no desktop os
+    indicadores ficam na lateral direita, não na base.
 {%- endcomment -%}
+{%- assign hero_alt = section.settings.image_alt | default: section.settings.heading | escape -%}
+{%- assign slide_interval = section.settings.interval | times: 1000 -%}
+
 <div
-  class="hero-inicio{% if section.settings.image_mobile != blank %} hero-inicio--has-mobile{% endif %}"
+  class="hero-inicio"
   data-section-id="{{ section.id }}"
+  style="--hero-interval: {{ slide_interval }}ms;"
 >
-  {%- assign hero_alt = section.settings.image_alt | default: section.settings.heading | escape -%}
-
   <div class="hero-inicio__media">
-    {%- if section.settings.image_mobile != blank -%}
-      {{
-        section.settings.image_mobile
-        | image_url: width: 1200
-        | image_tag:
-          loading: 'eager',
-          fetchpriority: 'high',
-          class: 'hero-inicio__image hero-inicio__image--mobile',
-          widths: '480, 750, 900, 1200',
-          sizes: '100vw',
-          alt: hero_alt
-      }}
-    {%- endif -%}
+    <hero-slideshow class="hero-inicio__slides" role="region" aria-roledescription="carrossel" aria-label="{{ hero_alt }}" data-interval="{{ slide_interval }}">
+      {%- if section.blocks.size > 0 -%}
+        {%- for block in section.blocks -%}
+          {%- liquid
+            assign slide_alt = block.settings.image_alt | default: hero_alt | escape
+            if forloop.first
+              assign slide_loading = 'eager'
+              assign slide_priority = 'high'
+            else
+              assign slide_loading = 'lazy'
+              assign slide_priority = 'auto'
+            endif
+          -%}
+          <div
+            class="hero-inicio__slide{% if forloop.first %} is-active{% endif %}"
+            aria-roledescription="slide"
+            aria-label="{{ forloop.index }} / {{ forloop.length }}"
+            {% unless forloop.first %}aria-hidden="true"{% endunless %}
+            {{ block.shopify_attributes }}
+          >
+            {%- if block.settings.image != blank -%}
+              {{
+                block.settings.image
+                | image_url: width: 3000
+                | image_tag:
+                  loading: slide_loading,
+                  fetchpriority: slide_priority,
+                  class: 'hero-inicio__image',
+                  widths: '750, 1100, 1500, 2000, 2600, 3000',
+                  sizes: '100vw',
+                  alt: slide_alt
+              }}
+            {%- else -%}
+              {{ 'lifestyle-1' | placeholder_svg_tag: 'hero-inicio__image hero-inicio__image--placeholder' }}
+            {%- endif -%}
+          </div>
+        {%- endfor -%}
+      {%- else -%}
+        {%- comment -%} Artes da marca empacotadas no tema. {%- endcomment -%}
+        {%- assign default_slides = 'hero-inicio,hero-inicio-2,hero-inicio-3,hero-inicio-4' | split: ',' -%}
+        {%- for slide in default_slides -%}
+          <div
+            class="hero-inicio__slide{% if forloop.first %} is-active{% endif %}"
+            aria-roledescription="slide"
+            aria-label="{{ forloop.index }} / {{ forloop.length }}"
+            {% unless forloop.first %}aria-hidden="true"{% endunless %}
+          >
+            <img
+              class="hero-inicio__image"
+              src="{{ slide | append: '-1400.jpg' | asset_url }}"
+              srcset="
+                {{ slide | append: '-900.jpg' | asset_url }} 900w,
+                {{ slide | append: '-1400.jpg' | asset_url }} 1400w,
+                {{ slide | append: '-1671.jpg' | asset_url }} 1671w
+              "
+              sizes="100vw"
+              width="1671"
+              height="841"
+              alt="{{ hero_alt }}"
+              {% if forloop.first %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %}
+            >
+          </div>
+        {%- endfor -%}
+      {%- endif -%}
 
-    {%- if section.settings.image != blank -%}
-      {{
-        section.settings.image
-        | image_url: width: 3000
-        | image_tag:
-          loading: 'eager',
-          fetchpriority: 'high',
-          class: 'hero-inicio__image hero-inicio__image--desktop',
-          widths: '750, 1100, 1500, 2000, 2600, 3000',
-          sizes: '100vw',
-          alt: hero_alt
-      }}
-    {%- else -%}
-      <img
-        class="hero-inicio__image hero-inicio__image--desktop"
-        src="{{ 'hero-inicio-1400.jpg' | asset_url }}"
-        srcset="
-          {{ 'hero-inicio-900.jpg' | asset_url }} 900w,
-          {{ 'hero-inicio-1400.jpg' | asset_url }} 1400w,
-          {{ 'hero-inicio-1671.jpg' | asset_url }} 1671w
-        "
-        sizes="100vw"
-        width="1671"
-        height="841"
-        alt="{{ hero_alt }}"
-        loading="eager"
-        fetchpriority="high"
-      >
-    {%- endif -%}
+      {%- liquid
+        if section.blocks.size > 0
+          assign slide_count = section.blocks.size
+        else
+          assign slide_count = default_slides.size
+        endif
+      -%}
+      {%- if slide_count > 1 -%}
+        <div class="hero-inicio__dots">
+          {%- for i in (1..slide_count) -%}
+            <button
+              type="button"
+              class="hero-inicio__dot{% if forloop.first %} is-active{% endif %}"
+              aria-label="Ir para o slide {{ i }}"
+              {% if forloop.first %}aria-current="true"{% endif %}
+            >
+              <span class="hero-inicio__dot-bar"></span>
+            </button>
+          {%- endfor -%}
+        </div>
+      {%- endif -%}
+    </hero-slideshow>
 
     <div class="hero-inicio__overlay">
       <div class="hero-inicio__headline">
@@ -110,7 +169,10 @@
 
       {%- if section.settings.quote != blank -%}
         <blockquote class="hero-inicio__quote">
-          <p class="hero-inicio__quote-text">{{ section.settings.quote | escape | newline_to_br }}</p>
+          {%- assign quote_first = section.settings.quote | strip | slice: 0 -%}
+          <p class="hero-inicio__quote-text{% if quote_first == '"' or quote_first == '“' %} hero-inicio__quote-text--hang{% endif %}">
+            {{- section.settings.quote | strip | escape | newline_to_br -}}
+          </p>
           {%- if section.settings.quote_source != blank -%}
             <cite class="hero-inicio__quote-source">{{ section.settings.quote_source | escape }}</cite>
           {%- endif -%}
@@ -124,6 +186,93 @@
   </div>
 </div>
 
+<script>
+  if (!customElements.get('hero-slideshow')) {
+    customElements.define('hero-slideshow', class extends HTMLElement {
+      connectedCallback() {
+        this.slides = [...this.querySelectorAll('.hero-inicio__slide')];
+        this.dots = [...this.querySelectorAll('.hero-inicio__dot')];
+        if (this.slides.length < 2) return;
+
+        this.index = 0;
+        this.interval = Number(this.dataset.interval) || 4000;
+        this.remaining = this.interval;
+        this.pauses = new Set();
+
+        this.dots.forEach((dot, i) => dot.addEventListener('click', () => this.go(i)));
+
+        document.addEventListener('visibilitychange', () => this.setPaused('tab', document.hidden));
+
+        // Editor do tema: selecionar um bloco mostra aquele slide e segura nele.
+        document.addEventListener('shopify:block:select', (e) => {
+          const i = this.slides.indexOf(e.target);
+          if (i > -1) { this.go(i); this.setPaused('editor', true); }
+        });
+        document.addEventListener('shopify:block:deselect', () => this.setPaused('editor', false));
+
+        this.setAttribute('autoplay', '');
+        this.start();
+      }
+
+      disconnectedCallback() {
+        clearTimeout(this.timer);
+      }
+
+      // O timer em JS é quem troca o slide. A barra de progresso é só visual,
+      // então a troca funciona mesmo com as animações do sistema desligadas.
+      start() {
+        clearTimeout(this.timer);
+        if (this.pauses.size) return;
+        this.startedAt = performance.now();
+        this.timer = setTimeout(() => this.go(this.index + 1), this.remaining);
+      }
+
+      setPaused(reason, paused) {
+        const wasPaused = this.pauses.size > 0;
+        if (paused) this.pauses.add(reason);
+        else this.pauses.delete(reason);
+        const isPaused = this.pauses.size > 0;
+        this.toggleAttribute('paused', isPaused);
+        if (isPaused === wasPaused) return;
+
+        if (isPaused) {
+          clearTimeout(this.timer);
+          this.remaining = Math.max(0, this.remaining - (performance.now() - this.startedAt));
+        } else {
+          this.start();
+        }
+      }
+
+      go(next) {
+        const total = this.slides.length;
+        next = (next + total) % total;
+        this.remaining = this.interval;
+        if (next === this.index) return this.start();
+
+        const prev = this.slides[this.index];
+        prev.classList.remove('is-active');
+        prev.classList.add('is-leaving');
+        prev.setAttribute('aria-hidden', 'true');
+        // Mantém o zoom do slide que sai até o fade terminar.
+        setTimeout(() => prev.classList.remove('is-leaving'), 1200);
+
+        const current = this.slides[next];
+        current.classList.add('is-active');
+        current.removeAttribute('aria-hidden');
+
+        this.dots.forEach((dot, i) => {
+          dot.classList.toggle('is-active', i === next);
+          if (i === next) dot.setAttribute('aria-current', 'true');
+          else dot.removeAttribute('aria-current');
+        });
+
+        this.index = next;
+        this.start();
+      }
+    });
+  }
+</script>
+
 <style>
   #shopify-section-{{ section.id }} .hero-inicio {
     --mater-gutter: clamp(20px, 6vw, 100px);
@@ -135,20 +284,128 @@
     position: relative;
     line-height: 0;
   }
+
+  /* ---------- Slideshow ---------- */
+  #shopify-section-{{ section.id }} .hero-inicio__slides {
+    position: relative;
+    display: block;
+    aspect-ratio: 1671 / 841;
+    overflow: hidden;
+  }
+  #shopify-section-{{ section.id }} .hero-inicio__slide {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  #shopify-section-{{ section.id }} .hero-inicio__slide.is-active {
+    opacity: 1;
+    z-index: 1;
+  }
   #shopify-section-{{ section.id }} .hero-inicio__image {
     display: block;
     width: 100%;
-    height: auto;
+    height: 100%;
+    object-fit: cover;
+    transform: scale(1.08);
+    transform-origin: 60% 50%;
+    will-change: transform;
   }
-  #shopify-section-{{ section.id }} .hero-inicio__image--mobile { display: none; }
+  /* Ken Burns: o slide ativo (e o que está saindo) aproxima devagar até 1. */
+  #shopify-section-{{ section.id }} .hero-inicio__slide.is-active .hero-inicio__image,
+  #shopify-section-{{ section.id }} .hero-inicio__slide.is-leaving .hero-inicio__image {
+    animation: hero-inicio-zoom calc(var(--hero-interval) + 1.2s) linear forwards;
+  }
+  @keyframes hero-inicio-zoom {
+    from { transform: scale(1.08); }
+    to { transform: scale(1); }
+  }
 
+  /* ---------- Indicadores ---------- */
+  #shopify-section-{{ section.id }} .hero-inicio__dots {
+    position: absolute;
+    z-index: 3;
+    top: 50%;
+    right: clamp(12px, 2vw, 36px);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transform: translateY(-50%);
+  }
+  #shopify-section-{{ section.id }} .hero-inicio__dot {
+    position: relative;
+    width: 18px;
+    height: clamp(28px, 3vw, 44px);
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+  }
+  /* Trilho */
+  #shopify-section-{{ section.id }} .hero-inicio__dot::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 50%;
+    width: 2px;
+    transform: translateX(-50%);
+    background-color: var(--color-text);
+    opacity: 0.2;
+    transition: opacity 0.3s;
+  }
+  #shopify-section-{{ section.id }} .hero-inicio__dot:hover::before { opacity: 0.45; }
+  #shopify-section-{{ section.id }} .hero-inicio__dot:focus-visible {
+    outline: 1px solid var(--color-text);
+    outline-offset: 2px;
+  }
+  /* Progresso */
+  #shopify-section-{{ section.id }} .hero-inicio__dot-bar {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 2px;
+    height: 100%;
+    transform: translateX(-50%) scaleY(0);
+    transform-origin: top;
+    background-color: var(--color-text);
+  }
+  #shopify-section-{{ section.id }} .hero-inicio__dot.is-active .hero-inicio__dot-bar {
+    transform: translateX(-50%) scaleY(1);
+  }
+  #shopify-section-{{ section.id }} hero-slideshow[autoplay] .hero-inicio__dot.is-active .hero-inicio__dot-bar {
+    animation: hero-inicio-progress var(--hero-interval) linear forwards;
+  }
+  @keyframes hero-inicio-progress {
+    from { transform: translateX(-50%) scaleY(0); }
+    to { transform: translateX(-50%) scaleY(1); }
+  }
+
+  /* Pausa (aba oculta, bloco selecionado no editor). */
+  #shopify-section-{{ section.id }} hero-slideshow[paused] .hero-inicio__dot-bar,
+  #shopify-section-{{ section.id }} hero-slideshow[paused] .is-active .hero-inicio__image {
+    animation-play-state: paused;
+  }
+
+  /* "Reduzir movimento" (ex.: Windows com efeitos de animação desligados):
+     os slides continuam trocando com fade, só o zoom é desligado. */
+  @media (prefers-reduced-motion: reduce) {
+    #shopify-section-{{ section.id }} .hero-inicio__image,
+    #shopify-section-{{ section.id }} .hero-inicio__slide.is-active .hero-inicio__image,
+    #shopify-section-{{ section.id }} .hero-inicio__slide.is-leaving .hero-inicio__image {
+      transform: none;
+      animation: none;
+    }
+  }
+
+  /* ---------- Copy ---------- */
   #shopify-section-{{ section.id }} .hero-inicio__overlay {
     position: absolute;
+    z-index: 2;
     inset: 0;
     line-height: normal;
     color: var(--color-text);
+    pointer-events: none;
   }
-  #shopify-section-{{ section.id }} .hero-inicio__overlay a { pointer-events: auto; }
+  #shopify-section-{{ section.id }} .hero-inicio__overlay > * { pointer-events: auto; }
 
   #shopify-section-{{ section.id }} .hero-inicio__headline {
     position: absolute;
@@ -176,7 +433,8 @@
   #shopify-section-{{ section.id }} .hero-inicio__quote {
     position: absolute;
     top: 56%;
-    left: calc(var(--mater-gutter) + clamp(0px, 3.5vw, 58px));
+    /* Mesma coluna do título: tudo começa na mesma linha vertical. */
+    left: var(--mater-gutter);
     margin: 0;
     max-width: 40%;
   }
@@ -184,6 +442,13 @@
     margin: 0;
     font-size: clamp(0.8rem, 1.2vw, 1.25rem);
     line-height: 1.55;
+    /* As quebras são as do texto; nada de quebra extra no meio da linha. */
+    white-space: nowrap;
+  }
+  /* Aspas de abertura penduradas para fora da coluna, para que as letras
+     da 1ª linha fiquem alinhadas com as das linhas de baixo. */
+  #shopify-section-{{ section.id }} .hero-inicio__quote-text--hang {
+    text-indent: -0.4em;
   }
   #shopify-section-{{ section.id }} .hero-inicio__quote-source {
     display: block;
@@ -225,8 +490,39 @@
 
   /* Abaixo de 750px a copy sai de cima da foto e vira fluxo normal. */
   @media screen and (max-width: 749px) {
-    #shopify-section-{{ section.id }} .hero-inicio--has-mobile .hero-inicio__image--desktop { display: none; }
-    #shopify-section-{{ section.id }} .hero-inicio--has-mobile .hero-inicio__image--mobile { display: block; }
+    /* Indicadores viram barras horizontais na base da foto. */
+    #shopify-section-{{ section.id }} .hero-inicio__dots {
+      top: auto;
+      right: auto;
+      bottom: 12px;
+      left: var(--mater-gutter);
+      flex-direction: row;
+      transform: none;
+    }
+    #shopify-section-{{ section.id }} .hero-inicio__dot {
+      width: 28px;
+      height: 18px;
+    }
+    #shopify-section-{{ section.id }} .hero-inicio__dot::before {
+      inset: 50% 0 auto 0;
+      width: auto;
+      height: 2px;
+      transform: translateY(-50%);
+    }
+    #shopify-section-{{ section.id }} .hero-inicio__dot-bar {
+      top: 50%;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      transform: translateY(-50%) scaleX(0);
+      transform-origin: left;
+    }
+    #shopify-section-{{ section.id }} .hero-inicio__dot.is-active .hero-inicio__dot-bar {
+      transform: translateY(-50%) scaleX(1);
+    }
+    #shopify-section-{{ section.id }} hero-slideshow[autoplay] .hero-inicio__dot.is-active .hero-inicio__dot-bar {
+      animation-name: hero-inicio-progress-x;
+    }
 
     #shopify-section-{{ section.id }} .hero-inicio__overlay {
       position: static;
@@ -245,6 +541,7 @@
     #shopify-section-{{ section.id }} .hero-inicio__title { font-size: clamp(2.4rem, 13vw, 4rem); }
     #shopify-section-{{ section.id }} .hero-inicio__eyebrow { font-size: 0.85rem; margin-top: 14px; }
     #shopify-section-{{ section.id }} .hero-inicio__quote { margin-top: 28px; }
+    #shopify-section-{{ section.id }} .hero-inicio__quote-text { white-space: normal; }
     #shopify-section-{{ section.id }} .hero-inicio__quote-text,
     #shopify-section-{{ section.id }} .hero-inicio__quote-source { font-size: 0.95rem; }
     /* No mobile o "seja bem vindo" vai para o topo do bloco de texto. */
@@ -256,24 +553,27 @@
     }
     #shopify-section-{{ section.id }} .hero-inicio__welcome::after { margin-left: 0; }
   }
+  @keyframes hero-inicio-progress-x {
+    from { transform: translateY(-50%) scaleX(0); }
+    to { transform: translateY(-50%) scaleX(1); }
+  }
 </style>
 
 {% schema %}
 {
   "name": "t:sections.hero_inicio.name",
   "tag": "section",
+  "max_blocks": 8,
   "settings": [
     {
-      "type": "image_picker",
-      "id": "image",
-      "label": "t:sections.hero_inicio.settings.image.label",
-      "info": "t:sections.hero_inicio.settings.image.info"
-    },
-    {
-      "type": "image_picker",
-      "id": "image_mobile",
-      "label": "t:sections.hero_inicio.settings.image_mobile.label",
-      "info": "t:sections.hero_inicio.settings.image_mobile.info"
+      "type": "range",
+      "id": "interval",
+      "min": 3,
+      "max": 12,
+      "step": 1,
+      "unit": "s",
+      "default": 4,
+      "label": "t:sections.hero_inicio.settings.interval.label"
     },
     {
       "type": "text",
@@ -312,6 +612,26 @@
       "id": "welcome",
       "default": "Seja bem vindo",
       "label": "t:sections.hero_inicio.settings.welcome.label"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "slide",
+      "name": "t:sections.hero_inicio.blocks.slide.name",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "t:sections.hero_inicio.blocks.slide.settings.image.label",
+          "info": "t:sections.hero_inicio.blocks.slide.settings.image.info"
+        },
+        {
+          "type": "text",
+          "id": "image_alt",
+          "label": "t:sections.hero_inicio.blocks.slide.settings.image_alt.label",
+          "info": "t:sections.hero_inicio.blocks.slide.settings.image_alt.info"
+        }
+      ]
     }
   ],
   "presets": [
