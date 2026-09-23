@@ -1,0 +1,33 @@
+{%- comment -%}
+  ============================================================
+  link-contato — URL de um item do menu, com correção do "Contato"
+  ============================================================
+
+  O QUE FAZ:
+  Imprime a URL de um link do menu. Se o título do item for
+  "Contato" / "Contact" / "Fale conosco", aponta para a página de
+  contato da loja (handle contato, contact ou fale-conosco), mesmo
+  que no admin o item esteja ligado a outro destino por engano.
+  Se nenhuma dessas páginas existir, usa o link do admin.
+
+  COMO USAR:
+  <a href="{% render 'link-contato', link: link %}">...</a>
+
+  OBSERVAÇÃO:
+  A página precisa existir em Loja virtual → Páginas, com o modelo
+  "contact", para abrir a tela de contato do tema.
+{%- endcomment -%}
+{%- liquid
+  assign titulo = link.title | downcase | strip
+  assign url = link.url
+  if titulo == 'contato' or titulo == 'contact' or titulo == 'fale conosco' or titulo == 'fale com a gente'
+    if pages['contato'].url != blank
+      assign url = pages['contato'].url
+    elsif pages['contact'].url != blank
+      assign url = pages['contact'].url
+    elsif pages['fale-conosco'].url != blank
+      assign url = pages['fale-conosco'].url
+    endif
+  endif
+  echo url
+-%}
