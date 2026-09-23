@@ -13,8 +13,9 @@
     meta description, URL canonica.
   - Favicon e apple-touch-icon (config settings.favicon).
   - Open Graph / JSON-LD e demais tags via {% render 'meta-tags' %}.
-  - CSS: index.css (ponto de entrada) + css-variables (variaveis
-    do tema geradas pelas settings).
+  - CSS: fontes.css, normalizar.css e base.css (nessa ordem, cada um
+    com asset_url versionado) + css-variables (variaveis do tema
+    geradas pelas settings).
   - Scripts: troca no-js -> js e carrega carrinho.js (defer).
   - {{ content_for_header }}: scripts obrigatorios do Shopify.
 
@@ -52,7 +53,14 @@
 
     {% render 'meta-tags' %}
 
-    {{ 'index.css' | asset_url | stylesheet_tag }}
+    {%- comment -%}
+      Cada CSS entra direto, com asset_url (?v=versão). Antes era um
+      index.css com @import sem versão — o CDN/navegador podia servir
+      uma cópia antiga de base.css por até 1 ano e a página ficava sem estilo.
+    {%- endcomment -%}
+    {{ 'fontes.css' | asset_url | stylesheet_tag }}
+    {{ 'normalizar.css' | asset_url | stylesheet_tag }}
+    {{ 'base.css' | asset_url | stylesheet_tag }}
     {% render 'css-variables' %}
 
     <script>document.documentElement.className = document.documentElement.className.replace('no-js', 'js');</script>

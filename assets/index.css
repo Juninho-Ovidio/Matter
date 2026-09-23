@@ -4,7 +4,11 @@
   ============================================================
 
   O QUE FAZ:
-  Este é o unico arquivo CSS carregado pelo layout (theme.liquid).
+  Usado só pelo templates/gift_card.liquid. O layout principal
+  (theme.liquid) NÃO usa mais este arquivo: carrega fontes.css,
+  normalizar.css e base.css direto com asset_url versionado, porque
+  os @import abaixo não têm versão e o CDN/navegador podia servir
+  uma cópia antiga de base.css (cards sem estilo).
   Ele importa os demais na ordem correta:
   1. fontes.css     — carregamento de fontes / @font-face
   2. normalizar.css — reset e normalizacao entre navegadores
