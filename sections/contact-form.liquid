@@ -1,187 +1,546 @@
 {%- comment -%}
   ============================================================
-  CONTACT FORM — formulário de contato nativo
+  CONTACT FORM — página "Fale com a gente" (Mater)
   ============================================================
 
   O QUE FAZ:
-  Renderiza o formulário de contato usando {% form 'contact' %} do
-  Shopify (envia email para a loja). Campos: nome, email (required),
-  telefone e mensagem. Mostra avisos de sucesso e de erros de validação.
+  Página de contato em duas colunas:
+  - Esquerda: chamada ("Estamos aqui para te ajudar"), selo de
+    tempo de resposta e os dois canais — WhatsApp (destaque, abre
+    wa.me com mensagem pronta) e E-mail (rola até o formulário) —
+    mais horário de atendimento e Instagram.
+  - Direita: formulário nativo {% form 'contact' %} com nome,
+    e-mail, telefone (com máscara), assunto (atalhos) e mensagem.
+    O Shopify envia o conteúdo para o e-mail da loja
+    (Configurações → Notificações / e-mail do remetente).
+  - Depois do envio, o card vira uma confirmação com o atalho do
+    WhatsApp para quem tem pressa.
 
   ONDE É USADA:
-  Template page.contact (ou onde a seção for adicionada via preset).
+  templates/page.contact.json. No admin: crie a página "Contato"
+  (Loja virtual → Páginas), escolha o modelo "contact" e coloque o
+  link dela no menu principal.
 
-  PRINCIPAIS PARTES:
-  - form 'contact': envio nativo, sem backend próprio
-  - Pré-preenche valores com dados do customer, se logado
-  - Bloco de erros com âncoras para cada campo inválido
-  - Telefone usa type="tel"; textarea tem resize desativado
-  - Setting: heading; tem preset (aparece no theme editor)
+  SETTINGS:
+  - whatsapp_number: só números, com DDI + DDD (ex.: 5511999999999).
+    Em branco, o card do WhatsApp some (no editor aparece um aviso).
+  - whatsapp_message: texto já preenchido na conversa.
+  - email: e-mail exibido no card; em branco usa o e-mail da loja.
+  - response_time / hours: textos de apoio — confira que batem com
+    o atendimento real.
 
   OBSERVAÇÕES:
-  Os name= de nome/telefone usam a label traduzida (padrão Shopify).
+  - Os campos extras usam name="contact[Nome]", "contact[Telefone]"
+    e "contact[Assunto]": o nome entre colchetes vira o rótulo no
+    e-mail que a loja recebe.
+  - Telefone/assunto são opcionais; nome, e-mail e mensagem são
+    obrigatórios (validação nativa do navegador).
 {%- endcomment -%}
 
-{%- assign form_id = 'ContactForm-' | append: section.id -%}
+{%- liquid
+  assign form_id = 'ContactForm-' | append: section.id
+  assign wa_number = section.settings.whatsapp_number | remove: ' ' | remove: '-' | remove: '(' | remove: ')' | remove: '+'
+  assign wa_url = 'https://wa.me/' | append: wa_number
+  if section.settings.whatsapp_message != blank
+    # url_encode troca espaço por "+", que o WhatsApp mostraria literalmente.
+    assign wa_text = section.settings.whatsapp_message | url_encode | replace: '+', '%20'
+    assign wa_url = wa_url | append: '?text=' | append: wa_text
+  endif
+  assign contact_email = section.settings.email | default: shop.email
+  assign subjects = section.settings.subjects | split: ','
+-%}
 
-<section class="contact page-width" data-section-id="{{ section.id }}">
-  {%- if section.settings.heading != blank -%}
-    <h1 class="contact__heading">{{ section.settings.heading | escape }}</h1>
-  {%- endif -%}
+<section class="contato" data-section-id="{{ section.id }}">
+  <div class="contato__grid">
+    {%- comment -%} ---------------- Canais ---------------- {%- endcomment -%}
+    <div class="contato__intro">
+      <p class="contato__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+      <h1 class="contato__title">{{ section.settings.heading | escape | newline_to_br }}</h1>
+      {%- if section.settings.subheading != blank -%}
+        <p class="contato__lead">{{ section.settings.subheading | escape }}</p>
+      {%- endif -%}
 
-  {%- form 'contact', id: form_id, class: 'contact__form' -%}
-    {%- if form.posted_successfully? -%}
-      <div class="contact__notice contact__notice--success" role="status" tabindex="-1">
-        {{ 'templates.contact.form.post_success' | t }}
-      </div>
-    {%- elsif form.errors -%}
-      <div class="contact__notice contact__notice--error" role="alert" tabindex="-1">
-        <h2 class="contact__notice-title">{{ 'templates.contact.form.error_heading' | t }}</h2>
-        <ul class="contact__errors" role="list">
-          {%- for field in form.errors -%}
-            <li>
-              {%- if field == 'form' -%}
-                {{ form.errors.messages[field] }}
+      {%- if section.settings.response_time != blank -%}
+        <p class="contato__badge">
+          <span class="contato__badge-dot" aria-hidden="true"></span>
+          {{ section.settings.response_time | escape }}
+        </p>
+      {%- endif -%}
+
+      <div class="contato__channels">
+        {%- if wa_number != blank -%}
+          <a class="contato__channel contato__channel--whatsapp" href="{{ wa_url }}" target="_blank" rel="noopener">
+            <span class="contato__channel-icon" aria-hidden="true">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.87 9.87 0 0 0 4.73 1.2h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2Zm.01 18.15h-.01a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.23 8.23 0 0 1-1.26-4.38c0-4.54 3.7-8.23 8.25-8.23 2.2 0 4.27.86 5.83 2.42a8.18 8.18 0 0 1 2.41 5.82c0 4.54-3.7 8.23-8.24 8.23Zm4.52-6.16c-.25-.12-1.46-.72-1.69-.8-.23-.08-.39-.12-.56.12-.17.25-.64.8-.78.97-.14.17-.29.19-.54.06-.25-.12-1.04-.38-1.99-1.22-.73-.66-1.23-1.46-1.37-1.71-.14-.25-.02-.38.11-.5.11-.11.25-.29.37-.43.12-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.23.25-.87.85-.87 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.46-.6 1.67-1.18.21-.58.21-1.07.14-1.18-.06-.1-.22-.16-.47-.29Z"/></svg>
+            </span>
+            <span class="contato__channel-text">
+              <span class="contato__channel-tag">Resposta mais rápida</span>
+              <strong>Falar no WhatsApp</strong>
+              <span>Tire dúvidas sobre tamanho, pedido ou troca direto com a gente.</span>
+            </span>
+            <span class="contato__channel-arrow" aria-hidden="true">→</span>
+          </a>
+        {%- elsif request.design_mode -%}
+          <p class="contato__warning">
+            Preencha o número do WhatsApp nas configurações desta seção para o botão aparecer.
+          </p>
+        {%- endif -%}
+
+        <a class="contato__channel" href="#{{ form_id }}" data-scroll-form>
+          <span class="contato__channel-icon" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="m4 7 8 6 8-6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          <span class="contato__channel-text">
+            <strong>Enviar e-mail</strong>
+            <span>
+              {%- if contact_email != blank -%}
+                {{ contact_email | escape }}
               {%- else -%}
-                <a href="#ContactForm-{{ field }}-{{ section.id }}">
-                  {{ form.errors.translated_fields[field] | capitalize }}
-                  {{ form.errors.messages[field] }}
-                </a>
+                Preencha o formulário ao lado
               {%- endif -%}
-            </li>
-          {%- endfor -%}
-        </ul>
+            </span>
+          </span>
+          <span class="contato__channel-arrow" aria-hidden="true">→</span>
+        </a>
       </div>
-    {%- endif -%}
 
-    <div class="contact__field">
-      <label class="field__label" for="ContactForm-name-{{ section.id }}">
-        {{ 'templates.contact.form.name' | t }}
-      </label>
-      <input
-        type="text"
-        class="field__input"
-        id="ContactForm-name-{{ section.id }}"
-        name="contact[{{ 'templates.contact.form.name' | t }}]"
-        value="{% if form.name %}{{ form.name }}{% elsif customer %}{{ customer.name }}{% endif %}"
-        autocomplete="name"
-        spellcheck="false"
-      >
+      <ul class="contato__info" role="list">
+        {%- if section.settings.hours != blank -%}
+          <li>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+            <span>{{ section.settings.hours | escape }}</span>
+          </li>
+        {%- endif -%}
+        {%- if settings.social_instagram_link != blank -%}
+          <li>
+            {% render 'icon', name: 'instagram' %}
+            <a href="{{ settings.social_instagram_link }}" target="_blank" rel="noopener">Siga no Instagram</a>
+          </li>
+        {%- endif -%}
+        <li>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6l-8-3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+          <span>Seus dados ficam só com a gente.</span>
+        </li>
+      </ul>
     </div>
 
-    <div class="contact__field">
-      <label class="field__label" for="ContactForm-email-{{ section.id }}">
-        {{ 'templates.contact.form.email' | t }}
-      </label>
-      <input
-        type="email"
-        class="field__input"
-        id="ContactForm-email-{{ section.id }}"
-        name="contact[email]"
-        value="{% if form.email %}{{ form.email }}{% elsif customer %}{{ customer.email }}{% endif %}"
-        autocomplete="email"
-        autocapitalize="off"
-        spellcheck="false"
-        required
-      >
-    </div>
+    {%- comment -%} ---------------- Formulário ---------------- {%- endcomment -%}
+    <div class="contato__card">
+      {%- form 'contact', id: form_id, class: 'contato__form' -%}
+        {%- if form.posted_successfully? -%}
+          <div class="contato__success" role="status" tabindex="-1" data-focus>
+            <span class="contato__success-icon" aria-hidden="true">
+              <svg width="34" height="34" viewBox="0 0 24 24" fill="none"><path d="m5 12.5 4.5 4.5L19 7.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <h2>Mensagem enviada!</h2>
+            <p>Obrigado por falar com a gente. Vamos responder no seu e-mail{% if section.settings.response_time != blank %} — {{ section.settings.response_time | downcase | escape }}{% endif %}.</p>
+            {%- if wa_number != blank -%}
+              <a class="contato__btn contato__btn--whatsapp" href="{{ wa_url }}" target="_blank" rel="noopener">Tem pressa? Chame no WhatsApp</a>
+            {%- endif -%}
+            <a class="contato__link" href="{{ routes.all_products_collection_url }}">Continuar comprando →</a>
+          </div>
+        {%- else -%}
+          <p class="contato__card-eyebrow">// Formulário</p>
+          <h2 class="contato__card-title">Mande sua mensagem</h2>
+          <p class="contato__card-lead">Preencha e responderemos no seu e-mail.</p>
 
-    <div class="contact__field">
-      <label class="field__label" for="ContactForm-phone-{{ section.id }}">
-        {{ 'templates.contact.form.phone' | t }}
-      </label>
-      <input
-        type="tel"
-        class="field__input"
-        id="ContactForm-phone-{{ section.id }}"
-        name="contact[{{ 'templates.contact.form.phone' | t }}]"
-        value="{% if form.phone %}{{ form.phone }}{% elsif customer %}{{ customer.phone }}{% endif %}"
-        autocomplete="tel"
-        spellcheck="false"
-      >
-    </div>
+          {%- if form.errors -%}
+            <div class="contato__errors" role="alert" tabindex="-1" data-focus>
+              <strong>Confira os campos abaixo:</strong>
+              <ul role="list">
+                {%- for field in form.errors -%}
+                  <li>
+                    {%- if field == 'form' -%}
+                      {{ form.errors.messages[field] }}
+                    {%- else -%}
+                      {{ form.errors.translated_fields[field] | capitalize }} {{ form.errors.messages[field] }}
+                    {%- endif -%}
+                  </li>
+                {%- endfor -%}
+              </ul>
+            </div>
+          {%- endif -%}
 
-    <div class="contact__field">
-      <label class="field__label" for="ContactForm-body-{{ section.id }}">
-        {{ 'templates.contact.form.comment' | t }}
-      </label>
-      <textarea
-        rows="6"
-        class="field__input contact__textarea"
-        id="ContactForm-body-{{ section.id }}"
-        name="contact[body]"
-        spellcheck="false"
-      >{% if form.body %}{{ form.body }}{% endif %}</textarea>
-    </div>
+          <div class="contato__fields">
+            <label class="contato__field contato__field--full">
+              <span>Nome completo *</span>
+              <input
+                type="text"
+                name="contact[Nome]"
+                value="{% if form.name %}{{ form.name }}{% elsif customer %}{{ customer.name }}{% endif %}"
+                autocomplete="name"
+                placeholder="Digite seu nome"
+                required
+              >
+            </label>
 
-    <button type="submit" class="button contact__submit">
-      {{ 'templates.contact.form.send' | t }}
-    </button>
-  {%- endform -%}
+            <label class="contato__field">
+              <span>E-mail *</span>
+              <input
+                type="email"
+                name="contact[email]"
+                value="{% if form.email %}{{ form.email }}{% elsif customer %}{{ customer.email }}{% endif %}"
+                autocomplete="email"
+                autocapitalize="off"
+                spellcheck="false"
+                placeholder="seuemail@exemplo.com"
+                required
+              >
+            </label>
+
+            <label class="contato__field">
+              <span>Telefone / WhatsApp</span>
+              <input
+                type="tel"
+                name="contact[Telefone]"
+                value="{% if customer %}{{ customer.phone }}{% endif %}"
+                autocomplete="tel"
+                inputmode="tel"
+                placeholder="(00) 00000-0000"
+                data-phone
+              >
+            </label>
+
+            {%- if subjects.size > 0 -%}
+              <fieldset class="contato__subjects contato__field--full">
+                <legend>Sobre o que é?</legend>
+                <div class="contato__chips">
+                  {%- for subject in subjects -%}
+                    {%- assign subject = subject | strip -%}
+                    {%- if subject != blank -%}
+                      <label class="contato__chip">
+                        <input type="radio" name="contact[Assunto]" value="{{ subject | escape }}" class="visually-hidden" {% if forloop.first %}checked{% endif %}>
+                        <span>{{ subject | escape }}</span>
+                      </label>
+                    {%- endif -%}
+                  {%- endfor -%}
+                </div>
+              </fieldset>
+            {%- endif -%}
+
+            <label class="contato__field contato__field--full">
+              <span>Mensagem *</span>
+              <textarea
+                name="contact[body]"
+                rows="5"
+                placeholder="Conte como podemos te ajudar. Se for sobre um pedido, informe o número."
+                required
+              >{% if form.body %}{{ form.body }}{% endif %}</textarea>
+            </label>
+          </div>
+
+          <button type="submit" class="contato__btn contato__btn--submit">
+            Enviar mensagem
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <p class="contato__privacy">Ao enviar, você concorda em ser respondido pelos canais informados.</p>
+        {%- endif -%}
+      {%- endform -%}
+    </div>
+  </div>
 </section>
 
 <style>
-  .contact {
-    padding-top: var(--spacing-sections, 40px);
-    padding-bottom: var(--spacing-sections, 40px);
-    max-width: 720px;
+  #shopify-section-{{ section.id }} .contato {
+    --mater-gutter: clamp(20px, 6vw, 100px);
+    padding: clamp(32px, 5vw, 80px) var(--mater-gutter) clamp(56px, 7vw, 110px);
+    background-color: var(--color-background);
+  }
+  #shopify-section-{{ section.id }} .contato__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+    gap: clamp(32px, 5vw, 90px);
   }
 
-  .contact__heading {
-    margin-bottom: 32px;
-    font-size: var(--f7);
-    text-align: center;
+  /* Chamada */
+  #shopify-section-{{ section.id }} .contato__eyebrow {
+    margin: 0 0 12px;
+    font-family: var(--font-heading-family);
+    font-size: 13px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
   }
-
-  .contact__field {
-    margin-bottom: 20px;
-  }
-
-  .contact__textarea {
-    resize: none;
-  }
-
-  .contact__notice {
-    margin-bottom: 24px;
-    padding: 14px 18px;
-    border-radius: var(--inputs-radius, 4px);
-    font-size: var(--f2);
-  }
-
-  .contact__notice--success {
-    color: var(--color-accent-text, #fff);
-    background-color: var(--color-sale, #1cb744);
-  }
-
-  .contact__notice--error {
-    color: var(--color-text, #000);
-    border: 1px solid var(--color-sale, #d02e2e);
-  }
-
-  .contact__notice-title {
-    font-size: var(--f3);
-    margin-bottom: 8px;
-  }
-
-  .contact__errors {
+  #shopify-section-{{ section.id }} .contato__title {
     margin: 0;
-    padding-left: 1.2em;
+    font-family: var(--font-display-family);
+    font-weight: 400;
+    font-size: clamp(2.6rem, 5.2vw, 5.4rem);
+    line-height: 0.95;
+    text-transform: uppercase;
+  }
+  #shopify-section-{{ section.id }} .contato__lead { max-width: 34em; margin: 18px 0 0; font-size: clamp(15px, 1.2vw, 17px); line-height: 1.6; opacity: 0.8; }
+  #shopify-section-{{ section.id }} .contato__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin: 22px 0 0;
+    padding: 8px 14px;
+    font-size: 13px;
+    background-color: var(--color-background-contrast);
+    border-radius: 999px;
+  }
+  #shopify-section-{{ section.id }} .contato__badge-dot {
+    width: 8px;
+    height: 8px;
+    background-color: #22c55e;
+    border-radius: 50%;
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6);
+    animation: contato-pulse 1.8s infinite;
+  }
+  @keyframes contato-pulse {
+    70% { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
   }
 
-  .contact__errors a {
-    color: inherit;
+  /* Canais */
+  #shopify-section-{{ section.id }} .contato__channels { display: grid; gap: 12px; margin-top: clamp(26px, 3vw, 40px); }
+  #shopify-section-{{ section.id }} .contato__channel {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 20px;
+    color: var(--color-text);
+    text-decoration: none;
+    background-color: var(--color-background-contrast);
+    border: 1px solid var(--color-border);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+  #shopify-section-{{ section.id }} .contato__channel:hover {
+    transform: translateY(-2px);
+    border-color: var(--color-text);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+  }
+  #shopify-section-{{ section.id }} .contato__channel-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 52px;
+    height: 52px;
+    color: var(--color-accent-text);
+    background-color: var(--color-accent);
+    border-radius: 50%;
+  }
+  #shopify-section-{{ section.id }} .contato__channel-text { display: grid; gap: 3px; flex: 1; min-width: 0; font-size: 14px; }
+  #shopify-section-{{ section.id }} .contato__channel-text strong { font-size: 17px; }
+  #shopify-section-{{ section.id }} .contato__channel-text span:last-child { opacity: 0.7; overflow-wrap: anywhere; }
+  #shopify-section-{{ section.id }} .contato__channel-tag {
+    justify-self: start;
+    padding: 2px 8px;
+    font-family: var(--font-heading-family);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #fff;
+    background-color: #1a9e4b;
+  }
+  #shopify-section-{{ section.id }} .contato__channel-arrow { font-size: 22px; transition: transform 0.2s ease; }
+  #shopify-section-{{ section.id }} .contato__channel:hover .contato__channel-arrow { transform: translateX(4px); }
+
+  /* WhatsApp em destaque, com o verde que o cliente reconhece */
+  #shopify-section-{{ section.id }} .contato__channel--whatsapp { border-color: #25d366; box-shadow: inset 4px 0 0 #25d366; }
+  #shopify-section-{{ section.id }} .contato__channel--whatsapp .contato__channel-icon { color: #fff; background-color: #25d366; }
+  #shopify-section-{{ section.id }} .contato__channel--whatsapp:hover { border-color: #1a9e4b; }
+
+  #shopify-section-{{ section.id }} .contato__warning {
+    margin: 0;
+    padding: 14px 16px;
+    font-size: 13px;
+    border: 1px dashed #b91c1c;
+    color: #b91c1c;
   }
 
-  .contact__submit {
-    margin-top: 8px;
-  }
+  #shopify-section-{{ section.id }} .contato__info { display: grid; gap: 12px; margin: clamp(24px, 3vw, 36px) 0 0; padding: 0; list-style: none; font-size: 14px; }
+  #shopify-section-{{ section.id }} .contato__info li { display: flex; align-items: center; gap: 10px; }
+  #shopify-section-{{ section.id }} .contato__info svg { width: 18px; height: 18px; flex: none; }
+  #shopify-section-{{ section.id }} .contato__info a { color: inherit; text-underline-offset: 3px; }
 
-  @media screen and (max-width: 1000px) {
-    .contact__heading {
-      font-size: var(--f6);
-    }
+  /* Card do formulário */
+  #shopify-section-{{ section.id }} .contato__card {
+    padding: clamp(24px, 3vw, 44px);
+    background-color: var(--color-background-contrast);
+    border: 1px solid var(--color-border);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.06);
+  }
+  #shopify-section-{{ section.id }} .contato__card-eyebrow {
+    margin: 0 0 8px;
+    font-family: var(--font-heading-family);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    opacity: 0.6;
+  }
+  #shopify-section-{{ section.id }} .contato__card-title {
+    margin: 0;
+    font-family: var(--font-display-family);
+    font-weight: 400;
+    font-size: clamp(1.7rem, 2.4vw, 2.3rem);
+    line-height: 1;
+    text-transform: uppercase;
+  }
+  #shopify-section-{{ section.id }} .contato__card-lead { margin: 8px 0 24px; font-size: 14px; opacity: 0.7; }
+
+  #shopify-section-{{ section.id }} .contato__fields { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  #shopify-section-{{ section.id }} .contato__field--full { grid-column: 1 / -1; }
+  #shopify-section-{{ section.id }} .contato__field {
+    display: grid;
+    gap: 4px;
+    padding: 10px 14px;
+    background-color: var(--color-background-contrast);
+    border: 1px solid var(--color-border);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  #shopify-section-{{ section.id }} .contato__field:focus-within { border-color: var(--color-text); box-shadow: 0 0 0 1px var(--color-text); }
+  #shopify-section-{{ section.id }} .contato__field span { font-size: 13px; }
+  #shopify-section-{{ section.id }} .contato__field input,
+  #shopify-section-{{ section.id }} .contato__field textarea {
+    width: 100%;
+    padding: 0;
+    font-family: var(--font-body-family);
+    font-size: 16px;
+    color: var(--color-text);
+    background: none;
+    border: none;
+    outline: none;
+    resize: vertical;
+  }
+  #shopify-section-{{ section.id }} .contato__field input::placeholder,
+  #shopify-section-{{ section.id }} .contato__field textarea::placeholder { color: var(--color-text); opacity: 0.4; }
+  #shopify-section-{{ section.id }} .contato__field:has(:user-invalid) { border-color: #b91c1c; }
+
+  #shopify-section-{{ section.id }} .contato__subjects { margin: 0; padding: 0; border: 0; }
+  #shopify-section-{{ section.id }} .contato__subjects legend { margin-bottom: 10px; padding: 0; font-size: 13px; }
+  #shopify-section-{{ section.id }} .contato__chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  #shopify-section-{{ section.id }} .contato__chip span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 38px;
+    padding: 6px 16px;
+    font-size: 13px;
+    background-color: var(--color-background);
+    border: 1px solid transparent;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: color 0.15s ease, background-color 0.15s ease;
+  }
+  #shopify-section-{{ section.id }} .contato__chip span:hover { border-color: var(--color-text); }
+  #shopify-section-{{ section.id }} .contato__chip input:checked + span { color: var(--color-accent-text); background-color: var(--color-accent); }
+  #shopify-section-{{ section.id }} .contato__chip input:focus-visible + span { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+
+  #shopify-section-{{ section.id }} .contato__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 58px;
+    padding: 12px 20px;
+    font-family: var(--font-heading-family);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+  }
+  #shopify-section-{{ section.id }} .contato__btn:hover { opacity: 0.88; transform: translateY(-1px); }
+  #shopify-section-{{ section.id }} .contato__btn--submit { margin-top: 20px; color: var(--color-accent-text); background-color: var(--color-accent); }
+  #shopify-section-{{ section.id }} .contato__btn--submit:hover svg { transform: translateX(3px); }
+  #shopify-section-{{ section.id }} .contato__btn--submit svg { transition: transform 0.15s ease; }
+  #shopify-section-{{ section.id }} .contato__btn--submit[aria-busy='true'] { opacity: 0.6; pointer-events: none; }
+  #shopify-section-{{ section.id }} .contato__btn--whatsapp { color: #fff; background-color: #25d366; }
+  #shopify-section-{{ section.id }} .contato__privacy { margin: 12px 0 0; font-size: 12px; text-align: center; opacity: 0.55; }
+
+  #shopify-section-{{ section.id }} .contato__errors {
+    margin-bottom: 20px;
+    padding: 14px 16px;
+    font-size: 14px;
+    color: #b91c1c;
+    border: 1px solid #b91c1c;
+  }
+  #shopify-section-{{ section.id }} .contato__errors ul { margin: 6px 0 0; padding-left: 18px; }
+
+  #shopify-section-{{ section.id }} .contato__success { display: grid; justify-items: center; gap: 12px; padding: 20px 0; text-align: center; outline: none; }
+  #shopify-section-{{ section.id }} .contato__success-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 72px;
+    height: 72px;
+    color: var(--color-accent-text);
+    background-color: var(--color-accent);
+    border-radius: 50%;
+    animation: contato-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes contato-pop { from { transform: scale(0.4); opacity: 0; } to { transform: none; opacity: 1; } }
+  #shopify-section-{{ section.id }} .contato__success h2 {
+    margin: 6px 0 0;
+    font-family: var(--font-display-family);
+    font-weight: 400;
+    font-size: clamp(1.8rem, 2.6vw, 2.4rem);
+    text-transform: uppercase;
+  }
+  #shopify-section-{{ section.id }} .contato__success p { max-width: 30em; margin: 0 0 10px; font-size: 15px; line-height: 1.6; opacity: 0.8; }
+  #shopify-section-{{ section.id }} .contato__link { font-size: 14px; color: inherit; text-underline-offset: 3px; }
+
+  @media screen and (max-width: 999px) {
+    #shopify-section-{{ section.id }} .contato__grid { grid-template-columns: 1fr; }
+  }
+  @media screen and (max-width: 559px) {
+    #shopify-section-{{ section.id }} .contato__fields { grid-template-columns: 1fr; }
+    #shopify-section-{{ section.id }} .contato__channel { padding: 16px; gap: 12px; }
+    #shopify-section-{{ section.id }} .contato__channel-icon { width: 44px; height: 44px; }
   }
 </style>
+
+<script>
+  (function () {
+    var root = document.querySelector('#shopify-section-{{ section.id }} .contato');
+    if (!root) return;
+
+    // Depois do envio (sucesso ou erro) leva o cliente direto ao aviso.
+    var notice = root.querySelector('[data-focus]');
+    if (notice) {
+      notice.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      notice.focus({ preventScroll: true });
+    }
+
+    // Card "Enviar e-mail" rola até o formulário e foca o primeiro campo.
+    var toForm = root.querySelector('[data-scroll-form]');
+    var form = document.getElementById('{{ form_id }}');
+    if (toForm && form) {
+      toForm.addEventListener('click', function (e) {
+        e.preventDefault();
+        form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        var first = form.querySelector('input:not([type=hidden]):not([type=radio])');
+        if (first) setTimeout(function () { first.focus({ preventScroll: true }); }, 400);
+      });
+    }
+
+    // Máscara (00) 00000-0000
+    var phone = root.querySelector('[data-phone]');
+    if (phone) {
+      phone.addEventListener('input', function () {
+        var d = phone.value.replace(/\D/g, '').slice(0, 11);
+        var out = d;
+        if (d.length > 2) out = '(' + d.slice(0, 2) + ') ' + d.slice(2);
+        if (d.length > 7) out = '(' + d.slice(0, 2) + ') ' + d.slice(2, d.length - 4) + '-' + d.slice(d.length - 4);
+        phone.value = out;
+      });
+    }
+
+    // Evita envio duplo.
+    if (form) {
+      form.addEventListener('submit', function () {
+        var btn = form.querySelector('.contato__btn--submit');
+        if (btn && form.checkValidity()) btn.setAttribute('aria-busy', 'true');
+      });
+    }
+  })();
+</script>
 
 {% schema %}
 {
@@ -191,9 +550,63 @@
   "settings": [
     {
       "type": "text",
+      "id": "eyebrow",
+      "default": "// Fale com a gente",
+      "label": "t:sections.contact_form.settings.eyebrow.label"
+    },
+    {
+      "type": "textarea",
       "id": "heading",
-      "label": "t:sections.contact_form.settings.heading.label",
-      "default": "Contact"
+      "default": "Estamos aqui\npara te ajudar",
+      "label": "t:sections.contact_form.settings.heading.label"
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "default": "Dúvidas sobre tamanho, pedido, troca ou uma estampa? Escolha o canal que preferir.",
+      "label": "t:sections.contact_form.settings.subheading.label"
+    },
+    {
+      "type": "text",
+      "id": "response_time",
+      "default": "Respondemos em até 1 dia útil",
+      "label": "t:sections.contact_form.settings.response_time.label",
+      "info": "t:sections.contact_form.settings.response_time.info"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.contact_form.settings.header_channels.content"
+    },
+    {
+      "type": "text",
+      "id": "whatsapp_number",
+      "label": "t:sections.contact_form.settings.whatsapp_number.label",
+      "info": "t:sections.contact_form.settings.whatsapp_number.info"
+    },
+    {
+      "type": "text",
+      "id": "whatsapp_message",
+      "default": "Olá! Vim pelo site da Mater e gostaria de tirar uma dúvida.",
+      "label": "t:sections.contact_form.settings.whatsapp_message.label"
+    },
+    {
+      "type": "text",
+      "id": "email",
+      "label": "t:sections.contact_form.settings.email.label",
+      "info": "t:sections.contact_form.settings.email.info"
+    },
+    {
+      "type": "text",
+      "id": "hours",
+      "default": "Atendimento de segunda a sexta, das 9h às 18h",
+      "label": "t:sections.contact_form.settings.hours.label"
+    },
+    {
+      "type": "text",
+      "id": "subjects",
+      "default": "Dúvida sobre tamanho, Meu pedido, Trocas e devoluções, Outro assunto",
+      "label": "t:sections.contact_form.settings.subjects.label",
+      "info": "t:sections.contact_form.settings.subjects.info"
     }
   ],
   "presets": [

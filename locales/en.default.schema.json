@@ -386,9 +386,30 @@
       "settings": {}
     },
     "contact_form": {
-      "name": "Contact form",
+      "name": "Contact page",
       "settings": {
-        "heading": { "label": "Heading" }
+        "eyebrow": { "label": "Eyebrow" },
+        "heading": { "label": "Heading" },
+        "subheading": { "label": "Subheading" },
+        "response_time": {
+          "label": "Response time",
+          "info": "Shown with a green dot. Only promise what your team can deliver."
+        },
+        "header_channels": { "content": "Channels" },
+        "whatsapp_number": {
+          "label": "WhatsApp number",
+          "info": "Numbers only, with country and area code. Example: 5511999999999. Empty hides the WhatsApp button."
+        },
+        "whatsapp_message": { "label": "WhatsApp pre-filled message" },
+        "email": {
+          "label": "Email shown",
+          "info": "Empty uses the store email. Form messages always go to the store email."
+        },
+        "hours": { "label": "Opening hours" },
+        "subjects": {
+          "label": "Subject shortcuts",
+          "info": "Separate with commas. Empty hides them."
+        }
       }
     }
   },

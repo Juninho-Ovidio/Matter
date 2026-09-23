@@ -3,7 +3,15 @@
     "main": {
       "type": "contact-form",
       "settings": {
-        "heading": "Contact"
+        "eyebrow": "// Fale com a gente",
+        "heading": "Estamos aqui\npara te ajudar",
+        "subheading": "Dúvidas sobre tamanho, pedido, troca ou uma estampa? Escolha o canal que preferir.",
+        "response_time": "Respondemos em até 1 dia útil",
+        "whatsapp_number": "5535920026807",
+        "whatsapp_message": "Olá! Vim pelo site da Mater e gostaria de tirar uma dúvida.",
+        "email": "mater.catholicstore@gmail.com",
+        "hours": "Atendimento de segunda a sexta, das 9h às 18h",
+        "subjects": "Dúvida sobre tamanho, Meu pedido, Trocas e devoluções, Outro assunto"
       }
     }
   },
