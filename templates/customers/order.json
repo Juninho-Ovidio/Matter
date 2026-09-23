@@ -1,0 +1,11 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-order",
+      "settings": {
+        "whatsapp_number": "5535920047872"
+      }
+    }
+  },
+  "order": ["main"]
+}

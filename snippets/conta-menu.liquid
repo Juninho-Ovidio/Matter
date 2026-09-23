@@ -1,0 +1,23 @@
+{%- comment -%}
+  ============================================================
+  conta-menu — navegação da área "Minha conta"
+  ============================================================
+  PARÂMETROS:
+  - current: 'orders' | 'addresses' (marca a aba ativa)
+  USO: {% render 'conta-menu', current: 'orders' %}
+{%- endcomment -%}
+
+<nav class="conta-painel__nav" aria-label="Minha conta">
+  <a href="{{ routes.account_url }}"{% if current == 'orders' %} aria-current="page"{% endif %}>
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 7h14l-1 13H6L5 7Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 7a3 3 0 0 1 6 0" stroke="currentColor" stroke-width="1.8"/></svg>
+    Pedidos
+  </a>
+  <a href="{{ routes.account_addresses_url }}"{% if current == 'addresses' %} aria-current="page"{% endif %}>
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21Z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="9.5" r="2.5" stroke="currentColor" stroke-width="1.8"/></svg>
+    Endereços
+  </a>
+  <a href="{{ routes.account_logout_url }}">
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 16l-4-4 4-4M6 12h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Sair
+  </a>
+</nav>

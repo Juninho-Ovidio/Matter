@@ -1,0 +1,65 @@
+{%- comment -%}
+  ============================================================
+  conta-erros — lista de erros dos formulários de conta, em PT
+  ============================================================
+  O Shopify devolve as mensagens no idioma padrão da loja (aqui,
+  inglês). Este snippet troca pelos textos em português conforme
+  o campo com erro; campos desconhecidos usam a mensagem original.
+
+  PARÂMETROS:
+  - errors: form.errors
+  - context: 'login' | 'register' | 'password' | 'address' (ajusta o texto do erro geral)
+
+  USO:
+  {%- if form.errors -%}{% render 'conta-erros', errors: form.errors, context: 'login' %}{%- endif -%}
+{%- endcomment -%}
+
+<div class="conta__alert conta__alert--error" role="alert" tabindex="-1" data-focus>
+  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.5v5.5m0 3.5v.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+  <div>
+    {%- if context == 'login' -%}
+      <strong>E-mail ou senha incorretos.</strong>
+      <div>Confira os dados ou use “Esqueci minha senha”.</div>
+    {%- else -%}
+      <strong>Confira os campos abaixo:</strong>
+      <ul role="list">
+        {%- for field in errors -%}
+          <li>
+            {%- case field -%}
+              {%- when 'email' -%}
+                {%- if context == 'register' -%}
+                  Este e-mail já tem uma conta ou não é válido. <a href="{{ routes.account_login_url }}#recover">Recuperar senha</a>
+                {%- else -%}
+                  Informe um e-mail válido.
+                {%- endif -%}
+              {%- when 'password' -%}
+                A senha precisa ter pelo menos 5 caracteres.
+              {%- when 'password_confirmation' -%}
+                As senhas não são iguais.
+              {%- when 'first_name' -%}
+                Informe seu nome.
+              {%- when 'last_name' -%}
+                Informe seu sobrenome.
+              {%- when 'address1' -%}
+                Informe o endereço.
+              {%- when 'city' -%}
+                Informe a cidade.
+              {%- when 'zip' -%}
+                Informe um CEP válido.
+              {%- when 'country' -%}
+                Escolha o país.
+              {%- when 'province' -%}
+                Escolha o estado.
+              {%- when 'phone' -%}
+                Informe um telefone válido.
+              {%- when 'form' -%}
+                {{ errors.messages[field] }}
+              {%- else -%}
+                {{ errors.translated_fields[field] | capitalize }} {{ errors.messages[field] }}
+            {%- endcase -%}
+          </li>
+        {%- endfor -%}
+      </ul>
+    {%- endif -%}
+  </div>
+</div>

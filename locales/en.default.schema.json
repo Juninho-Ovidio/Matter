@@ -412,6 +412,41 @@
       "name": "Password",
       "settings": {}
     },
+    "main_account_auth": {
+      "name": "Login / Register",
+      "settings": {
+        "form_heading": { "label": "Form heading" },
+        "form_text": { "label": "Form text" },
+        "header_aside": { "content": "Brand panel" },
+        "image": {
+          "label": "Image",
+          "info": "Empty uses the second hero image."
+        },
+        "aside_eyebrow": { "label": "Eyebrow" },
+        "aside_heading": { "label": "Heading" },
+        "aside_text": { "label": "Text" },
+        "perks": {
+          "label": "Benefits",
+          "info": "Separate with commas. Up to 4 look best."
+        }
+      }
+    },
+    "main_account_password": {
+      "name": "Account password",
+      "settings": {}
+    },
+    "main_account": {
+      "name": "My account",
+      "settings": {}
+    },
+    "main_addresses": {
+      "name": "Addresses",
+      "settings": {}
+    },
+    "main_order": {
+      "name": "Order",
+      "settings": {}
+    },
     "contact_form": {
       "name": "Contact page",
       "settings": {

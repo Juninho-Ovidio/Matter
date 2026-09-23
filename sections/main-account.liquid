@@ -1,0 +1,147 @@
+{%- comment -%}
+  ============================================================
+  MAIN ACCOUNT — painel "Minha conta" (Mater)
+  ============================================================
+
+  O QUE FAZ:
+  - Saudação com o nome do cliente + menu (Pedidos / Endereços / Sair).
+  - Números rápidos: pedidos, total em compras, endereços salvos.
+  - Lista de pedidos (10 por página) com status em português
+    (snippet conta-status) e link para o detalhe.
+  - Lateral: endereço principal, ajuda pelo WhatsApp e atalho para
+    continuar comprando.
+
+  ONDE É USADA: templates/customers/account.json (contas clássicas).
+{%- endcomment -%}
+
+{{ 'conta.css' | asset_url | stylesheet_tag }}
+
+{%- liquid
+  assign wa_number = section.settings.whatsapp_number | remove: ' ' | remove: '-' | remove: '(' | remove: ')' | remove: '+'
+-%}
+
+<section class="conta-painel">
+  <div class="conta-painel__wrap">
+    <header class="conta-painel__head">
+      <div>
+        <p class="conta__eyebrow">// Minha conta</p>
+        <h1 class="conta-painel__title">
+          Olá{% if customer.first_name != blank %}, {{ customer.first_name | escape }}{% endif %}
+        </h1>
+        <p class="conta-painel__sub">Acompanhe seus pedidos e gerencie seus endereços.</p>
+      </div>
+      {% render 'conta-menu', current: 'orders' %}
+    </header>
+
+    <div class="conta-painel__stats">
+      <div class="conta-painel__stat">
+        <span>Pedidos</span>
+        <strong>{{ customer.orders_count }}</strong>
+      </div>
+      <div class="conta-painel__stat">
+        <span>Total em compras</span>
+        <strong>{{ customer.total_spent | money }}</strong>
+      </div>
+      <div class="conta-painel__stat">
+        <span>Endereços salvos</span>
+        <strong>{{ customer.addresses_count }}</strong>
+      </div>
+    </div>
+
+    <div class="conta-painel__grid">
+      <div class="conta-painel__box">
+        <h2 class="conta-painel__box-title">Meus pedidos</h2>
+
+        {%- paginate customer.orders by 10 -%}
+          {%- if customer.orders.size > 0 -%}
+            <ul class="conta-pedidos" role="list">
+              {%- for order in customer.orders -%}
+                <li>
+                  <a class="conta-pedido" href="{{ order.customer_url }}">
+                    <span class="conta-pedido__id">
+                      <strong>Pedido {{ order.name }}</strong>
+                      <span>{{ order.created_at | date: '%d/%m/%Y' }} · {{ order.item_count }} {% if order.item_count == 1 %}item{% else %}itens{% endif %}</span>
+                    </span>
+                    <span class="conta-pedido__status">{% render 'conta-status', order: order %}</span>
+                    <span class="conta-pedido__total">{{ order.total_price | money }}</span>
+                    <span class="conta-pedido__arrow" aria-hidden="true">→</span>
+                  </a>
+                </li>
+              {%- endfor -%}
+            </ul>
+
+            {%- if paginate.pages > 1 -%}
+              <nav class="conta-paginacao" aria-label="Páginas de pedidos">
+                {%- for part in paginate.parts -%}
+                  {%- if part.is_link -%}
+                    <a href="{{ part.url }}">{{ part.title }}</a>
+                  {%- elsif part.title == paginate.current_page -%}
+                    <span class="current" aria-current="page">{{ part.title }}</span>
+                  {%- else -%}
+                    <span>{{ part.title }}</span>
+                  {%- endif -%}
+                {%- endfor -%}
+              </nav>
+            {%- endif -%}
+          {%- else -%}
+            <div class="conta-vazio">
+              <span class="conta-vazio__icon" aria-hidden="true">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M5 7h14l-1 13H6L5 7Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 7a3 3 0 0 1 6 0" stroke="currentColor" stroke-width="1.7"/></svg>
+              </span>
+              <h3>Nenhum pedido ainda</h3>
+              <p>Quando você fizer sua primeira compra, ela aparece aqui com o status da entrega.</p>
+              <a class="conta__btn" href="{{ routes.all_products_collection_url }}">
+                Ver produtos
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </a>
+            </div>
+          {%- endif -%}
+        {%- endpaginate -%}
+      </div>
+
+      <aside>
+        <div class="conta-painel__box">
+          <h2 class="conta-painel__box-title">
+            Endereço
+            <a href="{{ routes.account_addresses_url }}">{% if customer.default_address %}Gerenciar{% else %}Adicionar{% endif %}</a>
+          </h2>
+          {%- if customer.default_address -%}
+            <address class="conta-painel__address">{{ customer.default_address | format_address }}</address>
+          {%- else -%}
+            <p class="conta-painel__muted">Salve um endereço para finalizar suas compras mais rápido.</p>
+          {%- endif -%}
+        </div>
+
+        <div class="conta-painel__box">
+          <h2 class="conta-painel__box-title">Precisa de ajuda?</h2>
+          <p class="conta-painel__muted">Dúvida sobre um pedido, troca ou tamanho? Fale com a gente.</p>
+          {%- if wa_number != blank -%}
+            <a class="conta__btn conta__btn--small conta__btn--whatsapp conta__btn--block" href="https://wa.me/{{ wa_number }}?text={{ 'Olá! Tenho uma dúvida sobre meu pedido.' | url_encode | replace: '+', '%20' }}" target="_blank" rel="noopener">
+              Falar no WhatsApp
+            </a>
+          {%- endif -%}
+          <a class="conta__btn conta__btn--ghost conta__btn--small conta__btn--block" href="{{ routes.all_products_collection_url }}">
+            Continuar comprando
+          </a>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "t:sections.main_account.name",
+  "tag": "section",
+  "class": "section-main-account",
+  "settings": [
+    {
+      "type": "text",
+      "id": "whatsapp_number",
+      "default": "5535920047872",
+      "label": "t:sections.contact_form.settings.whatsapp_number.label",
+      "info": "t:sections.contact_form.settings.whatsapp_number.info"
+    }
+  ]
+}
+{% endschema %}

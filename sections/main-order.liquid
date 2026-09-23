@@ -1,0 +1,166 @@
+{%- comment -%}
+  ============================================================
+  MAIN ORDER — detalhe do pedido (Mater)
+  ============================================================
+
+  O QUE FAZ:
+  - Número, data e status do pedido (snippet conta-status).
+  - Linha do tempo: pedido feito → pagamento aprovado → enviado.
+  - Itens com foto, variação, quantidade, preço e rastreio (quando
+    o envio tem código de rastreamento).
+  - Resumo: subtotal, descontos, frete, impostos, reembolso e total.
+  - Lateral: endereço de entrega, de cobrança e ajuda no WhatsApp.
+
+  ONDE É USADA: templates/customers/order.json (contas clássicas).
+{%- endcomment -%}
+
+{{ 'conta.css' | asset_url | stylesheet_tag }}
+
+{%- liquid
+  assign wa_number = section.settings.whatsapp_number | remove: ' ' | remove: '-' | remove: '(' | remove: ')' | remove: '+'
+  assign is_paid = false
+  if order.financial_status == 'paid' or order.financial_status == 'partially_refunded' or order.financial_status == 'refunded' or order.financial_status == 'partially_paid'
+    assign is_paid = true
+  endif
+  assign is_shipped = false
+  if order.fulfillment_status == 'fulfilled' or order.fulfillment_status == 'partial'
+    assign is_shipped = true
+  endif
+  assign wa_text = 'Olá! Tenho uma dúvida sobre o pedido ' | append: order.name | url_encode | replace: '+', '%20'
+-%}
+
+<section class="conta-painel">
+  <div class="conta-painel__wrap">
+    <a class="conta-back" href="{{ routes.account_url }}">← Voltar para meus pedidos</a>
+
+    <header class="conta-painel__head">
+      <div>
+        <p class="conta__eyebrow">// Pedido de {{ order.created_at | date: '%d/%m/%Y às %H:%M' }}</p>
+        <h1 class="conta-painel__title">Pedido {{ order.name }}</h1>
+        <p class="conta-pedido__status">{% render 'conta-status', order: order %}</p>
+      </div>
+      {% render 'conta-menu', current: 'orders' %}
+    </header>
+
+    {%- if order.cancelled -%}
+      <div class="conta__alert conta__alert--error" role="status">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="m9 9 6 6m0-6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <div><strong>Pedido cancelado em {{ order.cancelled_at | date: '%d/%m/%Y' }}.</strong> Se tiver dúvidas sobre o reembolso, fale com a gente.</div>
+      </div>
+    {%- endif -%}
+
+    <div class="conta-painel__grid">
+      <div class="conta-painel__box">
+        {%- unless order.cancelled -%}
+          <ol class="conta-timeline" aria-label="Andamento do pedido">
+            <li class="is-done">Pedido feito</li>
+            <li{% if is_paid %} class="is-done"{% endif %}>Pagamento aprovado</li>
+            <li{% if is_shipped %} class="is-done"{% endif %}>Enviado</li>
+          </ol>
+        {%- endunless -%}
+
+        <h2 class="conta-painel__box-title">Itens</h2>
+        <ul class="conta-itens" role="list">
+          {%- for line_item in order.line_items -%}
+            <li class="conta-item">
+              <div class="conta-item__img">
+                {%- if line_item.image -%}
+                  {{ line_item.image | image_url: width: 200 | image_tag: loading: 'lazy', alt: line_item.title }}
+                {%- endif -%}
+                <span class="conta-item__qty">{{ line_item.quantity }}</span>
+              </div>
+              <div class="conta-item__info">
+                {%- if line_item.url != blank -%}
+                  <a href="{{ line_item.url }}">{{ line_item.product.title | default: line_item.title | escape }}</a>
+                {%- else -%}
+                  <strong>{{ line_item.title | escape }}</strong>
+                {%- endif -%}
+                {%- unless line_item.product.has_only_default_variant or line_item.variant_title == blank -%}
+                  <span>{{ line_item.variant_title | escape }}</span>
+                {%- endunless -%}
+                {%- if line_item.fulfillment -%}
+                  <span class="conta-item__track">
+                    Enviado em {{ line_item.fulfillment.created_at | date: '%d/%m/%Y' }}
+                    {%- if line_item.fulfillment.tracking_url -%}
+                      · <a href="{{ line_item.fulfillment.tracking_url }}" target="_blank" rel="noopener">Rastrear{% if line_item.fulfillment.tracking_number %} ({{ line_item.fulfillment.tracking_number }}){% endif %}</a>
+                    {%- elsif line_item.fulfillment.tracking_number -%}
+                      · Código: {{ line_item.fulfillment.tracking_number }}
+                    {%- endif -%}
+                  </span>
+                {%- endif -%}
+              </div>
+              <div class="conta-item__price">
+                {%- if line_item.original_line_price != line_item.final_line_price -%}
+                  <s>{{ line_item.original_line_price | money }}</s>
+                {%- endif -%}
+                {{ line_item.final_line_price | money }}
+              </div>
+            </li>
+          {%- endfor -%}
+        </ul>
+
+        <dl class="conta-totais">
+          <div><dt>Subtotal</dt><dd>{{ order.line_items_subtotal_price | money }}</dd></div>
+          {%- for discount in order.cart_level_discount_applications -%}
+            <div class="is-discount"><dt>Desconto ({{ discount.title | escape }})</dt><dd>-{{ discount.total_allocated_amount | money }}</dd></div>
+          {%- endfor -%}
+          <div>
+            <dt>Frete{% if order.shipping_methods.size > 0 %} ({{ order.shipping_methods.first.title | escape }}){% endif %}</dt>
+            <dd>{% if order.shipping_price == 0 %}Grátis{% else %}{{ order.shipping_price | money }}{% endif %}</dd>
+          </div>
+          {%- if order.total_tax > 0 -%}
+            <div><dt>Impostos</dt><dd>{{ order.total_tax | money }}</dd></div>
+          {%- endif -%}
+          {%- if order.total_refunded_amount > 0 -%}
+            <div class="is-discount"><dt>Reembolsado</dt><dd>-{{ order.total_refunded_amount | money }}</dd></div>
+          {%- endif -%}
+          <div class="is-total"><dt>Total</dt><dd>{{ order.total_price | money_with_currency }}</dd></div>
+        </dl>
+      </div>
+
+      <aside>
+        {%- if order.shipping_address -%}
+          <div class="conta-painel__box">
+            <h2 class="conta-painel__box-title">Entrega</h2>
+            <address class="conta-painel__address">{{ order.shipping_address | format_address }}</address>
+          </div>
+        {%- endif -%}
+        {%- if order.billing_address -%}
+          <div class="conta-painel__box">
+            <h2 class="conta-painel__box-title">Cobrança</h2>
+            <address class="conta-painel__address">{{ order.billing_address | format_address }}</address>
+          </div>
+        {%- endif -%}
+        <div class="conta-painel__box">
+          <h2 class="conta-painel__box-title">Precisa de ajuda?</h2>
+          <p class="conta-painel__muted">Fale com a gente informando o número {{ order.name }}.</p>
+          {%- if wa_number != blank -%}
+            <a class="conta__btn conta__btn--small conta__btn--whatsapp conta__btn--block" href="https://wa.me/{{ wa_number }}?text={{ wa_text }}" target="_blank" rel="noopener">
+              Falar no WhatsApp
+            </a>
+          {%- endif -%}
+          <a class="conta__btn conta__btn--ghost conta__btn--small conta__btn--block" href="{{ routes.all_products_collection_url }}">
+            Continuar comprando
+          </a>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "t:sections.main_order.name",
+  "tag": "section",
+  "class": "section-main-order",
+  "settings": [
+    {
+      "type": "text",
+      "id": "whatsapp_number",
+      "default": "5535920047872",
+      "label": "t:sections.contact_form.settings.whatsapp_number.label",
+      "info": "t:sections.contact_form.settings.whatsapp_number.info"
+    }
+  ]
+}
+{% endschema %}

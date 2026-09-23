@@ -1,0 +1,111 @@
+{%- comment -%}
+  ============================================================
+  MAIN ADDRESSES — "Meus endereços" (Mater)
+  ============================================================
+
+  O QUE FAZ:
+  - Botão "Adicionar novo endereço" que abre o formulário
+    (<details>, funciona sem JS).
+  - Cards dos endereços salvos (principal em destaque) com
+    "Editar" (abre o formulário no próprio card) e "Excluir".
+  - Formulário: snippet conta-endereco-form (CEP com ViaCEP).
+  - País/estado: Shopify.CountryProvinceSelector (shopify_common.js).
+
+  ONDE É USADA: templates/customers/addresses.json (contas clássicas).
+
+  OBS.: "Excluir" envia POST com _method=delete para address.url —
+  o mesmo que o Shopify.postLink faz nos temas oficiais.
+{%- endcomment -%}
+
+{{ 'conta.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'shopify_common.js' | shopify_asset_url }}" defer="defer"></script>
+<script src="{{ 'conta.js' | asset_url }}" defer="defer"></script>
+
+<section class="conta-painel">
+  <div class="conta-painel__wrap">
+    <header class="conta-painel__head">
+      <div>
+        <p class="conta__eyebrow">// Minha conta</p>
+        <h1 class="conta-painel__title">Endereços</h1>
+        <p class="conta-painel__sub">Salve seus endereços e finalize as próximas compras mais rápido.</p>
+      </div>
+      {% render 'conta-menu', current: 'addresses' %}
+    </header>
+
+    {%- paginate customer.addresses by 20 -%}
+      {%- comment -%} Novo endereço: já abre aberto se não houver nenhum salvo ou se deu erro. {%- endcomment -%}
+      {%- form 'customer_address', customer.new_address, class: 'conta__form' -%}
+        <details class="conta-details conta-details--new"{% if customer.addresses_count == 0 or form.errors %} open{% endif %}>
+          <summary>
+            <span class="conta-plus" aria-hidden="true">+</span>
+            Adicionar novo endereço
+          </summary>
+          {% render 'conta-endereco-form', form: form, suffix: 'new', is_new: true %}
+        </details>
+      {%- endform -%}
+
+      {%- if customer.addresses.size > 0 -%}
+        <div class="conta-enderecos">
+          {%- for address in customer.addresses -%}
+            {%- assign is_default = false -%}
+            {%- if address == customer.default_address -%}{%- assign is_default = true -%}{%- endif -%}
+            <article class="conta-endereco{% if is_default %} conta-endereco--default{% endif %}">
+              {%- if is_default -%}
+                <span class="conta-badge conta-badge--ok">Endereço principal</span>
+              {%- endif -%}
+              <address class="conta-painel__address">{{ address | format_address }}</address>
+
+              {%- form 'customer_address', address, class: 'conta__form' -%}
+                <details class="conta-details"{% if form.errors %} open{% endif %}>
+                  <summary class="conta__btn conta__btn--ghost conta__btn--small">Editar</summary>
+                  {% render 'conta-endereco-form', form: form, suffix: address.id, is_new: false %}
+                </details>
+              {%- endform -%}
+
+              <div class="conta-endereco__actions">
+                <form method="post" action="{{ address.url }}" onsubmit="return confirm('Excluir este endereço?');">
+                  <input type="hidden" name="_method" value="delete">
+                  <button type="submit" class="conta__link conta-endereco__delete">Excluir</button>
+                </form>
+              </div>
+            </article>
+          {%- endfor -%}
+        </div>
+      {%- endif -%}
+
+      {%- if paginate.pages > 1 -%}
+        <nav class="conta-paginacao" aria-label="Páginas de endereços">
+          {%- for part in paginate.parts -%}
+            {%- if part.is_link -%}
+              <a href="{{ part.url }}">{{ part.title }}</a>
+            {%- elsif part.title == paginate.current_page -%}
+              <span class="current" aria-current="page">{{ part.title }}</span>
+            {%- else -%}
+              <span>{{ part.title }}</span>
+            {%- endif -%}
+          {%- endfor -%}
+        </nav>
+      {%- endif -%}
+    {%- endpaginate -%}
+  </div>
+</section>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    if (!window.Shopify || !Shopify.CountryProvinceSelector) return;
+    document.querySelectorAll('#shopify-section-{{ section.id }} [data-country-select]').forEach(function (select) {
+      new Shopify.CountryProvinceSelector(select.id, select.getAttribute('data-province-id'), {
+        hideElement: select.getAttribute('data-province-container')
+      });
+    });
+  });
+</script>
+
+{% schema %}
+{
+  "name": "t:sections.main_addresses.name",
+  "tag": "section",
+  "class": "section-main-addresses",
+  "settings": []
+}
+{% endschema %}

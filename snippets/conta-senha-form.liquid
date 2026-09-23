@@ -1,0 +1,73 @@
+{%- comment -%}
+  ============================================================
+  conta-senha-form — miolo dos formulários "nova senha" e
+  "ativar conta" (main-account-password)
+  ============================================================
+  Fica num snippet porque o tipo do {% form %} precisa ser fixo:
+  a section abre o form certo e renderiza este conteúdo dentro.
+
+  PARÂMETROS:
+  - form: o objeto form da tag {% form %}
+  - is_activate: true na tela de ativar conta
+{%- endcomment -%}
+
+{%- if is_activate -%}
+  <p class="conta__eyebrow">// Falta só um passo</p>
+  <h1 class="conta__title">Ative sua conta</h1>
+  <p class="conta__lead">Crie uma senha para acessar seus pedidos e comprar mais rápido.</p>
+{%- else -%}
+  <p class="conta__eyebrow">// Recuperar acesso</p>
+  <h1 class="conta__title">Crie uma nova senha</h1>
+  <p class="conta__lead">Escolha uma senha nova para voltar a acessar sua conta.</p>
+{%- endif -%}
+
+{%- if form.errors -%}
+  {% render 'conta-erros', errors: form.errors, context: 'password' %}
+{%- endif -%}
+
+{%- liquid
+  assign pass_invalid = false
+  assign confirm_invalid = false
+  if form.errors contains 'password'
+    assign pass_invalid = true
+  endif
+  if form.errors contains 'password_confirmation'
+    assign confirm_invalid = true
+  endif
+-%}
+<div class="conta__fields">
+  {% render 'conta-senha',
+    id: 'NewPassword',
+    name: 'customer[password]',
+    label: 'Nova senha',
+    autocomplete: 'new-password',
+    strength: true,
+    invalid: pass_invalid
+  %}
+  {% render 'conta-senha',
+    id: 'NewPasswordConfirm',
+    name: 'customer[password_confirmation]',
+    label: 'Confirme a senha',
+    autocomplete: 'new-password',
+    confirm: 'NewPassword',
+    invalid: confirm_invalid
+  %}
+</div>
+
+<button type="submit" class="conta__btn">
+  {% if is_activate %}Ativar minha conta{% else %}Salvar nova senha{% endif %}
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</button>
+
+{%- if is_activate -%}
+  <p class="conta__switch">
+    <button type="submit" name="decline" value="Recusar convite" class="conta__link" formnovalidate>Não quero criar conta agora</button>
+  </p>
+{%- else -%}
+  <p class="conta__switch"><a href="{{ routes.account_login_url }}">← Voltar para entrar</a></p>
+{%- endif -%}
+
+<p class="conta__secure">
+  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.8"/></svg>
+  Ambiente 100% seguro
+</p>

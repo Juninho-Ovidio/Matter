@@ -1,0 +1,32 @@
+{%- comment -%}
+  ============================================================
+  conta-status — selo de status do pedido, em português
+  ============================================================
+  PARÂMETROS:
+  - order: o pedido
+
+  Mostra o status do pagamento e o da entrega (ou "Cancelado").
+  USO: {% render 'conta-status', order: order %}
+{%- endcomment -%}
+
+{%- if order.cancelled -%}
+  <span class="conta-badge conta-badge--bad">Cancelado</span>
+{%- else -%}
+  {%- case order.financial_status -%}
+    {%- when 'paid' -%}<span class="conta-badge conta-badge--ok">Pago</span>
+    {%- when 'pending' -%}<span class="conta-badge conta-badge--wait">Aguardando pagamento</span>
+    {%- when 'authorized' -%}<span class="conta-badge conta-badge--wait">Pagamento autorizado</span>
+    {%- when 'partially_paid' -%}<span class="conta-badge conta-badge--wait">Pago parcialmente</span>
+    {%- when 'refunded' -%}<span class="conta-badge conta-badge--bad">Reembolsado</span>
+    {%- when 'partially_refunded' -%}<span class="conta-badge conta-badge--info">Reembolso parcial</span>
+    {%- when 'voided' -%}<span class="conta-badge conta-badge--bad">Pagamento cancelado</span>
+    {%- else -%}<span class="conta-badge">{{ order.financial_status_label }}</span>
+  {%- endcase -%}
+
+  {%- case order.fulfillment_status -%}
+    {%- when 'fulfilled' -%}<span class="conta-badge conta-badge--ok">Enviado</span>
+    {%- when 'partial' -%}<span class="conta-badge conta-badge--info">Enviado em partes</span>
+    {%- when 'restocked' -%}<span class="conta-badge conta-badge--bad">Devolvido</span>
+    {%- else -%}<span class="conta-badge conta-badge--wait">Em preparação</span>
+  {%- endcase -%}
+{%- endif -%}

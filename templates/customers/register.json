@@ -1,0 +1,16 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-account-auth",
+      "settings": {
+        "form_heading": "Crie sua conta",
+        "form_text": "Cadastro rápido e grátis. Compre com mais agilidade e acompanhe cada pedido.",
+        "aside_eyebrow": "// Faça parte",
+        "aside_heading": "Vista sua fé\ncom a Mater",
+        "aside_text": "Crie sua conta e tenha tudo em um só lugar.",
+        "perks": "Acompanhe seus pedidos, Checkout mais rápido com seus dados salvos, Lançamentos e ofertas em primeira mão, Compra 100% segura"
+      }
+    }
+  },
+  "order": ["main"]
+}

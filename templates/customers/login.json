@@ -1,0 +1,16 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-account-auth",
+      "settings": {
+        "form_heading": "Entrar",
+        "form_text": "Acesse para acompanhar seus pedidos e comprar mais rápido.",
+        "aside_eyebrow": "// Mater Catholic Store",
+        "aside_heading": "Bem-vindo\nde volta",
+        "aside_text": "Sua fé, seu estilo. Entre e continue de onde parou.",
+        "perks": "Acompanhe seus pedidos, Compre mais rápido com seus dados salvos, Lançamentos e ofertas em primeira mão, Compra 100% segura"
+      }
+    }
+  },
+  "order": ["main"]
+}

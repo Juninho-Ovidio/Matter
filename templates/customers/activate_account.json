@@ -1,0 +1,14 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-account-password",
+      "settings": {
+        "aside_eyebrow": "// Bem-vindo à Mater",
+        "aside_heading": "Sua conta\nestá pronta",
+        "aside_text": "Só falta criar sua senha.",
+        "perks": "Acompanhe seus pedidos, Compre mais rápido com seus dados salvos, Lançamentos e ofertas em primeira mão"
+      }
+    }
+  },
+  "order": ["main"]
+}

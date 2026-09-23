@@ -1,0 +1,82 @@
+{%- comment -%}
+  ============================================================
+  conta-endereco-form — campos do formulário de endereço
+  ============================================================
+  Usado dentro de {% form 'customer_address', ... %} em
+  main-addresses (novo endereço e edição de cada endereço).
+
+  PARÂMETROS:
+  - form: o objeto form da tag
+  - suffix: sufixo único para os ids ('new' ou o id do endereço)
+  - is_new: true no formulário de novo endereço
+
+  O CEP busca rua, bairro, cidade e estado no ViaCEP (assets/conta.js).
+  País/estado usam o Shopify.CountryProvinceSelector (main-addresses).
+{%- endcomment -%}
+
+{%- if form.errors -%}
+  {% render 'conta-erros', errors: form.errors, context: 'address' %}
+{%- endif -%}
+
+<div class="conta__fields">
+  <label class="conta__field" for="AddressFirstName_{{ suffix }}">
+    <span>Nome</span>
+    <input type="text" id="AddressFirstName_{{ suffix }}" name="address[first_name]" value="{{ form.first_name }}" autocomplete="given-name" required>
+  </label>
+  <label class="conta__field" for="AddressLastName_{{ suffix }}">
+    <span>Sobrenome</span>
+    <input type="text" id="AddressLastName_{{ suffix }}" name="address[last_name]" value="{{ form.last_name }}" autocomplete="family-name" required>
+  </label>
+
+  <label class="conta__field" for="AddressZip_{{ suffix }}">
+    <span>CEP</span>
+    <input type="text" id="AddressZip_{{ suffix }}" name="address[zip]" value="{{ form.zip }}" autocomplete="postal-code" inputmode="numeric" placeholder="00000-000" data-cep required>
+  </label>
+  <label class="conta__field" for="AddressPhone_{{ suffix }}">
+    <span>Telefone</span>
+    <input type="tel" id="AddressPhone_{{ suffix }}" name="address[phone]" value="{{ form.phone }}" autocomplete="tel" inputmode="tel" placeholder="(00) 00000-0000">
+  </label>
+
+  <label class="conta__field conta__field--full" for="AddressAddress1_{{ suffix }}">
+    <span>Endereço e número</span>
+    <input type="text" id="AddressAddress1_{{ suffix }}" name="address[address1]" value="{{ form.address1 }}" autocomplete="address-line1" placeholder="Rua, avenida… e o número" required>
+  </label>
+  <label class="conta__field" for="AddressAddress2_{{ suffix }}">
+    <span>Bairro / complemento</span>
+    <input type="text" id="AddressAddress2_{{ suffix }}" name="address[address2]" value="{{ form.address2 }}" autocomplete="address-line2" placeholder="Bairro, apto, bloco…">
+  </label>
+  <label class="conta__field" for="AddressCity_{{ suffix }}">
+    <span>Cidade</span>
+    <input type="text" id="AddressCity_{{ suffix }}" name="address[city]" value="{{ form.city }}" autocomplete="address-level2" required>
+  </label>
+
+  <label class="conta__field conta__field--select" for="AddressCountry_{{ suffix }}">
+    <span>País</span>
+    <select
+      id="AddressCountry_{{ suffix }}"
+      name="address[country]"
+      autocomplete="country"
+      data-country-select
+      data-province-id="AddressProvince_{{ suffix }}"
+      data-province-container="AddressProvinceContainer_{{ suffix }}"
+      data-default="{{ form.country | default: 'Brazil' }}"
+    >
+      {{ all_country_option_tags }}
+    </select>
+  </label>
+  <label class="conta__field conta__field--select" id="AddressProvinceContainer_{{ suffix }}" for="AddressProvince_{{ suffix }}">
+    <span>Estado</span>
+    <select id="AddressProvince_{{ suffix }}" name="address[province]" autocomplete="address-level1" data-default="{{ form.province }}"></select>
+  </label>
+
+  <div class="conta__field--full">
+    <label class="conta__check">
+      <input type="checkbox" name="address[default]" value="1"{% if form.set_as_default_checkbox contains 'checked' %} checked{% endif %}>
+      <span>Usar como endereço principal</span>
+    </label>
+  </div>
+</div>
+
+<div class="conta-form-actions">
+  <button type="submit" class="conta__btn">{% if is_new %}Salvar endereço{% else %}Salvar alterações{% endif %}</button>
+</div>

@@ -1,0 +1,286 @@
+{%- comment -%}
+  ============================================================
+  MAIN ACCOUNT AUTH — Entrar / Criar conta (Mater)
+  ============================================================
+
+  O QUE FAZ:
+  Uma só section para as duas telas, escolhida por template.name:
+  - customers/login    → abas, formulário "Entrar", "Esqueci minha
+    senha" (troca de painel via #recover, funciona sem JS) e
+    "Continuar como visitante" quando vem do checkout.
+  - customers/register → nome, sobrenome, e-mail, senha com medidor
+    de força e opt-in de novidades (desmarcado — LGPD).
+  Ao lado, o painel da marca (snippet conta-lateral) com os
+  benefícios de ter conta. No celular o formulário vem primeiro.
+
+  ONDE É USADA:
+  templates/customers/login.json e templates/customers/register.json.
+
+  IMPORTANTE:
+  Só aparece com as CONTAS CLÁSSICAS ativadas no admin
+  (Configurações → Contas de clientes). Com as contas novas o
+  Shopify usa a própria tela de login e ignora estes templates.
+
+  ESTILO / JS: assets/conta.css e assets/conta.js.
+{%- endcomment -%}
+
+{{ 'conta.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'conta.js' | asset_url }}" defer="defer"></script>
+
+{%- assign is_register = false -%}
+{%- if template.name == 'register' -%}{%- assign is_register = true -%}{%- endif -%}
+
+<section class="conta">
+  <div class="conta__grid">
+    {% render 'conta-lateral',
+      image: section.settings.image,
+      eyebrow: section.settings.aside_eyebrow,
+      title: section.settings.aside_heading,
+      text: section.settings.aside_text,
+      perks: section.settings.perks
+    %}
+
+    <div class="conta__card">
+      <div class="conta__card-inner">
+        <nav class="conta__tabs" aria-label="Conta">
+          <a class="conta__tab" href="{{ routes.account_login_url }}"{% unless is_register %} aria-current="page"{% endunless %}>Entrar</a>
+          <a class="conta__tab" href="{{ routes.account_register_url }}"{% if is_register %} aria-current="page"{% endif %}>Criar conta</a>
+        </nav>
+
+        {%- if is_register -%}
+          {%- comment -%} ---------------- Criar conta ---------------- {%- endcomment -%}
+          {%- form 'create_customer', class: 'conta__form' -%}
+            <p class="conta__eyebrow">// Leva menos de 1 minuto</p>
+            <h1 class="conta__title">{{ section.settings.form_heading | default: 'Crie sua conta' | escape }}</h1>
+            {%- if section.settings.form_text != blank -%}
+              <p class="conta__lead">{{ section.settings.form_text | escape }}</p>
+            {%- endif -%}
+
+            {%- if form.errors -%}
+              {% render 'conta-erros', errors: form.errors, context: 'register' %}
+            {%- endif -%}
+
+            <div class="conta__fields">
+              <label class="conta__field{% if form.errors contains 'first_name' %} is-invalid{% endif %}" for="RegisterFirstName">
+                <span>Nome</span>
+                <input type="text" id="RegisterFirstName" name="customer[first_name]" value="{{ form.first_name }}" autocomplete="given-name" placeholder="Seu nome" required>
+              </label>
+              <label class="conta__field{% if form.errors contains 'last_name' %} is-invalid{% endif %}" for="RegisterLastName">
+                <span>Sobrenome</span>
+                <input type="text" id="RegisterLastName" name="customer[last_name]" value="{{ form.last_name }}" autocomplete="family-name" placeholder="Seu sobrenome">
+              </label>
+              <label class="conta__field conta__field--full{% if form.errors contains 'email' %} is-invalid{% endif %}" for="RegisterEmail">
+                <span>E-mail</span>
+                <input type="email" id="RegisterEmail" name="customer[email]" value="{{ form.email }}" autocomplete="email" autocapitalize="off" spellcheck="false" inputmode="email" placeholder="seuemail@exemplo.com" required>
+              </label>
+              {%- liquid
+                assign pass_invalid = false
+                if form.errors contains 'password'
+                  assign pass_invalid = true
+                endif
+              -%}
+              {% render 'conta-senha',
+                id: 'RegisterPassword',
+                name: 'customer[password]',
+                label: 'Crie uma senha',
+                autocomplete: 'new-password',
+                strength: true,
+                invalid: pass_invalid
+              %}
+            </div>
+
+            <div class="conta__marketing">
+              <label class="conta__check">
+                <input type="checkbox" name="customer[accepts_marketing]" value="true">
+                <span><strong>Quero receber lançamentos e ofertas</strong> por e-mail. Sem spam — você cancela quando quiser.</span>
+              </label>
+            </div>
+
+            <button type="submit" class="conta__btn">
+              Criar minha conta
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+
+            <p class="conta__secure">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.8"/></svg>
+              Seus dados ficam protegidos
+              {%- if shop.privacy_policy -%}
+                — <a class="conta__link" href="{{ shop.privacy_policy.url }}">Política de privacidade</a>
+              {%- endif -%}
+            </p>
+            <p class="conta__switch">Já tem conta? <a href="{{ routes.account_login_url }}">Entrar</a></p>
+          {%- endform -%}
+        {%- else -%}
+          {%- comment -%}
+            ---------------- Recuperar senha ----------------
+            Vem ANTES do login no HTML: o CSS usa ":target ~" para
+            esconder o login quando a URL termina em #recover.
+          {%- endcomment -%}
+          <div id="recover" class="conta__recover">
+            {%- form 'recover_customer_password', class: 'conta__form' -%}
+              {%- assign recover_success = form.posted_successfully? -%}
+              <p class="conta__eyebrow">// Sem problemas</p>
+              <h1 class="conta__title">Recuperar senha</h1>
+              <p class="conta__lead">Informe o e-mail da sua conta e enviaremos um link para você criar uma nova senha.</p>
+
+              {%- if recover_success -%}
+                <div class="conta__alert conta__alert--success" role="status">
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  <div><strong>Link enviado!</strong> Confira seu e-mail (e a caixa de spam).</div>
+                </div>
+              {%- endif -%}
+
+              {%- if form.errors -%}
+                <div class="conta__alert conta__alert--error" role="alert" tabindex="-1" data-focus>
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.5v5.5m0 3.5v.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                  <div><strong>Não encontramos uma conta com esse e-mail.</strong> Confira ou <a href="{{ routes.account_register_url }}">crie uma conta</a>.</div>
+                </div>
+              {%- endif -%}
+
+              <div class="conta__fields">
+                <label class="conta__field conta__field--full" for="RecoverEmail">
+                  <span>E-mail</span>
+                  <input type="email" id="RecoverEmail" name="email" autocomplete="email" autocapitalize="off" spellcheck="false" inputmode="email" placeholder="seuemail@exemplo.com" required>
+                </label>
+              </div>
+
+              <button type="submit" class="conta__btn">
+                Enviar link
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <p class="conta__switch"><a href="#login">← Voltar para entrar</a></p>
+            {%- endform -%}
+          </div>
+
+          {%- comment -%} ---------------- Entrar ---------------- {%- endcomment -%}
+          <div id="login" class="conta__login">
+            {%- if recover_success -%}
+              <div class="conta__alert conta__alert--success" role="status" tabindex="-1" data-focus>
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <div><strong>Link enviado!</strong> Confira seu e-mail (e a caixa de spam) para criar uma nova senha.</div>
+              </div>
+            {%- endif -%}
+
+            {%- form 'customer_login', class: 'conta__form' -%}
+              <p class="conta__eyebrow">// Minha conta</p>
+              <h1 class="conta__title">{{ section.settings.form_heading | default: 'Entrar' | escape }}</h1>
+              {%- if section.settings.form_text != blank -%}
+                <p class="conta__lead">{{ section.settings.form_text | escape }}</p>
+              {%- endif -%}
+
+              {%- if form.errors -%}
+                {% render 'conta-erros', errors: form.errors, context: 'login' %}
+              {%- endif -%}
+
+              <div class="conta__fields">
+                <label class="conta__field conta__field--full{% if form.errors %} is-invalid{% endif %}" for="LoginEmail">
+                  <span>E-mail</span>
+                  <input type="email" id="LoginEmail" name="customer[email]" value="{{ form.email }}" autocomplete="email" autocapitalize="off" spellcheck="false" inputmode="email" placeholder="seuemail@exemplo.com" required>
+                </label>
+                {%- liquid
+                  assign login_invalid = false
+                  if form.errors
+                    assign login_invalid = true
+                  endif
+                -%}
+                {% render 'conta-senha',
+                  id: 'LoginPassword',
+                  name: 'customer[password]',
+                  label: 'Senha',
+                  autocomplete: 'current-password',
+                  invalid: login_invalid
+                %}
+              </div>
+
+              <div class="conta__row">
+                <span></span>
+                <a class="conta__link" href="#recover">Esqueci minha senha</a>
+              </div>
+
+              <button type="submit" class="conta__btn">
+                Entrar na minha conta
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+            {%- endform -%}
+
+            <p class="conta__divider">Novo por aqui?</p>
+            <a class="conta__btn conta__btn--ghost" href="{{ routes.account_register_url }}">Criar conta grátis</a>
+
+            {%- if shop.checkout.guest_login -%}
+              {%- form 'guest_login' -%}
+                <p class="conta__switch">
+                  <button type="submit" class="conta__link">Continuar como visitante →</button>
+                </p>
+              {%- endform -%}
+            {%- endif -%}
+
+            <p class="conta__secure">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.8"/></svg>
+              Ambiente 100% seguro
+            </p>
+          </div>
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* Erro no "recuperar senha" mantém esse painel aberto depois do envio. */
+  .conta__recover:has(.conta__alert--error) { display: block; }
+  .conta__recover:has(.conta__alert--error) ~ .conta__login { display: none; }
+</style>
+
+{% schema %}
+{
+  "name": "t:sections.main_account_auth.name",
+  "tag": "section",
+  "class": "section-main-account-auth",
+  "settings": [
+    {
+      "type": "text",
+      "id": "form_heading",
+      "label": "t:sections.main_account_auth.settings.form_heading.label"
+    },
+    {
+      "type": "text",
+      "id": "form_text",
+      "label": "t:sections.main_account_auth.settings.form_text.label"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.main_account_auth.settings.header_aside.content"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "t:sections.main_account_auth.settings.image.label",
+      "info": "t:sections.main_account_auth.settings.image.info"
+    },
+    {
+      "type": "text",
+      "id": "aside_eyebrow",
+      "default": "// Mater Catholic Store",
+      "label": "t:sections.main_account_auth.settings.aside_eyebrow.label"
+    },
+    {
+      "type": "textarea",
+      "id": "aside_heading",
+      "default": "Bem-vindo\nde volta",
+      "label": "t:sections.main_account_auth.settings.aside_heading.label"
+    },
+    {
+      "type": "text",
+      "id": "aside_text",
+      "label": "t:sections.main_account_auth.settings.aside_text.label"
+    },
+    {
+      "type": "text",
+      "id": "perks",
+      "default": "Acompanhe seus pedidos, Compre mais rápido com seus dados salvos, Lançamentos e ofertas em primeira mão, Compra 100% segura",
+      "label": "t:sections.main_account_auth.settings.perks.label",
+      "info": "t:sections.main_account_auth.settings.perks.info"
+    }
+  ]
+}
+{% endschema %}

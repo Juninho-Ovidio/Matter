@@ -1,0 +1,64 @@
+{%- comment -%}
+  ============================================================
+  conta-lateral — painel da marca nas telas de conta
+  ============================================================
+  Imagem com degradê escuro, chamada e lista de benefícios de
+  ter conta (argumentos de conversão). Usado ao lado dos
+  formulários de entrar, criar conta e senha.
+
+  PARÂMETROS:
+  - image: imagem escolhida na section (opcional; sem ela usa
+    assets/hero-inicio-2-*.jpg)
+  - eyebrow, title, text: textos do painel
+  - perks: benefícios separados por vírgula (opcional)
+
+  USO:
+  {% render 'conta-lateral', image: section.settings.image, eyebrow: '...', title: '...', text: '...', perks: '...' %}
+{%- endcomment -%}
+
+<aside class="conta__aside">
+  <div class="conta__aside-media">
+    {%- if image != blank -%}
+      {{ image | image_url: width: 1400 | image_tag: loading: 'eager', sizes: '(min-width: 1000px) 50vw, 100vw', widths: '600, 900, 1200, 1400', alt: '' }}
+    {%- else -%}
+      <img
+        src="{{ 'hero-inicio-2-900.jpg' | asset_url }}"
+        srcset="{{ 'hero-inicio-2-900.jpg' | asset_url }} 900w, {{ 'hero-inicio-2-1400.jpg' | asset_url }} 1400w"
+        sizes="(min-width: 1000px) 50vw, 100vw"
+        alt=""
+        width="1400"
+        height="1400"
+      >
+    {%- endif -%}
+  </div>
+
+  {%- if eyebrow != blank -%}<p class="conta__aside-eyebrow">{{ eyebrow | escape }}</p>{%- endif -%}
+  <h2 class="conta__aside-title">{{ title | escape | newline_to_br }}</h2>
+  {%- if text != blank -%}<p class="conta__aside-text">{{ text | escape }}</p>{%- endif -%}
+
+  {%- assign perk_list = perks | split: ',' -%}
+  {%- if perk_list.size > 0 -%}
+    <ul class="conta__perks" role="list">
+      {%- for perk in perk_list -%}
+        {%- assign perk = perk | strip -%}
+        {%- if perk != blank -%}
+          <li>
+            <span class="conta__perks-icon" aria-hidden="true">
+              {%- case forloop.index -%}
+                {%- when 1 -%}
+                  <svg viewBox="0 0 24 24" fill="none"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="7" cy="17.5" r="1.8" fill="currentColor"/><circle cx="17" cy="17.5" r="1.8" fill="currentColor"/></svg>
+                {%- when 2 -%}
+                  <svg viewBox="0 0 24 24" fill="none"><path d="M13 3 5 13h6l-1 8 8-10h-6l1-8Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+                {%- when 3 -%}
+                  <svg viewBox="0 0 24 24" fill="none"><path d="M12 3v3m0 12v3M3 12h3m12 0h3M6 6l2 2m8 8 2 2M6 18l2-2m8-8 2-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                {%- else -%}
+                  <svg viewBox="0 0 24 24" fill="none"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6l-8-3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              {%- endcase -%}
+            </span>
+            {{ perk | escape }}
+          </li>
+        {%- endif -%}
+      {%- endfor -%}
+    </ul>
+  {%- endif -%}
+</aside>
