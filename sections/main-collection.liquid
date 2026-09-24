@@ -689,6 +689,15 @@
   }
   #shopify-section-{{ section.id }} .collection__trust-item svg { flex: none; }
 
+  /* Cantos arredondados: ordenação, faixa de selos e campos dos filtros
+     (mesmo raio dos botões da página de produto). */
+  #shopify-section-{{ section.id }} .collection__sort-select,
+  #shopify-section-{{ section.id }} .collection__trust,
+  #shopify-section-{{ section.id }} .collection__filter-price .field__input,
+  #shopify-section-{{ section.id }} .collection__mini-button,
+  #shopify-section-{{ section.id }} .collection__filter-toggle { border-radius: 8px; }
+  #shopify-section-{{ section.id }} .collection__check input[type='checkbox'] { border-radius: 4px; }
+
   /* Sidebar acompanha a rolagem no desktop. */
   @media screen and (min-width: 1000px) {
     #shopify-section-{{ section.id }} .collection__sidebar {
