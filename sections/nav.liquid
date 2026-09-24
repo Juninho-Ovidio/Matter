@@ -405,7 +405,7 @@
     justify-content: flex-end;
     gap: 12px;
   }
-  /* Botões circulares brancos do design. */
+  /* Botões circulares com contorno do design. */
   .header__action-button {
     display: inline-flex;
     align-items: center;
@@ -416,11 +416,11 @@
     min-width: 46px;
     min-height: 46px;
     color: var(--color-text);
-    background-color: var(--color-background-contrast);
+    /* Fundo transparente: pega a mesma cor do navbar. */
+    background-color: transparent;
     /* Contorno em preto suavizado (não o #070707 puro do tema). */
     border: 1px solid #3a3a3a;
     border-radius: 50%;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
     cursor: pointer;
     text-decoration: none;
     transition: transform 0.15s ease, box-shadow 0.15s ease;
