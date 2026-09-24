@@ -40,7 +40,8 @@
 
   POSICIONAMENTO DA COPY:
   No desktop os blocos são absolutos, com top em PORCENTAGEM da
-  altura do hero (11% / 56% / 6.5%) e os tamanhos de fonte em
+  altura do hero (título 11% / "seja bem-vindo" 6.5%); a citação
+  segue o título no fluxo. Os tamanhos de fonte ficam em
   vw com clamp. Assim a composição inteira escala junto com a foto e
   continua batendo com o layout em qualquer largura.
 
@@ -191,8 +192,8 @@
         {%- if section.settings.eyebrow != blank -%}
           <p class="hero-inicio__eyebrow">{{ section.settings.eyebrow | escape }}</p>
         {%- endif -%}
-      </div>
 
+      {%- comment -%} A citação segue o título no fluxo: o espaço entre os dois é fixo. {%- endcomment -%}
       {%- if section.settings.quote != blank -%}
         <blockquote class="hero-inicio__quote">
           {%- assign quote_first = section.settings.quote | strip | slice: 0 -%}
@@ -204,6 +205,7 @@
           {%- endif -%}
         </blockquote>
       {%- endif -%}
+      </div>
 
       {%- if section.settings.welcome != blank -%}
         <p class="hero-inicio__welcome">{{ section.settings.welcome | escape }}</p>
@@ -467,20 +469,16 @@
     text-transform: uppercase;
   }
   #shopify-section-{{ section.id }} .hero-inicio__eyebrow {
-    margin: clamp(14px, 2.6vw, 44px) 0 0;
+    margin: clamp(12px, 1.8vw, 30px) 0 0;
     font-family: var(--font-heading-family);
     font-size: clamp(0.8rem, 1.35vw, 1.45rem);
     letter-spacing: 0.12em;
     text-transform: uppercase;
   }
 
+  /* Dentro do bloco do título, logo abaixo do "// Streetwear". */
   #shopify-section-{{ section.id }} .hero-inicio__quote {
-    position: absolute;
-    top: 56%;
-    /* Mesma coluna do título: tudo começa na mesma linha vertical. */
-    left: var(--mater-gutter);
-    margin: 0;
-    max-width: 40%;
+    margin: clamp(18px, 2vw, 34px) 0 0;
   }
   #shopify-section-{{ section.id }} .hero-inicio__quote-text {
     margin: 0;
