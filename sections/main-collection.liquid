@@ -460,12 +460,17 @@
                 {% render 'grade-produtos', items: search.results, paginate: paginate, section_id: section.id, empty_text: empty_text %}
               {%- endpaginate -%}
             {%- else -%}
-              {%- comment -%} Sem termo: mostra todos os produtos para a página não ficar vazia. {%- endcomment -%}
-              {%- assign all_products = collections['all'] -%}
-              {%- paginate all_products.products by section.settings.products_per_page -%}
-                {% render 'grade-produtos', items: all_products.products, paginate: paginate, section_id: section.id %}
-              {%- endpaginate -%}
+              {%- comment -%}
+                Sem termo: mostra todos os produtos para a página não ficar vazia.
+                Sem paginate: fora da página de coleção, collections['all'].products
+                é uma lista comum (até 50 itens) e o paginate dá "Liquid error".
+              {%- endcomment -%}
+              {% render 'grade-produtos', items: collections['all'].products, section_id: section.id %}
             {%- endif -%}
+          {%- when 'list' -%}
+            {%- comment -%} /collections: mesma lista de todos os produtos, sem paginate (veja acima). {%- endcomment -%}
+            {%- assign empty_text = 'sections.main_collection.empty' | t -%}
+            {% render 'grade-produtos', items: listing.products, section_id: section.id, empty_text: empty_text %}
           {%- else -%}
             {%- assign empty_text = 'sections.main_collection.empty' | t -%}
             {%- paginate listing.products by section.settings.products_per_page -%}
