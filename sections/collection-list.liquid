@@ -22,6 +22,8 @@
     enviada no bloco; nos 4 primeiros cards, as artes do tema
     (assets/hero-inicio*.jpg, originais em img/inicio-1..4.png); a
     featured_image da coleção; um placeholder.
+  - Destino do card: setting "link" do bloco (ex.: a camiseta da
+    coleção); em branco, a coleção escolhida no bloco.
   - O card inteiro é um link; o "VER COLEÇÃO" é decorativo (não é um
     <a> dentro de outro <a>, que seria HTML inválido).
   - Settings: heading, subheading, eyebrow, side_text, columns_desktop.
@@ -67,8 +69,10 @@
       {%- for block in section.blocks -%}
         {%- assign block_collection = collections[block.settings.collection] -%}
         {%- assign card_title = block.settings.title | default: block_collection.title -%}
+        {%- comment -%} Destino do card: link escolhido no bloco > coleção > nada. {%- endcomment -%}
+        {%- assign card_url = block.settings.link | default: block_collection.url | default: '#' -%}
         <li class="collection-list__item" {{ block.shopify_attributes }}>
-          <a href="{{ block_collection.url | default: '#' }}" class="collection-card">
+          <a href="{{ card_url }}" class="collection-card">
             <div class="collection-card__media">
               {%- if block.settings.image != blank -%}
                 {{
@@ -343,6 +347,7 @@
       "name": "t:sections.collection_list.blocks.featured_collection.name",
       "settings": [
         { "type": "collection", "id": "collection", "label": "t:sections.collection_list.blocks.featured_collection.settings.collection.label" },
+        { "type": "url", "id": "link", "label": "Link do card", "info": "Para onde o card leva ao ser clicado (ex.: a camiseta da coleção). Em branco, leva à coleção escolhida acima." },
         { "type": "text", "id": "title", "label": "t:sections.collection_list.blocks.featured_collection.settings.title.label", "info": "t:sections.collection_list.blocks.featured_collection.settings.title.info" },
         { "type": "image_picker", "id": "image", "label": "t:sections.collection_list.blocks.featured_collection.settings.image.label", "info": "t:sections.collection_list.blocks.featured_collection.settings.image.info" }
       ]

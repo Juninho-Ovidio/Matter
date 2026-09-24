@@ -19,10 +19,10 @@
     "colecoes": {
       "type": "collection-list",
       "blocks": {
-        "b1": { "type": "featured_collection", "settings": { "title": "São Miguel Arcanjo" } },
-        "b2": { "type": "featured_collection", "settings": { "title": "Pietrelcina" } },
-        "b3": { "type": "featured_collection", "settings": { "title": "Calcuta" } },
-        "b4": { "type": "featured_collection", "settings": { "title": "Acútis" } }
+        "b1": { "type": "featured_collection", "settings": { "title": "São Miguel Arcanjo", "link": "/products/camisa-sao-miguel-arcanjo-preta" } },
+        "b2": { "type": "featured_collection", "settings": { "title": "Pietrelcina", "link": "/products/camiseta-pietrelcina" } },
+        "b3": { "type": "featured_collection", "settings": { "title": "Calcuta", "link": "/products/camiseta-teresa-calcuta" } },
+        "b4": { "type": "featured_collection", "settings": { "title": "Acútis", "link": "/products/camiseta-acutis" } }
       },
       "block_order": ["b1", "b2", "b3", "b4"],
       "settings": {
