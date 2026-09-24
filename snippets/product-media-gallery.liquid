@@ -757,6 +757,32 @@
   .product-sticky__meta span { opacity: 0.6; }
   .product-sticky__button { width: auto; min-height: 48px; padding: 10px 28px; }
 
+  /* ================= PC (1000px+) =================
+     Página mais contida: foto até 560px e coluna de compra até 460px,
+     as duas centralizadas; botões e tamanhos um pouco menores; foto e
+     miniaturas com borda fina. */
+  @media screen and (min-width: 1000px) {
+    .section-main-product .product {
+      grid-template-columns: minmax(0, 560px) minmax(0, 460px);
+      justify-content: center;
+      column-gap: clamp(40px, 5vw, 80px);
+    }
+    .product__stage { border: 1px solid var(--color-border); }
+    .product__thumb { width: 72px; border-color: var(--color-border); }
+    .product__thumb.is-active { border-color: var(--color-text); }
+
+    .product__title { font-size: clamp(1.9rem, 2.4vw, 2.5rem); margin-bottom: 10px; }
+    .section-main-product .price { font-size: clamp(1.3rem, 1.5vw, 1.6rem); }
+    .product__price { margin-bottom: 20px; }
+
+    .product__swatch:not(.product__swatch--color) { min-width: 44px; min-height: 40px; padding: 0 12px; font-size: 12px; }
+    .product__provador-card { padding: 11px 14px; margin-bottom: 18px; }
+    .product__btn { min-height: 46px; padding: 10px 18px; font-size: 12px; letter-spacing: 0.14em; }
+    .product__btn svg { width: 16px; height: 16px; }
+    .product__buy-buttons { gap: 8px; }
+    .product__trust li { padding: 11px 6px; font-size: 10.5px; gap: 6px; }
+  }
+
   /* ================= Responsivo ================= */
   @media screen and (max-width: 999px) {
     .section-main-product .product { grid-template-columns: 1fr; row-gap: 24px; }
