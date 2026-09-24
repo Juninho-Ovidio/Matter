@@ -58,6 +58,11 @@
       index.css com @import sem versão — o CDN/navegador podia servir
       uma cópia antiga de base.css por até 1 ano e a página ficava sem estilo.
     {%- endcomment -%}
+    {%- comment -%}
+      Anton (títulos) é pré-carregada: sem isso o navegador só a descobre
+      depois de ler o CSS, e o título aparece primeiro na fonte reserva.
+    {%- endcomment -%}
+    {{ 'anton-regular-latin.woff2' | asset_url | preload_tag: as: 'font', type: 'font/woff2', crossorigin: 'anonymous' }}
     {{ 'fontes.css' | asset_url | stylesheet_tag }}
     {{ 'normalizar.css' | asset_url | stylesheet_tag }}
     {{ 'base.css' | asset_url | stylesheet_tag }}

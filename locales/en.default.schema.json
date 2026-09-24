@@ -359,13 +359,6 @@
         "trust_3": { "label": "Item 3 (truck icon)" }
       }
     },
-    "collection_banner": {
-      "name": "Collection banner",
-      "settings": {
-        "show_description": { "label": "Show collection description" },
-        "show_image": { "label": "Show collection image" }
-      }
-    },
     "main_cart": {
       "name": "Cart",
       "settings": {
@@ -379,16 +372,6 @@
           "info": "Shop Pay, Google Pay, etc. under \"Finalizar compra\", when enabled in your payments."
         }
       }
-    },
-    "main_list_collections": {
-      "name": "Collections list",
-      "settings": {
-        "heading": { "label": "Heading" }
-      }
-    },
-    "main_search": {
-      "name": "Search results",
-      "settings": {}
     },
     "main_404": {
       "name": "404 page",

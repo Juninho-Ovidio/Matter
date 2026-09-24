@@ -131,8 +131,8 @@
         <img
           src="{{ 'logo-mater.png' | asset_url }}"
           class="header__logo-image"
-          width="800"
-          height="332"
+          width="560"
+          height="232"
           alt="{{ shop.name | escape }}"
           loading="eager"
         >
@@ -816,10 +816,10 @@
       }
       var items = products.map(function (p, i) {
         var img = p.featured_image && p.featured_image.url
-          ? '<img src="' + p.featured_image.url + (p.featured_image.url.indexOf('?') > -1 ? '&' : '?') + 'width=400" alt="" loading="lazy" width="400" height="400">'
+          ? '<img src="' + escapeHtml(p.featured_image.url + (p.featured_image.url.indexOf('?') > -1 ? '&' : '?') + 'width=400') + '" alt="" loading="lazy" width="400" height="400">'
           : '';
         return '<li class="search-modal__result" style="--i:' + i + '">' +
-          '<a href="' + p.url + '">' +
+          '<a href="' + escapeHtml(p.url) + '">' +
           '<div class="search-modal__result-media">' + img + '</div>' +
           '<span class="search-modal__result-title">' + escapeHtml(p.title) + '</span>' +
           '<span class="search-modal__result-price">' + escapeHtml(money(p.price)) + '</span>' +

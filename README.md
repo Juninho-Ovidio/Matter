@@ -131,16 +131,13 @@ cabeçalho/rodapé (permitem reordenar no editor).
 | `footer.liquid` | Rodapé: blocos (marca, menu, texto, newsletter), redes, ícones de pagamento |
 | `main-product.liquid` | Página de produto: galeria, variantes, add-to-cart nativo, blocos |
 | `main-cart.liquid` | Carrinho: itens, quantidade, notas, checkout |
-| `main-collection.liquid` | Grade de produtos: ordenação, filtros, paginação |
-| `collection-banner.liquid` | Cabeçalho da coleção (título, descrição, imagem) |
-| `main-search.liquid` | Resultados de busca (produtos, artigos, páginas) |
-| `main-list-collections.liquid` | Grade de coleções |
+| `main-collection.liquid` | Grade de produtos: ordenação, filtros, paginação (também usada em busca e lista de coleções) |
 | `main-blog.liquid` / `main-article.liquid` | Blog e post individual |
 | `main-page.liquid` | Página institucional |
 | `contact-form.liquid` | Formulário de contato nativo |
 | `main-password.liquid` | Página de senha |
 | `main-404.liquid` | Conteúdo do 404 |
-| `hero-inicio.liquid` | Hero da home: foto full-bleed + copy em HTML por cima (headline, citação, "seja bem vindo") |
+| `hero-inicio.liquid` | Hero da home: foto full-bleed + copy em HTML por cima (headline, citação, "seja bem-vindo") |
 | `divisor.liquid` | Faixa angular preta que separa sections; duas formas (tela1/tela2), cor e deslocamento configuráveis |
 | `produtos.liquid` | Cabeçalho da área de produtos da home (título + linha de apoio) |
 | `image-banner.liquid` | Banner hero (imagem + texto + botões) — home |
@@ -163,7 +160,6 @@ Pedaços reutilizáveis chamados via `{% render 'nome' %}`.
 | `icon.liquid` | Ícones SVG inline (busca, carrinho, conta, redes…) |
 | `pagination.liquid` | Paginação acessível |
 | `localization-form.liquid` | Seletores nativos de país/moeda e idioma |
-| `newsletter-form.liquid` | Formulário de inscrição em newsletter |
 | `share-button.liquid` | Botão de compartilhar (Web Share API) |
 | `product-variant-selection.liquid` | JS que atualiza preço/disponibilidade ao trocar variante |
 | `product-media-gallery.liquid` | Estilos da galeria de mídia do produto |
@@ -182,7 +178,6 @@ Pedaços reutilizáveis chamados via `{% render 'nome' %}`.
 | `logo-mater.png` | Logo da marca (PNG transparente, 800px) — fallback do header quando `settings.logo` está vazio |
 | `hero-inicio-900/1400/1671.jpg` | Foto do hero em 3 larguras (srcset) — versões otimizadas de `img/inicio-1.png` |
 | `anton-regular-latin.woff2` / `-latin-ext.woff2` | Fonte Anton (display da marca), exposta como `--font-display-family` |
-| `site.webmanifest` | Manifesto PWA |
 
 > A pasta `img/` guarda os **originais** de design. O Shopify só serve arquivos
 > de `assets/` (limite de 20 MB por arquivo), por isso o tema usa as versões
