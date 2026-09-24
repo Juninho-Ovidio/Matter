@@ -261,7 +261,9 @@
           {%- if card_size_option -%}
             {%- liquid
               # Ordem do menor para o maior (valores fora da lista vão no fim, na ordem do admin).
-              assign size_order = 'xxs,2xs,ppp,xs,pp,s,p,m,l,g,xl,gg,xxl,2xl,xg,eg,xxxl,3xl,xgg,egg,g1,g2,g3,g4' | split: ','
+              assign size_order = 's,p,m,l,g,xl,gg,xxl,2xl,xg,eg,xxxl,3xl,xgg,egg,g1,g2,g3,g4' | split: ','
+              # A loja não trabalha com PP: esses valores nunca aparecem.
+              assign sizes_hidden = 'xxs,2xs,ppp,xs,pp' | split: ','
               assign sorted_sizes = ''
               for key in size_order
                 for value in card_size_option.values
@@ -273,7 +275,7 @@
               endfor
               for value in card_size_option.values
                 assign value_key = value | downcase | strip
-                unless size_order contains value_key
+                unless size_order contains value_key or sizes_hidden contains value_key
                   assign sorted_sizes = sorted_sizes | append: value | append: '|||'
                 endunless
               endfor

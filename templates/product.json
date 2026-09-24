@@ -15,7 +15,9 @@
           "settings": {
             "title": "Provador virtual",
             "subtitle": "Descubra seu tamanho ideal em 10 segundos",
-            "size_rules": "P | 155-168 | 50-63\nM | 165-176 | 60-74\nG | 172-184 | 72-86\nGG | 180-192 | 84-100\nXGG | 186-200 | 96-115"
+            "size_rules": "P | 155-168 | 50-63\nM | 165-176 | 60-74\nG | 172-184 | 72-86\nGG | 180-192 | 84-100\nXG | 186-200 | 96-115",
+            "size_table_title": "Camiseta Oversized",
+            "size_table": "P | 76 | 62 | 22\nM | 78 | 65 | 22\nG | 80 | 68 | 23\nGG | 83 | 71 | 25\nXG | 86 | 74 | 25"
           }
         },
         "buy_buttons": {

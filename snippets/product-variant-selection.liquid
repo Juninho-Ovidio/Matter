@@ -268,6 +268,14 @@
         return { size: parts[0], hMin: h[0], hMax: h[1], wMin: w[0], wMax: w[1] };
       }).filter(Boolean);
 
+      // "M | 78 | 65 | 22" → table.M = { altura: 78, largura: 65, manga: 22 }
+      var table = {};
+      (dialog.dataset.table || '').split(/\n+/).forEach(function (line) {
+        var parts = line.split('|').map(function (s) { return s.trim(); });
+        if (parts.length < 4 || !parts[0]) return;
+        table[parts[0].toUpperCase()] = { altura: parts[1], largura: parts[2], manga: parts[3] };
+      });
+
       function distance(value, min, max) {
         if (value < min) return (min - value) / Math.max(1, max - min);
         if (value > max) return (value - max) / Math.max(1, max - min);
@@ -325,6 +333,16 @@
           noteOut.textContent = 'Para um caimento ' + fitName + ', com ' + h + ' cm e ' + w + ' kg.';
           applyBtn.hidden = false;
         }
+        // Medidas da peça no tamanho recomendado (tabela size_table) e
+        // destaque da linha correspondente na tabela do provador.
+        var piece = table[String(recommended).toUpperCase()];
+        if (piece) {
+          noteOut.textContent += ' Peça: ' + piece.altura + ' cm de altura, ' + piece.largura +
+            ' cm de largura, manga ' + piece.manga + ' cm.';
+        }
+        dialog.querySelectorAll('[data-size-row]').forEach(function (row) {
+          row.classList.toggle('is-recommended', row.dataset.sizeRow === String(recommended).toUpperCase());
+        });
         result.hidden = false;
 
         var summary = section.querySelector('[data-provador-summary]');

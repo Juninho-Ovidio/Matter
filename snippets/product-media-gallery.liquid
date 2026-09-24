@@ -423,6 +423,45 @@
     text-transform: uppercase;
   }
   .provador__intro { margin: 0 0 26px; font-size: 15px; line-height: 1.55; opacity: 0.75; }
+
+  /* Tabela de medidas da peça */
+  .provador__table-wrap { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--color-border); }
+  .provador__table-title {
+    margin: 0 0 12px;
+    font-family: var(--font-heading-family);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .provador__table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    overflow: hidden;
+    font-size: 14px;
+    text-align: center;
+    background-color: var(--color-background-contrast);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+  }
+  .provador__table th,
+  .provador__table td { padding: 11px 8px; border-bottom: 1px solid var(--color-border); }
+  .provador__table tbody tr:last-child th,
+  .provador__table tbody tr:last-child td { border-bottom: 0; }
+  .provador__table thead th {
+    font-family: var(--font-heading-family);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-accent-text);
+    background-color: var(--color-accent);
+  }
+  .provador__table tbody th { font-weight: 700; }
+  .provador__table tr.is-recommended th,
+  .provador__table tr.is-recommended td { font-weight: 700; background-color: rgba(7, 7, 7, 0.08); }
+  .provador__table-note { margin: 10px 0 0; font-size: 12px; opacity: 0.6; }
   .provador__fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px; }
   .provador__field { display: grid; gap: 6px; }
   .provador__field span,

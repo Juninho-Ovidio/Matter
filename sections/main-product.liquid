@@ -274,7 +274,9 @@
                         # cadastrados fora de ordem; valores fora da lista vão no fim.
                         assign option_values = option.values
                         if is_size
-                          assign size_order = 'xxs,2xs,ppp,xs,pp,s,p,m,l,g,xl,gg,xxl,2xl,xg,eg,xxxl,3xl,xgg,egg,g1,g2,g3,g4' | split: ','
+                          assign size_order = 's,p,m,l,g,xl,gg,xxl,2xl,xg,eg,xxxl,3xl,xgg,egg,g1,g2,g3,g4' | split: ','
+                          # A loja não trabalha com PP: esses valores nunca aparecem.
+                          assign sizes_hidden = 'xxs,2xs,ppp,xs,pp' | split: ','
                           assign sorted_sizes = ''
                           for key in size_order
                             for v in option.values
@@ -286,7 +288,7 @@
                           endfor
                           for v in option.values
                             assign v_key = v | downcase | strip
-                            unless size_order contains v_key
+                            unless size_order contains v_key or sizes_hidden contains v_key
                               assign sorted_sizes = sorted_sizes | append: v | append: '|||'
                             endunless
                           endfor
@@ -424,7 +426,7 @@
                 <span class="product__provador-arrow" aria-hidden="true">→</span>
               </button>
 
-              <dialog class="provador" data-provador data-rules="{{ block.settings.size_rules | escape }}" aria-labelledby="ProvadorTitle-{{ section.id }}">
+              <dialog class="provador" data-provador data-rules="{{ block.settings.size_rules | escape }}" data-table="{{ block.settings.size_table | escape }}" aria-labelledby="ProvadorTitle-{{ section.id }}">
                 <div class="provador__box">
                   <button type="button" class="provador__close" data-provador-close aria-label="Fechar">
                     {% render 'icon', name: 'close' %}
@@ -461,6 +463,38 @@
                     <p class="provador__result-note" data-provador-note></p>
                     <button type="button" class="provador__apply" data-provador-apply>Selecionar este tamanho</button>
                   </div>
+
+                  {%- comment -%}
+                    Tabela de medidas da PEÇA (setting size_table):
+                    "Tamanho | Altura | Largura | Manga", uma linha por tamanho.
+                  {%- endcomment -%}
+                  {%- if block.settings.size_table != blank -%}
+                    {%- assign table_rows = block.settings.size_table | newline_to_br | split: '<br />' -%}
+                    <div class="provador__table-wrap">
+                      <p class="provador__table-title">
+                        Tabela de medidas{% if block.settings.size_table_title != blank %} · {{ block.settings.size_table_title | escape }}{% endif %}
+                      </p>
+                      <table class="provador__table">
+                        <thead>
+                          <tr><th scope="col">Tamanho</th><th scope="col">Altura</th><th scope="col">Largura</th><th scope="col">Manga</th></tr>
+                        </thead>
+                        <tbody>
+                          {%- for row in table_rows -%}
+                            {%- assign cells = row | strip | split: '|' -%}
+                            {%- if cells.size >= 4 -%}
+                              <tr data-size-row="{{ cells[0] | strip | upcase | escape }}">
+                                <th scope="row">{{ cells[0] | strip | escape }}</th>
+                                <td>{{ cells[1] | strip | escape }} cm</td>
+                                <td>{{ cells[2] | strip | escape }} cm</td>
+                                <td>{{ cells[3] | strip | escape }} cm</td>
+                              </tr>
+                            {%- endif -%}
+                          {%- endfor -%}
+                        </tbody>
+                      </table>
+                      <p class="provador__table-note">Medidas da peça, com a camiseta esticada sobre uma superfície plana. Pode variar até 2 cm.</p>
+                    </div>
+                  {%- endif -%}
 
                   {%- if block.settings.size_chart != blank -%}
                     <details class="provador__chart">
@@ -709,9 +743,22 @@
         {
           "type": "textarea",
           "id": "size_rules",
-          "default": "P | 155-168 | 50-63\nM | 165-176 | 60-74\nG | 172-184 | 72-86\nGG | 180-192 | 84-100\nXGG | 186-200 | 96-115",
+          "default": "P | 155-168 | 50-63\nM | 165-176 | 60-74\nG | 172-184 | 72-86\nGG | 180-192 | 84-100\nXG | 186-200 | 96-115",
           "label": "t:sections.main_product.blocks.provador.settings.size_rules.label",
           "info": "t:sections.main_product.blocks.provador.settings.size_rules.info"
+        },
+        {
+          "type": "text",
+          "id": "size_table_title",
+          "default": "Camiseta Oversized",
+          "label": "Nome da tabela de medidas"
+        },
+        {
+          "type": "textarea",
+          "id": "size_table",
+          "default": "P | 76 | 62 | 22\nM | 78 | 65 | 22\nG | 80 | 68 | 23\nGG | 83 | 71 | 25\nXG | 86 | 74 | 25",
+          "label": "Medidas da peça (cm)",
+          "info": "Uma linha por tamanho: Tamanho | Altura | Largura | Manga. Ex.: M | 78 | 65 | 22"
         },
         {
           "type": "richtext",
