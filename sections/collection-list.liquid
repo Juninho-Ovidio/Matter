@@ -321,7 +321,8 @@
   @media screen and (max-width: 559px) {
     #shopify-section-{{ section.id }} .collection-list__grid { grid-template-columns: 1fr; }
     /* Em telas bem estreitas deixa quebrar para não vazar da tela. */
-    #shopify-section-{{ section.id }} .collection-list__side { white-space: normal; }
+    #shopify-section-{{ section.id }} .collection-list__side { white-space: normal; text-wrap: pretty; }
+    #shopify-section-{{ section.id }} .collection-list__side br { display: none; }
   }
 </style>
 
