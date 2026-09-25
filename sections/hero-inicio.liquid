@@ -35,11 +35,8 @@
     da barra ativa dura o mesmo intervalo do timer.
 
   EFEITO:
-  - Crossfade de 1.2s entre slides (opacity).
-  - O slide ativo começa em scale(1.08) e desce até 1 durante todo o
-    tempo em que fica na tela.
-  - Estilo "vídeo": o slide novo entra com uma cortina diagonal + faixa
-    de luz (classe is-entering; o 1º slide da página entra sem animação)
+  - Estilo "vídeo": o slide novo entra com uma cortina diagonal de 0.8s
+    + faixa de luz (classe is-entering; o 1º slide da página entra sem animação)
     e cada slide tem seu movimento de câmera (afastar, panorâmica,
     aproximar, subir — hero-inicio-cam-1..4).
   - Card de chamada por slide (artes do tema): nome da coleção, preço e
@@ -314,7 +311,7 @@
         prev.setAttribute('aria-hidden', 'true');
         prev.inert = true; // o link do card não recebe foco/clique fora da tela
         // Mantém o slide que sai visível (e com zoom) até a cortina terminar.
-        setTimeout(() => prev.classList.remove('is-leaving'), 1200);
+        setTimeout(() => prev.classList.remove('is-leaving'), 900);
 
         const current = this.slides[next];
         // is-entering dispara a cortina diagonal; o 1º slide da página não
@@ -386,7 +383,7 @@
     z-index: 2;
   }
   #shopify-section-{{ section.id }} .hero-inicio__slide.is-entering {
-    animation: hero-inicio-wipe 1.1s cubic-bezier(0.77, 0, 0.18, 1) both;
+    animation: hero-inicio-wipe 0.8s cubic-bezier(0.77, 0, 0.18, 1) both;
   }
   @keyframes hero-inicio-wipe {
     from { clip-path: polygon(120% 0, 160% 0, 160% 100%, 140% 100%); }
@@ -401,7 +398,7 @@
     width: 22%;
     background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.55) 50%, transparent);
     pointer-events: none;
-    animation: hero-inicio-sheen 1.1s cubic-bezier(0.77, 0, 0.18, 1) both;
+    animation: hero-inicio-sheen 0.8s cubic-bezier(0.77, 0, 0.18, 1) both;
   }
   @keyframes hero-inicio-sheen {
     from { transform: translateX(560%) skewX(-12deg); opacity: 1; }
@@ -428,7 +425,7 @@
      panorâmicas para a borda da foto nunca aparecer. */
   #shopify-section-{{ section.id }} .hero-inicio__slide.is-active .hero-inicio__image,
   #shopify-section-{{ section.id }} .hero-inicio__slide.is-leaving .hero-inicio__image {
-    animation: hero-inicio-cam-1 calc(var(--hero-interval) + 1.2s) cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+    animation: hero-inicio-cam-1 calc(var(--hero-interval) + 0.9s) cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
   }
   #shopify-section-{{ section.id }} .hero-inicio__slide:nth-child(4n + 2).is-active .hero-inicio__image,
   #shopify-section-{{ section.id }} .hero-inicio__slide:nth-child(4n + 2).is-leaving .hero-inicio__image { animation-name: hero-inicio-cam-2; }
@@ -469,7 +466,7 @@
   #shopify-section-{{ section.id }} .is-active .hero-inicio__cta {
     opacity: 1;
     transform: none;
-    transition-delay: 0.45s;
+    transition-delay: 0.3s;
   }
   #shopify-section-{{ section.id }} .hero-inicio__cta > span {
     opacity: 0;
@@ -478,9 +475,9 @@
   }
   /* Entra depois da cortina, em cascata. */
   #shopify-section-{{ section.id }} .is-active .hero-inicio__cta > span { opacity: 1; transform: none; }
-  #shopify-section-{{ section.id }} .is-active .hero-inicio__cta > span:nth-child(1) { transition-delay: 0.55s; }
-  #shopify-section-{{ section.id }} .is-active .hero-inicio__cta > span:nth-child(2) { transition-delay: 0.65s; }
-  #shopify-section-{{ section.id }} .is-active .hero-inicio__cta > span:nth-child(3) { transition-delay: 0.75s; }
+  #shopify-section-{{ section.id }} .is-active .hero-inicio__cta > span:nth-child(1) { transition-delay: 0.38s; }
+  #shopify-section-{{ section.id }} .is-active .hero-inicio__cta > span:nth-child(2) { transition-delay: 0.45s; }
+  #shopify-section-{{ section.id }} .is-active .hero-inicio__cta > span:nth-child(3) { transition-delay: 0.52s; }
   #shopify-section-{{ section.id }} .hero-inicio__cta-eyebrow {
     font-family: var(--font-heading-family);
     font-size: 11px;
