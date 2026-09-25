@@ -3,7 +3,7 @@
     "hero": {
       "type": "hero-inicio",
       "settings": {
-        "interval": 4,
+        "interval": 5,
         "heading": "Santidade\nem estilo",
         "eyebrow": "// Streetwear",
         "quote": "\"Ninguém te despreze por seres jovem.\nAo contrário, torna-te modelo para os\nfiéis, no modo de falar e de viver,\nna caridade, na fé, na castidade.\nEnquanto eu não chegar, aplica-te\nà leitura, à exortação, ao ensino.\"",
