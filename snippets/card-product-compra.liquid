@@ -86,6 +86,12 @@
   <div class="card-compra">
     <a href="{{ card_product.url }}" class="card-compra__media" tabindex="-1" aria-hidden="true">
       {%- if card_product.featured_media -%}
+        {%- comment -%}
+          A foto principal leva o texto alternativo cadastrado na Shopify
+          (ajuda no Google Imagens); o link todo já é aria-hidden, então não
+          repete o nome para leitores de tela. A 2ª foto é decorativa.
+        {%- endcomment -%}
+        {%- assign card_alt = card_product.featured_media.alt | escape -%}
         {{
           card_product.featured_media
           | image_url: width: 720
@@ -94,7 +100,7 @@
             class: 'card-compra__image card-compra__image--primary',
             widths: '240, 360, 540, 720, 900, 1080, 1260',
             sizes: '(min-width: 1400px) 25vw, (min-width: 700px) 33vw, 50vw',
-            alt: ''
+            alt: card_alt
         }}
         {%- if settings.card_show_second_image and card_product.media[1] -%}
           {{

@@ -305,5 +305,28 @@
         "info": "t:settings_schema.social_sharing.settings.share_image.info"
       }
     ]
+  },
+  {
+    "name": "SEO e marca",
+    "settings": [
+      {
+        "type": "paragraph",
+        "content": "Como a loja aparece na aba do navegador e nas buscas do Google."
+      },
+      {
+        "type": "text",
+        "id": "brand_name",
+        "label": "Nome da marca",
+        "default": "Mater Catholic",
+        "info": "Aparece na aba do navegador (a página inicial mostra só ele), no fim do título das outras páginas e para o Google."
+      },
+      {
+        "type": "textarea",
+        "id": "seo_description",
+        "label": "Descrição padrão para o Google",
+        "default": "Camisetas católicas oversized com São Miguel Arcanjo, Padre Pio, Carlo Acutis e Madre Teresa. Vista sua fé com estilo. Envio para todo o Brasil.",
+        "info": "Usada nas páginas sem descrição própria (página inicial, coleções, contato). Ideal: até 155 caracteres."
+      }
+    ]
   }
 ]

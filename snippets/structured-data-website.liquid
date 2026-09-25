@@ -6,14 +6,15 @@
   O QUE FAZ:
   Gera dois blocos JSON-LD (schema.org) para a home: WebSite (com
   SearchAction para a caixa de busca do Google) e Organization (nome,
-  url e logo da loja).
+  url, logo e perfis sociais da marca).
 
   COMO USAR:
   {% render 'structured-data-website' %}
   Normalmente chamado por meta-tags apenas na home (page_type 'index').
 
   PARÂMETROS:
-  Nenhum — usa shop, routes e settings.logo.
+  Nenhum — usa shop, routes e as settings brand_name, logo e
+  social_instagram_link (com fallback para o Instagram da marca).
 
   OBSERVAÇÕES:
   O placeholder {search_term_string} é montado por partes (append) de
@@ -23,12 +24,19 @@
 {%- liquid
   assign search_placeholder = '?q=' | append: '{' | append: 'search_term_string' | append: '}'
   assign search_target = shop.url | append: routes.search_url | append: search_placeholder
+  assign brand = settings.brand_name | default: shop.name
+  assign instagram = settings.social_instagram_link | default: 'https://www.instagram.com/matercatholicstore/'
+  if settings.logo
+    assign org_logo = settings.logo | image_url: width: 500 | prepend: 'https:'
+  else
+    assign org_logo = 'logo-mater.png' | asset_url | prepend: 'https:'
+  endif
 -%}
 <script type="application/ld+json">
   {
-    "@context": "http://schema.org",
+    "@context": "https://schema.org",
     "@type": "WebSite",
-    "name": {{ shop.name | json }},
+    "name": {{ brand | json }},
     "url": {{ shop.url | append: routes.root_url | json }},
     "potentialAction": {
       "@type": "SearchAction",
@@ -39,12 +47,11 @@
 </script>
 <script type="application/ld+json">
   {
-    "@context": "http://schema.org",
+    "@context": "https://schema.org",
     "@type": "Organization",
-    "name": {{ shop.name | json }},
-    "url": {{ shop.url | append: routes.root_url | json }}
-    {%- if settings.logo %},
-      "logo": {{ settings.logo | image_url: width: 500 | prepend: "https:" | json }}
-    {%- endif -%}
+    "name": {{ brand | json }},
+    "url": {{ shop.url | append: routes.root_url | json }},
+    "logo": {{ org_logo | json }},
+    "sameAs": [{{ instagram | json }}]
   }
 </script>

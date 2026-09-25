@@ -35,23 +35,45 @@
     <meta name="theme-color" content="{{ settings.color_accent }}">
     <link rel="canonical" href="{{ canonical_url }}">
 
+    {%- comment -%}
+      Ícone da aba: o enviado em Configurações do tema > Logo > Favicon;
+      sem ele, o "M" da marca empacotado em assets/favicon-*.png.
+    {%- endcomment -%}
     {%- if settings.favicon != blank -%}
       <link rel="icon" type="image/png" href="{{ settings.favicon | image_url: width: 32, height: 32 }}">
       <link rel="apple-touch-icon" href="{{ settings.favicon | image_url: width: 180, height: 180 }}">
+    {%- else -%}
+      <link rel="icon" type="image/png" sizes="32x32" href="{{ 'favicon-32.png' | asset_url }}">
+      <link rel="icon" type="image/png" sizes="512x512" href="{{ 'favicon-512.png' | asset_url }}">
+      <link rel="apple-touch-icon" href="{{ 'favicon-180.png' | asset_url }}">
     {%- endif -%}
 
+    {%- liquid
+      # Nome da marca na aba e nas buscas (settings > SEO e marca).
+      assign brand = settings.brand_name | default: shop.name
+      assign seo_title = page_title
+      # A coleção automática "all" vem da Shopify como "Products".
+      if request.page_type == 'collection' and collection.handle == 'all'
+        assign seo_title = 'sections.main_collection.all_title' | t
+      endif
+      assign seo_description = page_description | default: settings.seo_description | default: shop.description
+    -%}
     <title>
-      {{ page_title }}
-      {%- if current_tags %} &ndash; {{ 'general.meta.tags' | t: tags: current_tags | join: ', ' }}{% endif -%}
-      {%- if current_page != 1 %} &ndash; {{ 'general.meta.page' | t: page: current_page }}{% endif -%}
-      {%- unless page_title contains shop.name %} &ndash; {{ shop.name }}{% endunless -%}
+      {%- if request.page_type == 'index' -%}
+        {{ brand }}
+      {%- else -%}
+        {{ seo_title }}
+        {%- if current_tags %} &ndash; {{ 'general.meta.tags' | t: tags: current_tags | join: ', ' }}{% endif -%}
+        {%- if current_page != 1 %} &ndash; {{ 'general.meta.page' | t: page: current_page }}{% endif -%}
+        {%- unless seo_title contains brand %} &ndash; {{ brand }}{% endunless -%}
+      {%- endif -%}
     </title>
 
-    {%- if page_description -%}
-      <meta name="description" content="{{ page_description | escape }}">
+    {%- if seo_description != blank -%}
+      <meta name="description" content="{{ seo_description | strip_html | strip | escape }}">
     {%- endif -%}
 
-    {% render 'meta-tags' %}
+    {% render 'meta-tags', seo_title: seo_title, seo_description: seo_description %}
 
     {%- comment -%}
       Cada CSS entra direto, com asset_url (?v=versão). Antes era um
