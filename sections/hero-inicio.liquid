@@ -22,8 +22,10 @@
        servem versões responsivas pela CDN do Shopify.
     2. Sem blocos, usa as 4 artes empacotadas no tema:
        assets/hero-inicio-*.jpg (slide 1) e hero-inicio-{2,3,4}-*.jpg,
-       cada uma em 3 larguras (900 / 1400 / 1671) para o srcset.
-       Os originais em alta ficam em img/inicio-1..4.png.
+       cada uma em 5 larguras (900 / 1400 / 1920 / 2600 / 3200) para o
+       srcset. Os originais (1671px) ficam em img/inicio-1..4.png; os
+       JPGs saem de uma ampliação 4x por IA (Real-ESRGAN x4plus), para
+       ficarem nítidos em telas Retina/4K.
   - Só o primeiro slide é eager + fetchpriority high; os demais lazy.
   - Autoplay por timer em JS (setTimeout), independente de animação
     CSS — assim troca mesmo com as animações do sistema desligadas.
@@ -55,7 +57,7 @@
   base da foto.
 
   Abaixo de 750px (celular) a foto vira 6:5 com recortes próprios
-  (assets/hero-inicio*-mobile-{600,1000}.jpg, via <picture>) e a
+  (assets/hero-inicio*-mobile-{600,1000,1500}.jpg, via <picture>) e a
   citação flui sem as quebras de linha do desktop.
 
   OBSERVAÇÕES:
@@ -136,7 +138,8 @@
                 media="(max-width: 749px)"
                 srcset="
                   {{ slide | append: '-mobile-600.jpg' | asset_url }} 600w,
-                  {{ slide | append: '-mobile-1000.jpg' | asset_url }} 1000w
+                  {{ slide | append: '-mobile-1000.jpg' | asset_url }} 1000w,
+                  {{ slide | append: '-mobile-1500.jpg' | asset_url }} 1500w
                 "
                 sizes="100vw"
                 width="1000"
@@ -144,13 +147,15 @@
               >
               <img
                 class="hero-inicio__image"
-                src="{{ slide | append: '-1400.jpg' | asset_url }}"
+                src="{{ slide | append: '-1920.jpg' | asset_url }}"
                 srcset="
                   {{ slide | append: '-900.jpg' | asset_url }} 900w,
                   {{ slide | append: '-1400.jpg' | asset_url }} 1400w,
-                  {{ slide | append: '-1671.jpg' | asset_url }} 1671w
+                  {{ slide | append: '-1920.jpg' | asset_url }} 1920w,
+                  {{ slide | append: '-2600.jpg' | asset_url }} 2600w,
+                  {{ slide | append: '-3200.jpg' | asset_url }} 3200w
                 "
-                sizes="100vw"
+                sizes="(min-width: 1921px) 1920px, 100vw"
                 width="1671"
                 height="841"
                 alt="{{ hero_alt }}"
