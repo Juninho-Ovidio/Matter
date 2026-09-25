@@ -244,16 +244,17 @@
   },
   "gift_cards": {
     "issued": {
-      "title": "Here's your {{ value }} gift card for {{ shop }}!",
-      "subtext": "Your gift card",
-      "gift_card_code": "Gift card code",
-      "shop_link": "Continue shopping",
-      "add_to_apple_wallet": "Add to Apple Wallet",
-      "qr_image_alt": "QR code — scan to redeem gift card",
-      "copy_code": "Copy gift card code",
-      "expired": "Expired",
-      "copy_code_success": "Code copied successfully",
-      "print_gift_card": "Print"
+      "title": "Seu vale-presente de {{ value }} da {{ shop }}",
+      "subtext": "Seu vale-presente",
+      "balance": "Saldo disponível",
+      "gift_card_code": "Código do vale-presente",
+      "shop_link": "Continuar comprando",
+      "add_to_apple_wallet": "Adicionar à Apple Wallet",
+      "qr_image_alt": "QR Code — escaneie para usar o vale-presente",
+      "copy_code": "Copiar código",
+      "expired": "Expirado",
+      "copy_code_success": "Código copiado!",
+      "print_gift_card": "Imprimir"
     }
   },
   "blogs": {

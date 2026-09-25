@@ -5,8 +5,8 @@
 
   O QUE FAZ:
   Página que o cliente vê ao receber um vale-presente. Mostra o saldo,
-  o código do cartão, um QR Code (gerado inline em JS, sem lib/rede
-  externa), botão de copiar, botão de imprimir, link Apple Wallet e
+  o código do cartão, um QR Code (biblioteca oficial vendor/qrcode.js
+  da Shopify), botão de copiar, botão de imprimir, link Apple Wallet e
   link para voltar à loja.
 
   ONDE É USADA:
@@ -16,15 +16,21 @@
   - Documento HTML completo (tem <html>, <head>, <body>) — NÃO é uma
     section OS 2.0; por isso carrega index.css e css-variables direto
   - gift_card.balance / .code / .expired / .pass_url: dados do cartão
-  - Script inline: gerador de QR Code auto-contido (byte mode, EC M)
-    que renderiza num <canvas> a partir da URL de verificação do QR
-  - Botão copiar usa navigator.clipboard; botão imprimir usa window.print()
+  - QR Code: vendor/qrcode.js da Shopify (com defer), a partir de
+    gift_card.qr_identifier — o mesmo código que o PDV lê
+  - Logo: settings.logo ou, sem ele, assets/logo-mater.png
+  - Botão copiar usa navigator.clipboard (some se indisponível);
+    botão imprimir usa window.print()
+  - Textos em locales/en.default.json → gift_cards.issued
 
   OBSERVAÇÕES:
   ATENÇÃO: este cabeçalho fica ANTES do <!doctype html>, como comentário
   Liquid. Se expirado, o saldo aparece riscado com tag "expirado".
   Estilos de .giftcard__actions somem no @media print.
+  {% layout none %} é obrigatório: sem ele a Shopify embrulha esta página
+  no theme.liquid (HTML dentro de HTML, com navbar e rodapé ao lado).
 {%- endcomment -%}
+{%- layout none -%}
 <!doctype html>
 <html class="no-js" lang="{{ request.locale.iso_code }}">
   <head>
@@ -73,10 +79,6 @@
         height: auto;
         margin: 0 auto;
         display: block;
-      }
-
-      .giftcard__shop-name {
-        font-size: var(--f6);
       }
 
       .giftcard__card {
@@ -192,6 +194,11 @@
   <body class="template-gift-card">
     <main class="giftcard" role="main">
       <div class="giftcard__logo">
+        {%- comment -%}
+          O alt vai numa variável: "alt: shop.name | escape" dentro do image_tag
+          aplicaria o escape na tag <img> inteira (o logo sairia como texto).
+        {%- endcomment -%}
+        {%- assign logo_alt = shop.name | escape -%}
         {%- if settings.logo != blank -%}
           {{
             settings.logo
@@ -199,17 +206,24 @@
             | image_tag:
               widths: '110, 220, 330, 440',
               class: 'giftcard__logo-image',
-              alt: shop.name | escape
+              alt: logo_alt
           }}
         {%- else -%}
-          <h1 class="giftcard__shop-name">{{ shop.name }}</h1>
+          {%- comment -%} Mesmo logo da marca usado no navbar e no rodapé. {%- endcomment -%}
+          <img
+            src="{{ 'logo-mater.png' | asset_url }}"
+            class="giftcard__logo-image"
+            width="560"
+            height="232"
+            alt="{{ logo_alt }}"
+          >
         {%- endif -%}
       </div>
 
       <p class="giftcard__subtext">{{ 'gift_cards.issued.subtext' | t }}</p>
 
       <div class="giftcard__card">
-        <p class="giftcard__label">{{ 'gift_cards.issued.subtext' | t }}</p>
+        <p class="giftcard__label">{{ 'gift_cards.issued.balance' | t }}</p>
         <div class="giftcard__value {% if gift_card.expired %}giftcard__value--expired{% endif %}">
           {{ gift_card.balance | money }}
         </div>
@@ -279,13 +293,18 @@
         }
 
         var copyBtn = document.getElementById('CopyButton');
-        if (copyBtn && navigator.clipboard) {
-          copyBtn.addEventListener('click', function () {
-            navigator.clipboard.writeText(copyBtn.dataset.code).then(function () {
-              copyBtn.textContent = copyBtn.dataset.success;
-            });
-          });
+        if (!copyBtn) return;
+        // Sem acesso à área de transferência (navegador antigo / sem HTTPS):
+        // o botão sairia sem ação, então some e o código continua visível.
+        if (!navigator.clipboard) {
+          copyBtn.hidden = true;
+          return;
         }
+        copyBtn.addEventListener('click', function () {
+          navigator.clipboard.writeText(copyBtn.dataset.code).then(function () {
+            copyBtn.textContent = copyBtn.dataset.success;
+          });
+        });
       });
     </script>
   </body>
