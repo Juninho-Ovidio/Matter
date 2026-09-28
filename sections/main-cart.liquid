@@ -21,7 +21,9 @@
     sem JS; com JS os +/- chamam /cart/change.js e recarregam.
   - Barra de frete grátis: por quantidade (free_shipping_quantity,
     prioridade) ou por valor (free_shipping_threshold, R$). 0 = escondida.
-    Só avisa: quem zera o frete é o desconto automático do admin.
+    Quem zera o frete é o desconto automático do admin; com a meta
+    batida, o cálculo por CEP mostra "Grátis" nas tarifas abaixo de
+    free_shipping_max_rate (mesmo teto do desconto).
   - Frete por CEP: ViaCEP (viacep.com.br) descobre cidade/UF e a
     Cart API do Shopify (/cart/prepare_shipping_rates.json +
     /cart/async_shipping_rates.json) devolve as tarifas reais da
@@ -52,6 +54,16 @@
       assign qty_progress = 100
     endif
   endif
+
+  # Meta batida: o cálculo por CEP mostra como "Grátis" as tarifas abaixo
+  # do teto do desconto (a Cart API devolve o preço cheio, sem desconto).
+  assign free_ship_ok = false
+  if free_qty > 0 and cart.item_count >= free_qty
+    assign free_ship_ok = true
+  elsif threshold_cents > 0 and cart.total_price >= threshold_cents
+    assign free_ship_ok = true
+  endif
+  assign free_ship_max_cents = section.settings.free_shipping_max_rate | default: 0 | times: 100
 -%}
 
 <div class="mcart" id="main-cart-{{ section.id }}">
@@ -199,7 +211,7 @@
             </div>
             <p class="mcart__cep-place" data-cep-place hidden></p>
             <p class="mcart__cep-error" data-cep-error hidden></p>
-            <div class="mcart__rates" data-rates role="radiogroup" aria-label="Opções de entrega"></div>
+            <div class="mcart__rates" data-rates data-free-ship="{{ free_ship_ok }}" data-free-max="{{ free_ship_max_cents }}" role="radiogroup" aria-label="Opções de entrega"></div>
             <p class="mcart__rates-note" data-rates-note hidden>A forma de entrega é confirmada no próximo passo.</p>
           </div>
 
@@ -565,6 +577,7 @@
   #shopify-section-{{ section.id }} .mcart__rate-name { font-size: 14px; }
   #shopify-section-{{ section.id }} .mcart__rate-days { display: block; font-size: 12px; opacity: 0.6; }
   #shopify-section-{{ section.id }} .mcart__rate-price { font-size: 14px; font-weight: 700; white-space: nowrap; }
+  #shopify-section-{{ section.id }} .mcart__rate-price s { margin-right: 6px; font-weight: 400; opacity: 0.5; }
   #shopify-section-{{ section.id }} .mcart__rates-note { margin: 10px 0 0; font-size: 12px; opacity: 0.6; }
 
   /* Observação */
@@ -809,6 +822,13 @@
     var sumTotal = root.querySelector('[data-summary-total]');
     var cartTotal = Number(sumTotal.dataset.cartTotal) / 100;
     var STORE_KEY = 'mater-cep';
+    var freeShip = ratesEl.dataset.freeShip === 'true';
+    var freeMax = Number(ratesEl.dataset.freeMax) / 100;
+
+    // Espelha o desconto automático do admin: meta batida e tarifa abaixo do teto.
+    function isFree(price) {
+      return freeShip && (freeMax === 0 || price < freeMax);
+    }
 
     cepInput.addEventListener('input', function () {
       var d = cepInput.value.replace(/\D/g, '').slice(0, 8);
@@ -841,7 +861,8 @@
           var d = r.delivery_days;
           days = d[0] === d[d.length - 1] ? d[0] + ' dias úteis' : 'De ' + d[0] + ' a ' + d[d.length - 1] + ' dias úteis';
         }
-        var price = Number(r.price);
+        var full = Number(r.price);
+        var price = isFree(full) ? 0 : full;
         var name = document.createElement('span');
         name.textContent = r.name;
         return '<label class="mcart__rate">' +
@@ -849,11 +870,11 @@
           '<input type="radio" name="mcart_rate" form="mcart-rates-only" value="' + price + '"' + (i === 0 ? ' checked' : '') + '>' +
           '<svg class="mcart__rate-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="7" cy="17.5" r="1.8" stroke="currentColor" stroke-width="1.6"/><circle cx="17" cy="17.5" r="1.8" stroke="currentColor" stroke-width="1.6"/></svg>' +
           '<span class="mcart__rate-name">' + name.innerHTML + (days ? '<span class="mcart__rate-days">' + days + '</span>' : '') + '</span>' +
-          '<span class="mcart__rate-price">' + (price === 0 ? 'Grátis' : money(price)) + '</span>' +
+          '<span class="mcart__rate-price">' + (price === 0 && full > 0 ? '<s>' + money(full) + '</s>' : '') + (price === 0 ? 'Grátis' : money(price)) + '</span>' +
           '</label>';
       }).join('');
       noteEl.hidden = false;
-      selectRate(Number(rates[0].price));
+      selectRate(Number(ratesEl.querySelector('input').value));
       ratesEl.querySelectorAll('input').forEach(function (input) {
         input.addEventListener('change', function () { selectRate(Number(input.value)); });
       });
@@ -951,6 +972,17 @@
       "default": 0,
       "label": "Frete grátis a partir de (peças)",
       "info": "Mostra \"Faltam X camisetas para frete grátis\". Tem prioridade sobre o valor acima. 0 esconde. Precisa casar com o desconto automático de frete grátis do admin."
+    },
+    {
+      "type": "range",
+      "id": "free_shipping_max_rate",
+      "min": 0,
+      "max": 200,
+      "step": 5,
+      "unit": "R$",
+      "default": 45,
+      "label": "Frete grátis vale para fretes abaixo de",
+      "info": "Com a meta batida, o cálculo por CEP mostra \"Grátis\" nas opções abaixo desse valor. Use o mesmo teto do desconto automático do admin. 0 = todas as opções."
     },
     {
       "type": "text",
