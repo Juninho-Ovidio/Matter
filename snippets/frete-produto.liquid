@@ -9,13 +9,22 @@
   e entrega local, se houver) para a variante selecionada, qtd. 1.
 
   COMO FUNCIONA:
-  - ViaCEP (viacep.com.br) descobre cidade/UF do CEP.
   - Storefront API da Shopify SEM token (acesso público permitido para
-    carrinho): cria um carrinho à parte só para cotar e pede as opções
-    com @defer (as cotações da transportadora chegam num 2º pedaço da
-    resposta, multipart/mixed). O carrinho do cliente NÃO é tocado.
+    carrinho): numa ÚNICA chamada cria um carrinho à parte só para cotar
+    e pede as opções com @defer (as cotações da transportadora chegam num
+    2º pedaço da resposta, multipart/mixed). O carrinho do cliente NÃO é
+    tocado. A cotação precisa do CEP + UF; a UF sai da faixa do CEP
+    (tabela dos Correios, sem rede).
+  - Em paralelo, o ViaCEP (viacep.com.br) só confirma que o CEP existe e
+    dá o nome da cidade para a legenda. Se ele falhar, as opções saem mesmo assim.
   - A API não devolve o prazo em dias; o prazo exato aparece no checkout.
     Cada opção ganha um rótulo (expressa, econômica, transportadora).
+
+  VELOCIDADE (~2,5 s, quase tudo é a Frenet consultando os Correios):
+  - Calcula sozinho ao completar os 8 números.
+  - Resultado guardado na sessão (sessionStorage) por variante + CEP.
+  - Com um CEP salvo de visita anterior, calcula em segundo plano quando o
+    bloco aparece na tela: ao chegar nele, o resultado já está pronto.
 
   COMO USAR:
   {% render 'frete-produto', block: block, form_id: product_form_id %}
@@ -62,25 +71,48 @@
 
 <script>
   if (!customElements.get('frete-produto')) {
+    // UF pela faixa do CEP (Correios): [maior prefixo de 5 dígitos, UF].
+    var FRETE_UF = [
+      [19999, 'SP'], [28999, 'RJ'], [29999, 'ES'], [39999, 'MG'], [48999, 'BA'], [49999, 'SE'],
+      [56999, 'PE'], [57999, 'AL'], [58999, 'PB'], [59999, 'RN'], [63999, 'CE'], [64999, 'PI'],
+      [65999, 'MA'], [68899, 'PA'], [68999, 'AP'], [69299, 'AM'], [69399, 'RR'], [69899, 'AM'],
+      [69999, 'AC'], [72799, 'DF'], [72999, 'GO'], [73699, 'DF'], [76799, 'GO'], [76999, 'RO'],
+      [77999, 'TO'], [78899, 'MT'], [79999, 'MS'], [87999, 'PR'], [89999, 'SC'], [99999, 'RS']
+    ];
+
     customElements.define('frete-produto', class extends HTMLElement {
       connectedCallback() {
         this.input = this.querySelector('[data-frete-cep]');
         this.btn = this.querySelector('[data-frete-calc]');
         this.out = this.querySelector('[data-frete-result]');
-        this.cache = {};
+        this.pending = {};
 
         // Lembra o último CEP digitado (conveniência; falha em silêncio).
-        try { var saved = localStorage.getItem('mater:cep'); if (saved) this.input.value = saved; } catch (e) {}
+        var saved = null;
+        try { saved = localStorage.getItem('mater:cep'); if (saved) this.input.value = saved; } catch (e) {}
 
         this.input.addEventListener('input', () => {
           var d = this.input.value.replace(/\D/g, '').slice(0, 8);
           this.input.value = d.length > 5 ? d.slice(0, 5) + '-' + d.slice(5) : d;
+          // CEP completo: já calcula, sem precisar clicar.
+          if (d.length === 8) this.calc();
         });
         // Enter calcula em vez de enviar o form do produto (adicionar ao carrinho).
         this.input.addEventListener('keydown', (e) => {
           if (e.key === 'Enter') { e.preventDefault(); this.calc(); }
         });
         this.btn.addEventListener('click', () => this.calc());
+
+        // CEP salvo: calcula quando o bloco chega perto da tela, para o
+        // resultado já estar pronto quando o cliente olhar.
+        if (saved && 'IntersectionObserver' in window) {
+          var io = new IntersectionObserver((entries) => {
+            if (!entries[0].isIntersecting) return;
+            io.disconnect();
+            this.calc();
+          }, { rootMargin: '300px' });
+          io.observe(this);
+        }
       }
 
       variantId() {
@@ -89,30 +121,18 @@
         return input ? input.value : null;
       }
 
+      uf(cep) {
+        var n = Number(cep.slice(0, 5));
+        if (n < 1000) return null;
+        for (var i = 0; i < FRETE_UF.length; i++) if (n <= FRETE_UF[i][0]) return FRETE_UF[i][1];
+        return null;
+      }
+
       message(text, isError) {
         var p = document.createElement('p');
         p.className = 'frete__msg' + (isError ? ' frete__msg--error' : '');
         p.textContent = text;
         this.out.replaceChildren(p);
-      }
-
-      async gql(query, variables, deferred) {
-        var res = await fetch(this.dataset.api, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: deferred ? 'multipart/mixed; deferSpec=20220824, application/json' : 'application/json'
-          },
-          body: JSON.stringify({ query: query, variables: variables })
-        });
-        var text = await res.text();
-        // Resposta com @defer vem em partes separadas por "--graphql".
-        var parts = text.indexOf('--graphql') > -1 ? text.split('--graphql') : [text];
-        return parts
-          .map(function (p) { return p.slice(p.indexOf('{')).trim(); })
-          .filter(function (p) { return p.charAt(0) === '{'; })
-          .map(function (p) { try { return JSON.parse(p); } catch (e) { return null; } })
-          .filter(Boolean);
       }
 
       label(option) {
@@ -130,63 +150,87 @@
         return Number(amount).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
       }
 
+      // Cidade para a legenda e confirmação de que o CEP existe.
+      // Rede fora do ar não bloqueia: devolve null e a cotação segue.
+      city(cep) {
+        return fetch('https://viacep.com.br/ws/' + cep + '/json/')
+          .then(function (r) { return r.json(); })
+          .then(function (a) { return a && a.erro ? { invalid: true } : { name: a.localidade + '/' + a.uf }; })
+          .catch(function () { return null; });
+      }
+
+      // Uma chamada: cria o carrinho de cotação e, com @defer, recebe as opções.
+      rates(cep, uf, variant) {
+        return fetch(this.dataset.api, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'multipart/mixed; deferSpec=20220824, application/json' },
+          body: JSON.stringify({
+            query: 'mutation($i: CartInput!) { cartCreate(input: $i) { cart { id ... @defer { deliveryGroups(first: 5, withCarrierRates: true) { nodes { deliveryOptions { title estimatedCost { amount } deliveryMethodType } } } } } userErrors { message } } }',
+            variables: { i: {
+              lines: [{ merchandiseId: 'gid://shopify/ProductVariant/' + variant, quantity: 1 }],
+              buyerIdentity: { countryCode: 'BR' },
+              delivery: { addresses: [{ selected: true, address: { deliveryAddress: { zip: cep, countryCode: 'BR', provinceCode: uf } } }] }
+            } }
+          })
+        })
+          .then(function (r) { return r.text(); })
+          .then(function (text) {
+            // Resposta com @defer vem em partes separadas por "--graphql".
+            var options = [];
+            text.split('--graphql').forEach(function (part) {
+              var json = part.slice(part.indexOf('{')).trim();
+              if (json.charAt(0) !== '{') return;
+              try { json = JSON.parse(json); } catch (e) { return; }
+              (json.incremental || []).forEach(function (inc) {
+                var groups = inc.data && inc.data.deliveryGroups;
+                ((groups && groups.nodes) || []).forEach(function (g) {
+                  (g.deliveryOptions || []).forEach(function (o) { options.push(o); });
+                });
+              });
+            });
+            return options.sort(function (a, b) { return Number(a.estimatedCost.amount) - Number(b.estimatedCost.amount); });
+          });
+      }
+
       async calc() {
         var cep = this.input.value.replace(/\D/g, '');
         if (cep.length !== 8) return this.message('Digite um CEP com 8 números.', true);
+        var uf = this.uf(cep);
+        if (!uf) return this.message('Não encontramos esse CEP. Confira os números.', true);
         var variant = this.variantId();
         if (!variant) return this.message('Escolha um tamanho para calcular o frete.', true);
         try { localStorage.setItem('mater:cep', this.input.value); } catch (e) {}
 
-        var key = variant + ':' + cep;
-        if (this.cache[key]) return this.render(this.cache[key]);
+        var key = 'mater:frete:' + variant + ':' + cep;
+        try {
+          var hit = sessionStorage.getItem(key);
+          if (hit) return this.render(JSON.parse(hit), cep);
+        } catch (e) {}
+        // Mesmo cálculo já em andamento (ex.: digitou e clicou): não repete.
+        if (this.pending[key]) return;
+        this.pending[key] = true;
 
         this.btn.disabled = true;
         this.btn.textContent = 'Calculando…';
         this.message('Consultando os Correios e transportadoras…');
         try {
-          var addr = await fetch('https://viacep.com.br/ws/' + cep + '/json/').then(function (r) { return r.json(); });
-          if (!addr || addr.erro) throw new Error('cep');
-
-          var created = await this.gql(
-            'mutation($i: CartInput!) { cartCreate(input: $i) { cart { id } userErrors { message } } }',
-            { i: {
-              lines: [{ merchandiseId: 'gid://shopify/ProductVariant/' + variant, quantity: 1 }],
-              buyerIdentity: { countryCode: 'BR' },
-              delivery: { addresses: [{ selected: true, address: { deliveryAddress: {
-                zip: cep, countryCode: 'BR', provinceCode: addr.uf, city: addr.localidade,
-                address1: addr.logradouro || 'Centro'
-              } } }] }
-            } }
-          );
-          var cart = created[0] && created[0].data && created[0].data.cartCreate.cart;
-          if (!cart) throw new Error('cart');
-
-          var parts = await this.gql(
-            'query($id: ID!) { cart(id: $id) { id ... @defer { deliveryGroups(first: 5, withCarrierRates: true) { nodes { deliveryOptions { title estimatedCost { amount } deliveryMethodType } } } } } }',
-            { id: cart.id }, true
-          );
-          var options = [];
-          parts.forEach(function (p) {
-            var chunks = (p.incremental || []).map(function (i) { return i.data; });
-            if (p.data && p.data.cart && p.data.cart.deliveryGroups) chunks.push(p.data.cart);
-            chunks.forEach(function (c) {
-              ((c.deliveryGroups && c.deliveryGroups.nodes) || []).forEach(function (g) {
-                (g.deliveryOptions || []).forEach(function (o) { options.push(o); });
-              });
-            });
-          });
-          options.sort(function (a, b) { return Number(a.estimatedCost.amount) - Number(b.estimatedCost.amount); });
-          this.cache[key] = { options: options, city: addr.localidade + '/' + addr.uf };
-          this.render(this.cache[key]);
+          var both = await Promise.all([this.city(cep), this.rates(cep, uf, variant)]);
+          var place = both[0];
+          if (place && place.invalid) throw new Error('cep');
+          var data = { options: both[1], city: place ? place.name : null };
+          try { sessionStorage.setItem(key, JSON.stringify(data)); } catch (e) {}
+          // Só mostra se o cliente não trocou o CEP enquanto calculava.
+          if (this.input.value.replace(/\D/g, '') === cep) this.render(data, cep);
         } catch (e) {
           this.message(e.message === 'cep' ? 'Não encontramos esse CEP. Confira os números.' : 'Não foi possível calcular agora. Tente de novo em instantes.', true);
         } finally {
+          delete this.pending[key];
           this.btn.disabled = false;
           this.btn.textContent = 'Calcular';
         }
       }
 
-      render(data) {
+      render(data, cep) {
         if (!data.options.length) return this.message('Ainda não entregamos nesse CEP.', true);
         var list = document.createElement('ul');
         list.className = 'frete__list';
@@ -208,7 +252,7 @@
         });
         var where = document.createElement('p');
         where.className = 'frete__where';
-        where.textContent = 'Para ' + data.city + ' · o prazo exato aparece no checkout.';
+        where.textContent = 'Para ' + (data.city || 'o CEP ' + cep.slice(0, 5) + '-' + cep.slice(5)) + ' · o prazo exato aparece no checkout.';
         this.out.replaceChildren(list, where);
       }
     });
