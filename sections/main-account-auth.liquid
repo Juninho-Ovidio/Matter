@@ -63,15 +63,15 @@
             <div class="conta__fields">
               <label class="conta__field{% if form.errors contains 'first_name' %} is-invalid{% endif %}" for="RegisterFirstName">
                 <span>Nome</span>
-                <input type="text" id="RegisterFirstName" name="customer[first_name]" value="{{ form.first_name }}" autocomplete="given-name" placeholder="Seu nome" required>
+                <input type="text" id="RegisterFirstName" name="customer[first_name]" value="{{ form.first_name | escape }}" autocomplete="given-name" placeholder="Seu nome" required>
               </label>
               <label class="conta__field{% if form.errors contains 'last_name' %} is-invalid{% endif %}" for="RegisterLastName">
                 <span>Sobrenome</span>
-                <input type="text" id="RegisterLastName" name="customer[last_name]" value="{{ form.last_name }}" autocomplete="family-name" placeholder="Seu sobrenome">
+                <input type="text" id="RegisterLastName" name="customer[last_name]" value="{{ form.last_name | escape }}" autocomplete="family-name" placeholder="Seu sobrenome">
               </label>
               <label class="conta__field conta__field--full{% if form.errors contains 'email' %} is-invalid{% endif %}" for="RegisterEmail">
                 <span>E-mail</span>
-                <input type="email" id="RegisterEmail" name="customer[email]" value="{{ form.email }}" autocomplete="email" autocapitalize="off" spellcheck="false" inputmode="email" placeholder="seuemail@exemplo.com" required>
+                <input type="email" id="RegisterEmail" name="customer[email]" value="{{ form.email | escape }}" autocomplete="email" autocapitalize="off" spellcheck="false" inputmode="email" placeholder="seuemail@exemplo.com" required>
               </label>
               {%- liquid
                 assign pass_invalid = false
@@ -175,7 +175,7 @@
               <div class="conta__fields">
                 <label class="conta__field conta__field--full{% if form.errors %} is-invalid{% endif %}" for="LoginEmail">
                   <span>E-mail</span>
-                  <input type="email" id="LoginEmail" name="customer[email]" value="{{ form.email }}" autocomplete="email" autocapitalize="off" spellcheck="false" inputmode="email" placeholder="seuemail@exemplo.com" required>
+                  <input type="email" id="LoginEmail" name="customer[email]" value="{{ form.email | escape }}" autocomplete="email" autocapitalize="off" spellcheck="false" inputmode="email" placeholder="seuemail@exemplo.com" required>
                 </label>
                 {%- liquid
                   assign login_invalid = false

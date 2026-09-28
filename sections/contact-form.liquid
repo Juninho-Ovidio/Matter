@@ -168,7 +168,7 @@
               <input
                 type="text"
                 name="contact[Nome]"
-                value="{% if form.name %}{{ form.name }}{% elsif customer %}{{ customer.name }}{% endif %}"
+                value="{% if form.name %}{{ form.name | escape }}{% elsif customer %}{{ customer.name | escape }}{% endif %}"
                 autocomplete="name"
                 placeholder="Digite seu nome"
                 required
@@ -180,7 +180,7 @@
               <input
                 type="email"
                 name="contact[email]"
-                value="{% if form.email %}{{ form.email }}{% elsif customer %}{{ customer.email }}{% endif %}"
+                value="{% if form.email %}{{ form.email | escape }}{% elsif customer %}{{ customer.email | escape }}{% endif %}"
                 autocomplete="email"
                 autocapitalize="off"
                 spellcheck="false"
@@ -194,7 +194,7 @@
               <input
                 type="tel"
                 name="contact[Telefone]"
-                value="{% if customer %}{{ customer.phone }}{% endif %}"
+                value="{% if customer %}{{ customer.phone | escape }}{% endif %}"
                 autocomplete="tel"
                 inputmode="tel"
                 placeholder="(00) 00000-0000"
@@ -226,7 +226,7 @@
                 rows="5"
                 placeholder="Conte como podemos te ajudar. Se for sobre um pedido, informe o número."
                 required
-              >{% if form.body %}{{ form.body }}{% endif %}</textarea>
+              >{% if form.body %}{{ form.body | escape }}{% endif %}</textarea>
             </label>
           </div>
 

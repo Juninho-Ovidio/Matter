@@ -124,7 +124,7 @@
             class="field__input"
             id="CommentForm-author-{{ section.id }}"
             name="comment[author]"
-            value="{{ form.author }}"
+            value="{{ form.author | escape }}"
             autocomplete="name"
             spellcheck="false"
             required
@@ -140,7 +140,7 @@
             class="field__input"
             id="CommentForm-email-{{ section.id }}"
             name="comment[email]"
-            value="{{ form.email }}"
+            value="{{ form.email | escape }}"
             autocomplete="email"
             autocapitalize="off"
             spellcheck="false"
@@ -159,7 +159,7 @@
             name="comment[body]"
             spellcheck="false"
             required
-          >{{ form.body }}</textarea>
+          >{{ form.body | escape }}</textarea>
         </div>
 
         <button type="submit" class="button">{{ 'blogs.article.post' | t }}</button>

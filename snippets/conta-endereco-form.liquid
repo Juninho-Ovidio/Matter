@@ -21,33 +21,33 @@
 <div class="conta__fields">
   <label class="conta__field" for="AddressFirstName_{{ suffix }}">
     <span>Nome</span>
-    <input type="text" id="AddressFirstName_{{ suffix }}" name="address[first_name]" value="{{ form.first_name }}" autocomplete="given-name" required>
+    <input type="text" id="AddressFirstName_{{ suffix }}" name="address[first_name]" value="{{ form.first_name | escape }}" autocomplete="given-name" required>
   </label>
   <label class="conta__field" for="AddressLastName_{{ suffix }}">
     <span>Sobrenome</span>
-    <input type="text" id="AddressLastName_{{ suffix }}" name="address[last_name]" value="{{ form.last_name }}" autocomplete="family-name" required>
+    <input type="text" id="AddressLastName_{{ suffix }}" name="address[last_name]" value="{{ form.last_name | escape }}" autocomplete="family-name" required>
   </label>
 
   <label class="conta__field" for="AddressZip_{{ suffix }}">
     <span>CEP</span>
-    <input type="text" id="AddressZip_{{ suffix }}" name="address[zip]" value="{{ form.zip }}" autocomplete="postal-code" inputmode="numeric" placeholder="00000-000" data-cep required>
+    <input type="text" id="AddressZip_{{ suffix }}" name="address[zip]" value="{{ form.zip | escape }}" autocomplete="postal-code" inputmode="numeric" placeholder="00000-000" data-cep required>
   </label>
   <label class="conta__field" for="AddressPhone_{{ suffix }}">
     <span>Telefone</span>
-    <input type="tel" id="AddressPhone_{{ suffix }}" name="address[phone]" value="{{ form.phone }}" autocomplete="tel" inputmode="tel" placeholder="(00) 00000-0000">
+    <input type="tel" id="AddressPhone_{{ suffix }}" name="address[phone]" value="{{ form.phone | escape }}" autocomplete="tel" inputmode="tel" placeholder="(00) 00000-0000">
   </label>
 
   <label class="conta__field conta__field--full" for="AddressAddress1_{{ suffix }}">
     <span>Endereço e número</span>
-    <input type="text" id="AddressAddress1_{{ suffix }}" name="address[address1]" value="{{ form.address1 }}" autocomplete="address-line1" placeholder="Rua, avenida… e o número" required>
+    <input type="text" id="AddressAddress1_{{ suffix }}" name="address[address1]" value="{{ form.address1 | escape }}" autocomplete="address-line1" placeholder="Rua, avenida… e o número" required>
   </label>
   <label class="conta__field" for="AddressAddress2_{{ suffix }}">
     <span>Bairro / complemento</span>
-    <input type="text" id="AddressAddress2_{{ suffix }}" name="address[address2]" value="{{ form.address2 }}" autocomplete="address-line2" placeholder="Bairro, apto, bloco…">
+    <input type="text" id="AddressAddress2_{{ suffix }}" name="address[address2]" value="{{ form.address2 | escape }}" autocomplete="address-line2" placeholder="Bairro, apto, bloco…">
   </label>
   <label class="conta__field" for="AddressCity_{{ suffix }}">
     <span>Cidade</span>
-    <input type="text" id="AddressCity_{{ suffix }}" name="address[city]" value="{{ form.city }}" autocomplete="address-level2" required>
+    <input type="text" id="AddressCity_{{ suffix }}" name="address[city]" value="{{ form.city | escape }}" autocomplete="address-level2" required>
   </label>
 
   <label class="conta__field conta__field--select" for="AddressCountry_{{ suffix }}">
@@ -59,14 +59,14 @@
       data-country-select
       data-province-id="AddressProvince_{{ suffix }}"
       data-province-container="AddressProvinceContainer_{{ suffix }}"
-      data-default="{{ form.country | default: 'Brazil' }}"
+      data-default="{{ form.country | default: 'Brazil' | escape }}"
     >
       {{ all_country_option_tags }}
     </select>
   </label>
   <label class="conta__field conta__field--select" id="AddressProvinceContainer_{{ suffix }}" for="AddressProvince_{{ suffix }}">
     <span>Estado</span>
-    <select id="AddressProvince_{{ suffix }}" name="address[province]" autocomplete="address-level1" data-default="{{ form.province }}"></select>
+    <select id="AddressProvince_{{ suffix }}" name="address[province]" autocomplete="address-level1" data-default="{{ form.province | escape }}"></select>
   </label>
 
   <div class="conta__field--full">
