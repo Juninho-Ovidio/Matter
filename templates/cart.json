@@ -1,7 +1,11 @@
 {
   "sections": {
     "main": {
-      "type": "main-cart"
+      "type": "main-cart",
+      "settings": {
+        "free_shipping_quantity": 3,
+        "free_shipping_note": "(PAC e transportadora)"
+      }
     }
   },
   "order": ["main"]

@@ -19,8 +19,9 @@
   PRINCIPAIS PARTES:
   - {% form 'cart' %}: quantidades (updates[]) e checkout. Funciona
     sem JS; com JS os +/- chamam /cart/change.js e recarregam.
-  - Barra de frete grátis: setting free_shipping_threshold (R$).
-    0 = escondida.
+  - Barra de frete grátis: por quantidade (free_shipping_quantity,
+    prioridade) ou por valor (free_shipping_threshold, R$). 0 = escondida.
+    Só avisa: quem zera o frete é o desconto automático do admin.
   - Frete por CEP: ViaCEP (viacep.com.br) descobre cidade/UF e a
     Cart API do Shopify (/cart/prepare_shipping_rates.json +
     /cart/async_shipping_rates.json) devolve as tarifas reais da
@@ -38,6 +39,17 @@
     assign progress = cart.total_price | times: 100 | divided_by: threshold_cents
     if progress > 100
       assign progress = 100
+    endif
+  endif
+
+  # Frete grátis por QUANTIDADE (tem prioridade sobre o valor). Precisa
+  # casar com o desconto automático de frete grátis criado no admin.
+  assign free_qty = section.settings.free_shipping_quantity | default: 0
+  if free_qty > 0
+    assign qty_missing = free_qty | minus: cart.item_count
+    assign qty_progress = cart.item_count | times: 100 | divided_by: free_qty
+    if qty_progress > 100
+      assign qty_progress = 100
     endif
   endif
 -%}
@@ -80,7 +92,19 @@
             {%- if cart.item_count == 1 -%}1 item{%- else -%}{{ cart.item_count }} itens{%- endif %} no seu pedido.
           </p>
 
-          {%- if threshold_cents > 0 -%}
+          {%- if free_qty > 0 -%}
+            <div class="mcart__free">
+              {%- if qty_missing > 0 -%}
+                <p>
+                  Falta{% if qty_missing > 1 %}m{% endif %} <strong>{{ qty_missing }} camiseta{% if qty_missing > 1 %}s{% endif %}</strong>
+                  para você ganhar <strong>frete grátis</strong>.
+                </p>
+              {%- else -%}
+                <p><strong>Parabéns!</strong> Você ganhou <strong>frete grátis</strong>{% if section.settings.free_shipping_note != blank %} {{ section.settings.free_shipping_note | escape }}{% endif %}.</p>
+              {%- endif -%}
+              <div class="mcart__free-track"><span style="width: {{ qty_progress }}%;"></span></div>
+            </div>
+          {%- elsif threshold_cents > 0 -%}
             <div class="mcart__free">
               {%- if remaining > 0 -%}
                 <p>Faltam <strong>{{ remaining | money }}</strong> para você ganhar <strong>frete grátis</strong>.</p>
@@ -917,6 +941,23 @@
       "default": 0,
       "label": "t:sections.main_cart.settings.free_shipping_threshold.label",
       "info": "t:sections.main_cart.settings.free_shipping_threshold.info"
+    },
+    {
+      "type": "range",
+      "id": "free_shipping_quantity",
+      "min": 0,
+      "max": 10,
+      "step": 1,
+      "default": 0,
+      "label": "Frete grátis a partir de (peças)",
+      "info": "Mostra \"Faltam X camisetas para frete grátis\". Tem prioridade sobre o valor acima. 0 esconde. Precisa casar com o desconto automático de frete grátis do admin."
+    },
+    {
+      "type": "text",
+      "id": "free_shipping_note",
+      "default": "(PAC e transportadora)",
+      "label": "Complemento da mensagem de frete grátis",
+      "info": "Aparece depois de \"Você ganhou frete grátis\". Ex.: quais opções ficam grátis."
     },
     {
       "type": "checkbox",
