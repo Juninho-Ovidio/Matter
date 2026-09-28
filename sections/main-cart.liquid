@@ -264,16 +264,8 @@
               <input type="text" id="CartCoupon" placeholder="Digite seu cupom" autocomplete="off" data-coupon>
               <button type="button" class="mcart__btn-light" data-coupon-apply>Aplicar</button>
             </div>
-            {%- if cart.discount_codes.size > 0 -%}
-              <ul class="mcart__codes" role="list">
-                {%- for code in cart.discount_codes -%}
-                  <li class="{% if code.applicable %}is-ok{% else %}is-bad{% endif %}">
-                    {{ code.code | escape }}
-                    {%- if code.applicable %} aplicado{% else %} não se aplica a este carrinho{% endif -%}
-                  </li>
-                {%- endfor -%}
-              </ul>
-            {%- endif -%}
+            {%- comment -%} Preenchida pelo JS a partir do /cart.js (no Liquid, cart.discount_codes vem vazio). {%- endcomment -%}
+            <ul class="mcart__codes" role="list" data-codes hidden></ul>
           </div>
 
           <button type="submit" name="checkout" class="mcart__checkout">
@@ -804,7 +796,13 @@
       var code = couponInput.value.trim();
       if (!code) { couponInput.focus(); return; }
       couponBtn.setAttribute('aria-busy', 'true');
-      window.location.href = '/discount/' + encodeURIComponent(code) + '?redirect=' + encodeURIComponent('{{ routes.cart_url }}');
+      // Grava o cupom no próprio carrinho (substitui o anterior). O link
+      // /discount/CODIGO nem sempre chegava ao carrinho.
+      fetch('{{ routes.cart_update_url }}.js', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({ discount: code })
+      }).finally(function () { window.location.reload(); });
     }
     if (couponBtn) couponBtn.addEventListener('click', applyCoupon);
     if (couponInput) couponInput.addEventListener('keydown', function (e) {
@@ -825,10 +823,40 @@
     var freeShip = ratesEl.dataset.freeShip === 'true';
     var freeMax = Number(ratesEl.dataset.freeMax) / 100;
 
+    var lastRates = null;
+
     // Espelha o desconto automático do admin: meta batida e tarifa abaixo do teto.
     function isFree(price) {
       return freeShip && (freeMax === 0 || price < freeMax);
     }
+
+    // Cupons: lista o que está no carrinho. Cupom aceito que não gera
+    // desconto em item nem no pedido é de frete (ex.: FREE) e zera as tarifas.
+    var codesEl = root.querySelector('[data-codes]');
+    fetch('{{ routes.cart_url }}.js', { headers: { Accept: 'application/json' } })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        var codes = data.discount_codes || [];
+        if (!codes.length) return;
+        var titles = (data.cart_level_discount_applications || []).map(function (a) { return a.title; });
+        (data.items || []).forEach(function (item) {
+          (item.line_level_discount_allocations || []).forEach(function (a) { titles.push(a.discount_application.title); });
+        });
+        codesEl.innerHTML = codes.map(function (c) {
+          var li = document.createElement('li');
+          li.className = c.applicable ? 'is-ok' : 'is-bad';
+          li.textContent = c.code + (c.applicable ? ' aplicado' : ' não se aplica a este carrinho');
+          return li.outerHTML;
+        }).join('');
+        codesEl.hidden = false;
+        var shippingCode = codes.some(function (c) { return c.applicable && titles.indexOf(c.code) === -1; });
+        if (!shippingCode) return;
+        freeShip = true;
+        freeMax = 0;
+        if (lastRates) renderRates(lastRates);
+        else selectRate(0);
+      })
+      .catch(function () {});
 
     cepInput.addEventListener('input', function () {
       var d = cepInput.value.replace(/\D/g, '').slice(0, 8);
@@ -855,6 +883,7 @@
         return;
       }
       rates.sort(function (a, b) { return Number(a.price) - Number(b.price); });
+      lastRates = rates;
       ratesEl.innerHTML = rates.map(function (r, i) {
         var days = '';
         if (r.delivery_days && r.delivery_days.length) {
