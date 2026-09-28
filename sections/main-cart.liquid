@@ -824,6 +824,7 @@
     var freeMax = Number(ratesEl.dataset.freeMax) / 100;
 
     var lastRates = null;
+    var RATE_NAMES = { 'Local Delivery': 'Entrega local', 'Local delivery': 'Entrega local' };
 
     // Espelha o desconto automático do admin: meta batida e tarifa abaixo do teto.
     function isFree(price) {
@@ -893,7 +894,8 @@
         var full = Number(r.price);
         var price = isFree(full) ? 0 : full;
         var name = document.createElement('span');
-        name.textContent = r.name;
+        // A Shopify devolve os nomes no idioma principal da loja (inglês).
+        name.textContent = RATE_NAMES[r.name] || r.name;
         return '<label class="mcart__rate">' +
           // form="" aponta para um id inexistente: o radio não vai junto no POST do carrinho.
           '<input type="radio" name="mcart_rate" form="mcart-rates-only" value="' + price + '"' + (i === 0 ? ' checked' : '') + '>' +

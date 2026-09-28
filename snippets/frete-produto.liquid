@@ -137,7 +137,7 @@
 
       label(option) {
         var t = (option.title || '').toLowerCase();
-        if (option.deliveryMethodType === 'LOCAL') return 'Entrega local';
+        if (option.deliveryMethodType === 'LOCAL') return 'Entregue pela Mater';
         if (option.deliveryMethodType === 'PICK_UP') return 'Retirada';
         // Palavras inteiras: "Jadlog Package" contém "pac" e não é PAC.
         if (/\bsedex\b/.test(t)) return 'Correios · entrega expressa';
@@ -240,7 +240,8 @@
           li.className = 'frete__option';
           var info = document.createElement('span');
           var name = document.createElement('strong');
-          name.textContent = o.title;
+          // A Shopify manda "Local Delivery" no idioma principal da loja (inglês).
+          name.textContent = o.deliveryMethodType === 'LOCAL' ? 'Entrega local' : o.title;
           var kind = document.createElement('small');
           kind.textContent = this.label(o);
           info.append(name, kind);
