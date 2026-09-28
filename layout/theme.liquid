@@ -56,6 +56,14 @@
       if request.page_type == 'collection' and collection.handle == 'all'
         assign seo_title = 'sections.main_collection.all_title' | t
       endif
+      # A busca vem como "Search: N results found for ..." (idioma base da loja).
+      if request.page_type == 'search'
+        if search.performed
+          assign seo_title = 'templates.search.search_for' | t: terms: search.terms
+        else
+          assign seo_title = 'templates.search.title' | t
+        endif
+      endif
       assign seo_description = page_description | default: settings.seo_description | default: shop.description
     -%}
     <title>
