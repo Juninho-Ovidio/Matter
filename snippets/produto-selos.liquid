@@ -1,0 +1,34 @@
+{%- comment -%}
+  ============================================================
+  produto-selos — selos de confiança da página do produto
+  ============================================================
+
+  O QUE FAZ:
+  Lista com até 3 selos (ícone + texto): compra segura, envio e troca.
+  Cada um some se o texto ficar em branco no editor.
+
+  COMO USAR:
+  {% render 'produto-selos', block: block %}
+  Chamado pelo bloco "trust" de sections/main-product.liquid (fica num
+  snippet para manter a seção abaixo do limite de complexidade do Liquid).
+{%- endcomment -%}
+<ul class="product__trust" role="list" {{ block.shopify_attributes }}>
+  {%- if block.settings.trust_1 != blank -%}
+    <li>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6l-8-3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="m8.5 12 2.5 2.5 4.5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>{{ block.settings.trust_1 | escape }}</span>
+    </li>
+  {%- endif -%}
+  {%- if block.settings.trust_2 != blank -%}
+    <li>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="7" cy="17.5" r="1.8" stroke="currentColor" stroke-width="1.6"/><circle cx="17" cy="17.5" r="1.8" stroke="currentColor" stroke-width="1.6"/></svg>
+      <span>{{ block.settings.trust_2 | escape }}</span>
+    </li>
+  {%- endif -%}
+  {%- if block.settings.trust_3 != blank -%}
+    <li>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M18 3v4h-4M6 21v-4h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>{{ block.settings.trust_3 | escape }}</span>
+    </li>
+  {%- endif -%}
+</ul>

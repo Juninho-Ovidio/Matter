@@ -24,6 +24,13 @@
           "type": "buy_buttons",
           "settings": { "show_dynamic_checkout": false }
         },
+        "frete": {
+          "type": "shipping_calculator",
+          "settings": {
+            "heading": "Calcular frete",
+            "free_note": "Frete grátis comprando 3 camisetas (PAC e transportadora)"
+          }
+        },
         "trust": {
           "type": "trust",
           "settings": {
@@ -42,6 +49,7 @@
         "variant_picker",
         "provador",
         "buy_buttons",
+        "frete",
         "trust",
         "description",
         "share"

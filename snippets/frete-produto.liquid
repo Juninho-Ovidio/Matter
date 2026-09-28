@@ -1,0 +1,301 @@
+{%- comment -%}
+  ============================================================
+  frete-produto — calculadora de frete na página do produto
+  ============================================================
+
+  O QUE FAZ:
+  Campo de CEP + botão "Calcular". Mostra as opções de frete reais da
+  loja (as mesmas do checkout: Frenet → PAC, Sedex, Mini Envios, Jadlog;
+  e entrega local, se houver) para a variante selecionada, qtd. 1.
+
+  COMO FUNCIONA:
+  - ViaCEP (viacep.com.br) descobre cidade/UF do CEP.
+  - Storefront API da Shopify SEM token (acesso público permitido para
+    carrinho): cria um carrinho à parte só para cotar e pede as opções
+    com @defer (as cotações da transportadora chegam num 2º pedaço da
+    resposta, multipart/mixed). O carrinho do cliente NÃO é tocado.
+  - A API não devolve o prazo em dias; o prazo exato aparece no checkout.
+    Cada opção ganha um rótulo (expressa, econômica, transportadora).
+
+  COMO USAR:
+  {% render 'frete-produto', block: block, form_id: product_form_id %}
+  Dentro do form do produto: o campo não tem name (não vai no POST) e o
+  Enter é interceptado, para não adicionar ao carrinho sem querer.
+
+  PARÂMETROS:
+  - block: bloco "shipping_calculator" (settings heading, free_note).
+  - form_id: id do form do produto (de onde sai a variante escolhida).
+{%- endcomment -%}
+<frete-produto
+  class="frete"
+  data-form-id="{{ form_id }}"
+  data-api="/api/2026-07/graphql.json"
+  {{ block.shopify_attributes }}
+>
+  <p class="frete__title">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="7" cy="17.5" r="1.8" stroke="currentColor" stroke-width="1.6"/><circle cx="17" cy="17.5" r="1.8" stroke="currentColor" stroke-width="1.6"/></svg>
+    {{ block.settings.heading | default: 'Calcular frete' | escape }}
+  </p>
+
+  <div class="frete__row">
+    <label class="visually-hidden" for="FreteCep-{{ block.id }}">CEP</label>
+    <input
+      id="FreteCep-{{ block.id }}"
+      class="frete__input"
+      type="text"
+      inputmode="numeric"
+      autocomplete="postal-code"
+      placeholder="00000-000"
+      maxlength="9"
+      data-frete-cep
+    >
+    <button type="button" class="frete__btn" data-frete-calc>Calcular</button>
+  </div>
+  <a class="frete__help" href="https://buscacepinter.correios.com.br/app/endereco/index.php" target="_blank" rel="noopener noreferrer">Não sei meu CEP</a>
+
+  <div class="frete__result" data-frete-result aria-live="polite"></div>
+
+  {%- if block.settings.free_note != blank -%}
+    <p class="frete__note">{{ block.settings.free_note | escape }}</p>
+  {%- endif -%}
+</frete-produto>
+
+<script>
+  if (!customElements.get('frete-produto')) {
+    customElements.define('frete-produto', class extends HTMLElement {
+      connectedCallback() {
+        this.input = this.querySelector('[data-frete-cep]');
+        this.btn = this.querySelector('[data-frete-calc]');
+        this.out = this.querySelector('[data-frete-result]');
+        this.cache = {};
+
+        // Lembra o último CEP digitado (conveniência; falha em silêncio).
+        try { var saved = localStorage.getItem('mater:cep'); if (saved) this.input.value = saved; } catch (e) {}
+
+        this.input.addEventListener('input', () => {
+          var d = this.input.value.replace(/\D/g, '').slice(0, 8);
+          this.input.value = d.length > 5 ? d.slice(0, 5) + '-' + d.slice(5) : d;
+        });
+        // Enter calcula em vez de enviar o form do produto (adicionar ao carrinho).
+        this.input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') { e.preventDefault(); this.calc(); }
+        });
+        this.btn.addEventListener('click', () => this.calc());
+      }
+
+      variantId() {
+        var form = document.getElementById(this.dataset.formId);
+        var input = form && form.querySelector('input[name="id"]');
+        return input ? input.value : null;
+      }
+
+      message(text, isError) {
+        var p = document.createElement('p');
+        p.className = 'frete__msg' + (isError ? ' frete__msg--error' : '');
+        p.textContent = text;
+        this.out.replaceChildren(p);
+      }
+
+      async gql(query, variables, deferred) {
+        var res = await fetch(this.dataset.api, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: deferred ? 'multipart/mixed; deferSpec=20220824, application/json' : 'application/json'
+          },
+          body: JSON.stringify({ query: query, variables: variables })
+        });
+        var text = await res.text();
+        // Resposta com @defer vem em partes separadas por "--graphql".
+        var parts = text.indexOf('--graphql') > -1 ? text.split('--graphql') : [text];
+        return parts
+          .map(function (p) { return p.slice(p.indexOf('{')).trim(); })
+          .filter(function (p) { return p.charAt(0) === '{'; })
+          .map(function (p) { try { return JSON.parse(p); } catch (e) { return null; } })
+          .filter(Boolean);
+      }
+
+      label(option) {
+        var t = (option.title || '').toLowerCase();
+        if (option.deliveryMethodType === 'LOCAL') return 'Entrega local';
+        if (option.deliveryMethodType === 'PICK_UP') return 'Retirada';
+        // Palavras inteiras: "Jadlog Package" contém "pac" e não é PAC.
+        if (/\bsedex\b/.test(t)) return 'Correios · entrega expressa';
+        if (/\bmini envios?\b/.test(t)) return 'Correios · econômica';
+        if (/\bpac\b/.test(t)) return 'Correios · entrega normal';
+        return 'Transportadora';
+      }
+
+      money(amount) {
+        return Number(amount).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      }
+
+      async calc() {
+        var cep = this.input.value.replace(/\D/g, '');
+        if (cep.length !== 8) return this.message('Digite um CEP com 8 números.', true);
+        var variant = this.variantId();
+        if (!variant) return this.message('Escolha um tamanho para calcular o frete.', true);
+        try { localStorage.setItem('mater:cep', this.input.value); } catch (e) {}
+
+        var key = variant + ':' + cep;
+        if (this.cache[key]) return this.render(this.cache[key]);
+
+        this.btn.disabled = true;
+        this.btn.textContent = 'Calculando…';
+        this.message('Consultando os Correios e transportadoras…');
+        try {
+          var addr = await fetch('https://viacep.com.br/ws/' + cep + '/json/').then(function (r) { return r.json(); });
+          if (!addr || addr.erro) throw new Error('cep');
+
+          var created = await this.gql(
+            'mutation($i: CartInput!) { cartCreate(input: $i) { cart { id } userErrors { message } } }',
+            { i: {
+              lines: [{ merchandiseId: 'gid://shopify/ProductVariant/' + variant, quantity: 1 }],
+              buyerIdentity: { countryCode: 'BR' },
+              delivery: { addresses: [{ selected: true, address: { deliveryAddress: {
+                zip: cep, countryCode: 'BR', provinceCode: addr.uf, city: addr.localidade,
+                address1: addr.logradouro || 'Centro'
+              } } }] }
+            } }
+          );
+          var cart = created[0] && created[0].data && created[0].data.cartCreate.cart;
+          if (!cart) throw new Error('cart');
+
+          var parts = await this.gql(
+            'query($id: ID!) { cart(id: $id) { id ... @defer { deliveryGroups(first: 5, withCarrierRates: true) { nodes { deliveryOptions { title estimatedCost { amount } deliveryMethodType } } } } } }',
+            { id: cart.id }, true
+          );
+          var options = [];
+          parts.forEach(function (p) {
+            var chunks = (p.incremental || []).map(function (i) { return i.data; });
+            if (p.data && p.data.cart && p.data.cart.deliveryGroups) chunks.push(p.data.cart);
+            chunks.forEach(function (c) {
+              ((c.deliveryGroups && c.deliveryGroups.nodes) || []).forEach(function (g) {
+                (g.deliveryOptions || []).forEach(function (o) { options.push(o); });
+              });
+            });
+          });
+          options.sort(function (a, b) { return Number(a.estimatedCost.amount) - Number(b.estimatedCost.amount); });
+          this.cache[key] = { options: options, city: addr.localidade + '/' + addr.uf };
+          this.render(this.cache[key]);
+        } catch (e) {
+          this.message(e.message === 'cep' ? 'Não encontramos esse CEP. Confira os números.' : 'Não foi possível calcular agora. Tente de novo em instantes.', true);
+        } finally {
+          this.btn.disabled = false;
+          this.btn.textContent = 'Calcular';
+        }
+      }
+
+      render(data) {
+        if (!data.options.length) return this.message('Ainda não entregamos nesse CEP.', true);
+        var list = document.createElement('ul');
+        list.className = 'frete__list';
+        list.setAttribute('role', 'list');
+        data.options.forEach((o) => {
+          var li = document.createElement('li');
+          li.className = 'frete__option';
+          var info = document.createElement('span');
+          var name = document.createElement('strong');
+          name.textContent = o.title;
+          var kind = document.createElement('small');
+          kind.textContent = this.label(o);
+          info.append(name, kind);
+          var price = document.createElement('span');
+          price.className = 'frete__price';
+          price.textContent = Number(o.estimatedCost.amount) === 0 ? 'Grátis' : this.money(o.estimatedCost.amount);
+          li.append(info, price);
+          list.append(li);
+        });
+        var where = document.createElement('p');
+        where.className = 'frete__where';
+        where.textContent = 'Para ' + data.city + ' · o prazo exato aparece no checkout.';
+        this.out.replaceChildren(list, where);
+      }
+    });
+  }
+</script>
+
+<style>
+  .frete {
+    display: block;
+    margin: 0 0 22px;
+    padding: 16px;
+    background-color: var(--color-background-contrast);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+  }
+  .frete__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 12px;
+    font-family: var(--font-heading-family);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .frete__row { display: flex; gap: 8px; }
+  .frete__input {
+    flex: 1;
+    min-width: 0;
+    min-height: 44px;
+    padding: 10px 14px;
+    font-size: 15px;
+    letter-spacing: 0.04em;
+    color: var(--color-text);
+    background-color: var(--color-background-contrast);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+  }
+  .frete__input:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 1px; }
+  .frete__btn {
+    flex: none;
+    min-height: 44px;
+    padding: 10px 18px;
+    font-family: var(--font-heading-family);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-accent-text);
+    background-color: var(--color-accent);
+    border: 0;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .frete__btn:disabled { opacity: 0.6; cursor: progress; }
+  .frete__help {
+    display: inline-block;
+    margin-top: 8px;
+    font-size: 12px;
+    color: inherit;
+    text-decoration: underline;
+    opacity: 0.7;
+  }
+  .frete__result:empty { display: none; }
+  .frete__result { margin-top: 12px; }
+  .frete__list { margin: 0; padding: 0; list-style: none; }
+  .frete__option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 0;
+    border-top: 1px solid var(--color-border);
+  }
+  .frete__option:first-child { border-top: 0; padding-top: 0; }
+  .frete__option strong { display: block; font-size: 14px; }
+  .frete__option small { display: block; margin-top: 2px; font-size: 12px; opacity: 0.6; }
+  .frete__price { flex: none; font-size: 14px; font-weight: 700; }
+  .frete__where, .frete__msg { margin: 10px 0 0; font-size: 12px; opacity: 0.7; }
+  .frete__msg { margin: 0; opacity: 1; }
+  .frete__msg--error { color: var(--color-sale, #b91c1c); }
+  .frete__note {
+    margin: 12px 0 0;
+    padding-top: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    border-top: 1px dashed var(--color-border);
+  }
+</style>
