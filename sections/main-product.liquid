@@ -380,7 +380,7 @@
                       {%- for color in category_colors -%}
                         {%- assign color_hex = color.color.value.first | default: color.color.value -%}
                         {%- if color_hex != blank -%}
-                          <span class="product__swatch product__swatch--color is-selected" title="{{ color.label.value | escape }}">
+                          <span class="product__swatch product__swatch--color is-selected" title="{% render 'traduz', texto: color.label.value %}">
                             <span class="product__swatch-color" style="background-color: {{ color_hex }};"></span>
                           </span>
                         {%- endif -%}

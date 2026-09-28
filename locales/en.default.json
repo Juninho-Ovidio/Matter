@@ -1,26 +1,26 @@
 {
   "general": {
     "meta": {
-      "tags": "Tagged \"{{ tags }}\"",
-      "page": "Page {{ page }}"
+      "tags": "Marcado com \"{{ tags }}\"",
+      "page": "Página {{ page }}"
     },
     "404": {
-      "title": "Page not found",
-      "subtext": "The page you are looking for does not exist."
+      "title": "Página não encontrada",
+      "subtext": "A página que você procura não existe."
     },
     "password_page": {
-      "password_label": "Password",
-      "password_placeholder": "Your password",
-      "submit": "Enter"
+      "password_label": "Senha",
+      "password_placeholder": "Sua senha",
+      "submit": "Entrar"
     },
     "search": {
-      "search": "Search",
-      "placeholder": "Search",
-      "submit": "Search",
-      "results_with_count": "{{ count }} result for \"{{ terms }}\"",
-      "results_with_count_plural": "{{ count }} results for \"{{ terms }}\"",
-      "no_results": "No results found for \"{{ terms }}\". Check the spelling or use a different word or phrase.",
-      "reset": "Clear search term",
+      "search": "Buscar",
+      "placeholder": "Buscar",
+      "submit": "Buscar",
+      "results_with_count": "{{ count }} resultado para \"{{ terms }}\"",
+      "results_with_count_plural": "{{ count }} resultados para \"{{ terms }}\"",
+      "no_results": "Nenhum resultado para \"{{ terms }}\". Confira a ortografia ou tente outra palavra.",
+      "reset": "Limpar busca",
       "modal_placeholder": "O que você procura?",
       "popular": "// Buscas populares",
       "products_heading": "// Produtos",
@@ -29,45 +29,45 @@
       "close": "Fechar busca"
     },
     "pagination": {
-      "label": "Pagination",
-      "previous": "Previous page",
-      "next": "Next page",
-      "page": "Page {{ number }}"
+      "label": "Paginação",
+      "previous": "Página anterior",
+      "next": "Próxima página",
+      "page": "Página {{ number }}"
     },
     "breadcrumbs": {
       "home": "Início",
       "products": "Produtos"
     },
-    "continue_shopping": "Continue shopping"
+    "continue_shopping": "Continuar comprando"
   },
   "accessibility": {
-    "skip_to_text": "Skip to content",
-    "close": "Close",
-    "unit_price_separator": "per",
-    "vendor": "Vendor:",
-    "error": "Error",
-    "refresh_page": "Choosing a selection results in a full page refresh.",
+    "skip_to_text": "Pular para o conteúdo",
+    "close": "Fechar",
+    "unit_price_separator": "por",
+    "vendor": "Marca:",
+    "error": "Erro",
+    "refresh_page": "Escolher uma opção recarrega a página.",
     "link_messages": {
-      "new_window": "Opens in a new window.",
-      "external": "Opens external website."
+      "new_window": "Abre em uma nova janela.",
+      "external": "Abre um site externo."
     },
-    "loading": "Loading...",
-    "next_slide": "Slide right",
-    "previous_slide": "Slide left",
-    "of": "of",
-    "star_reviews_info": "{{ rating_value }} out of {{ rating_max }} stars",
-    "total_reviews": "{{ count }} total reviews"
+    "loading": "Carregando...",
+    "next_slide": "Próximo",
+    "previous_slide": "Anterior",
+    "of": "de",
+    "star_reviews_info": "{{ rating_value }} de {{ rating_max }} estrelas",
+    "total_reviews": "{{ count }} avaliações"
   },
   "localization": {
-    "country_label": "Country/region",
-    "language_label": "Language",
-    "update_language": "Update language",
-    "update_country": "Update country/region"
+    "country_label": "País/região",
+    "language_label": "Idioma",
+    "update_language": "Mudar idioma",
+    "update_country": "Mudar país/região"
   },
   "newsletter": {
-    "label": "Email",
-    "success": "Thanks for subscribing.",
-    "button_label": "Subscribe"
+    "label": "E-mail",
+    "success": "Obrigado por se inscrever.",
+    "button_label": "Inscrever"
   },
   "products": {
     "product": {
@@ -86,10 +86,10 @@
         "decrease": "Diminuir quantidade de {{ product }}"
       },
       "price": {
-        "from_price_html": "From {{ price }}",
-        "regular_price": "Regular price",
-        "sale_price": "Sale price",
-        "unit_price": "Unit price"
+        "from_price_html": "A partir de {{ price }}",
+        "regular_price": "Preço normal",
+        "sale_price": "Preço promocional",
+        "unit_price": "Preço unitário"
       },
       "vendor": "Marca",
       "view_full_details": "Ver detalhes",
@@ -98,26 +98,26 @@
       "include_taxes": "Impostos incluídos.",
       "shipping_policy_html": "<a href=\"{{ link }}\">Frete</a> calculado no checkout.",
       "pickup_availability": {
-        "view_store_info": "View store information",
-        "check_other_stores": "Check availability at other stores",
-        "pick_up_available": "Pickup available",
-        "pick_up_available_at_html": "Pickup available at <span class=\"color-foreground\">{{ location_name }}</span>",
-        "pick_up_unavailable_at_html": "Pickup currently unavailable at <span class=\"color-foreground\">{{ location_name }}</span>",
-        "unavailable": "Couldn't load pickup availability",
-        "refresh": "Refresh"
+        "view_store_info": "Ver informações da loja",
+        "check_other_stores": "Ver disponibilidade em outras lojas",
+        "pick_up_available": "Retirada disponível",
+        "pick_up_available_at_html": "Retirada disponível em <span class=\"color-foreground\">{{ location_name }}</span>",
+        "pick_up_unavailable_at_html": "Retirada indisponível no momento em <span class=\"color-foreground\">{{ location_name }}</span>",
+        "unavailable": "Não foi possível carregar a disponibilidade de retirada",
+        "refresh": "Atualizar"
       },
       "media": {
-        "gallery_viewer": "Gallery Viewer",
-        "load_image": "Load image {{ index }} in gallery view",
-        "load_model": "Load 3D Model {{ index }} in gallery view",
-        "load_video": "Play video {{ index }} in gallery view",
-        "image_available": "Image {{ index }} is now available in gallery view",
-        "open_media": "Open media {{ index }} in modal",
-        "play_model": "Play 3D Viewer",
-        "play_video": "Play video"
+        "gallery_viewer": "Galeria",
+        "load_image": "Ver imagem {{ index }} na galeria",
+        "load_model": "Ver modelo 3D {{ index }} na galeria",
+        "load_video": "Reproduzir vídeo {{ index }} na galeria",
+        "image_available": "Imagem {{ index }} disponível na galeria",
+        "open_media": "Abrir mídia {{ index }} em tela cheia",
+        "play_model": "Abrir visualizador 3D",
+        "play_video": "Reproduzir vídeo"
       },
-      "choose_options": "Choose options",
-      "choose_product_options": "Choose options for {{ product_name }}"
+      "choose_options": "Escolher opções",
+      "choose_product_options": "Escolher opções de {{ product_name }}"
     },
     "facets": {
       "sort_by_label": "Ordenar por:",
@@ -136,34 +136,34 @@
   },
   "templates": {
     "search": {
-      "no_results": "No results found for \"{{ terms }}\". Check the spelling or use a different word or phrase.",
-      "results_with_count": "{{ count }} result for \"{{ terms }}\"",
-      "results_with_count_plural": "{{ count }} results for \"{{ terms }}\"",
-      "title": "Search results",
-      "page": "Page",
-      "products": "Products",
-      "search_for": "Search for \"{{ terms }}\"",
+      "no_results": "Nenhum resultado para \"{{ terms }}\". Confira a ortografia ou tente outra palavra.",
+      "results_with_count": "{{ count }} resultado para \"{{ terms }}\"",
+      "results_with_count_plural": "{{ count }} resultados para \"{{ terms }}\"",
+      "title": "Resultados da busca",
+      "page": "Página",
+      "products": "Produtos",
+      "search_for": "Buscar por \"{{ terms }}\"",
       "results_pages_with_count": {
-        "one": "{{ count }} page",
-        "other": "{{ count }} pages"
+        "one": "{{ count }} página",
+        "other": "{{ count }} páginas"
       }
     },
     "cart": {
-      "cart": "Cart"
+      "cart": "Carrinho"
     },
     "contact": {
       "form": {
-        "name": "Name",
-        "email": "Email",
-        "phone": "Phone number",
-        "comment": "Comment",
-        "send": "Send",
-        "post_success": "Thanks for contacting us. We'll get back to you as soon as possible.",
-        "error_heading": "Please adjust the following:"
+        "name": "Nome",
+        "email": "E-mail",
+        "phone": "Telefone",
+        "comment": "Mensagem",
+        "send": "Enviar",
+        "post_success": "Obrigado pelo contato. Responderemos o mais rápido possível.",
+        "error_heading": "Corrija os itens abaixo:"
       }
     },
     "404": {
-      "title": "Page not found",
+      "title": "Página não encontrada",
       "subtext": "404"
     }
   },
@@ -176,69 +176,69 @@
       "collections_title": "Coleções"
     },
     "header": {
-      "announcement": "Announcement",
+      "announcement": "Aviso",
       "menu": "Menu",
       "cart_count": {
         "one": "{{ count }} item",
-        "other": "{{ count }} items"
+        "other": "{{ count }} itens"
       }
     },
     "cart": {
-      "title": "Your cart",
-      "caption": "Cart items",
-      "remove_title": "Remove {{ title }}",
-      "note": "Order special instructions",
-      "checkout": "Check out",
-      "empty": "Your cart is empty",
-      "cart_error": "There was an error while updating your cart. Please try again.",
-      "cart_quantity_error_html": "You can only add {{ quantity }} of this item to your cart.",
-      "taxes_and_shipping_policy_at_checkout_html": "Taxes and <a href=\"{{ link }}\">shipping</a> calculated at checkout",
-      "taxes_included_but_shipping_at_checkout": "Tax included and shipping calculated at checkout",
-      "taxes_included_and_shipping_policy_html": "Tax included. <a href=\"{{ link }}\">Shipping</a> calculated at checkout.",
-      "taxes_and_shipping_at_checkout": "Taxes and shipping calculated at checkout",
+      "title": "Seu carrinho",
+      "caption": "Itens do carrinho",
+      "remove_title": "Remover {{ title }}",
+      "note": "Observações do pedido",
+      "checkout": "Finalizar compra",
+      "empty": "Seu carrinho está vazio",
+      "cart_error": "Ocorreu um erro ao atualizar o carrinho. Tente novamente.",
+      "cart_quantity_error_html": "Você só pode adicionar {{ quantity }} unidade(s) deste item ao carrinho.",
+      "taxes_and_shipping_policy_at_checkout_html": "Impostos e <a href=\"{{ link }}\">frete</a> calculados no checkout",
+      "taxes_included_but_shipping_at_checkout": "Impostos incluídos e frete calculado no checkout",
+      "taxes_included_and_shipping_policy_html": "Impostos incluídos. <a href=\"{{ link }}\">Frete</a> calculado no checkout.",
+      "taxes_and_shipping_at_checkout": "Impostos e frete calculados no checkout",
       "headings": {
-        "product": "Product",
-        "price": "Price",
+        "product": "Produto",
+        "price": "Preço",
         "total": "Total",
-        "quantity": "Quantity"
+        "quantity": "Quantidade"
       },
       "subtotal": "Subtotal",
-      "new_subtotal": "New subtotal",
-      "update": "Update",
-      "remove": "Remove"
+      "new_subtotal": "Novo subtotal",
+      "update": "Atualizar",
+      "remove": "Remover"
     },
     "footer": {
-      "payment": "Payment methods",
-      "rights": "All rights reserved.",
-      "base_by_html": "Base by <a href=\"{{ link }}\" target=\"_blank\" rel=\"noopener\">Team Lecdt</a>"
+      "payment": "Formas de pagamento",
+      "rights": "Todos os direitos reservados.",
+      "base_by_html": "Base por <a href=\"{{ link }}\" target=\"_blank\" rel=\"noopener\">Team Lecdt</a>"
     },
     "collection_list": {
-      "view_all": "View all",
+      "view_all": "Ver todas",
       "view_collection": "Ver coleção"
     },
     "featured_collection": {
-      "view_all": "View all",
-      "view_all_label": "View all products in the {{ collection_name }} collection"
+      "view_all": "Ver todos",
+      "view_all_label": "Ver todos os produtos da coleção {{ collection_name }}"
     }
   },
   "customer": {
     "account": {
-      "title": "Account",
-      "details": "Account details",
-      "view_addresses": "View addresses",
-      "return": "Return to account details"
+      "title": "Conta",
+      "details": "Dados da conta",
+      "view_addresses": "Ver endereços",
+      "return": "Voltar aos dados da conta"
     },
     "login_page": {
-      "title": "Login",
-      "email": "Email",
-      "password": "Password",
-      "sign_in": "Sign in",
-      "create_account": "Create account"
+      "title": "Entrar",
+      "email": "E-mail",
+      "password": "Senha",
+      "sign_in": "Entrar",
+      "create_account": "Criar conta"
     },
     "orders": {
-      "title": "Order history",
-      "order_number": "Order",
-      "date": "Date",
+      "title": "Histórico de pedidos",
+      "order_number": "Pedido",
+      "date": "Data",
       "total": "Total"
     }
   },
@@ -259,26 +259,26 @@
   },
   "blogs": {
     "article": {
-      "read_more": "Read more",
-      "comment_meta_html": "{{ author }} on {{ date }}",
+      "read_more": "Ler mais",
+      "comment_meta_html": "{{ author }} em {{ date }}",
       "comments": {
-        "one": "{{ count }} comment",
-        "other": "{{ count }} comments"
+        "one": "{{ count }} comentário",
+        "other": "{{ count }} comentários"
       },
-      "moderated": "Please note, comments need to be approved before they are published.",
-      "comment_form_title": "Leave a comment",
-      "name": "Name",
-      "email": "Email",
-      "message": "Comment",
-      "post": "Post comment",
-      "back_to_blog": "Back to blog",
-      "share": "Share this article",
-      "success": "Your comment was posted successfully. Thank you!",
-      "success_moderated": "Your comment was posted successfully. We'll publish it in a little while, as our blog is moderated."
+      "moderated": "Os comentários precisam ser aprovados antes de serem publicados.",
+      "comment_form_title": "Deixe um comentário",
+      "name": "Nome",
+      "email": "E-mail",
+      "message": "Comentário",
+      "post": "Publicar comentário",
+      "back_to_blog": "Voltar ao blog",
+      "share": "Compartilhar este artigo",
+      "success": "Seu comentário foi publicado. Obrigado!",
+      "success_moderated": "Seu comentário foi enviado e será publicado em breve, pois o blog é moderado."
     }
   },
   "onboarding": {
-    "product_title": "Example product title",
-    "collection_title": "Your collection's name"
+    "product_title": "Nome do produto de exemplo",
+    "collection_title": "Nome da sua coleção"
   }
 }

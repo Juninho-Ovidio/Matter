@@ -47,7 +47,7 @@
     {%- endif -%}
 
     {%- assign gift_card_value = gift_card.initial_value | money -%}
-    <title>{{ 'gift_cards.issued.title' | t: value: gift_card_value, shop: shop.name }}</title>
+    <title>{{ 'gift_cards.issued.title' | t: value: gift_card_value, shop: settings.brand_name | default: shop.name }}</title>
 
     {{ 'index.css' | asset_url | stylesheet_tag }}
     {% render 'css-variables' %}
@@ -198,7 +198,7 @@
           O alt vai numa variável: "alt: shop.name | escape" dentro do image_tag
           aplicaria o escape na tag <img> inteira (o logo sairia como texto).
         {%- endcomment -%}
-        {%- assign logo_alt = shop.name | escape -%}
+        {%- assign logo_alt = settings.brand_name | default: shop.name | escape -%}
         {%- if settings.logo != blank -%}
           {{
             settings.logo

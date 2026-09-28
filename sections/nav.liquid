@@ -114,7 +114,7 @@
 
     <a href="{{ routes.root_url }}" class="header__logo-link">
       {%- if settings.logo != blank -%}
-        {%- assign logo_alt = shop.name | escape -%}
+        {%- assign logo_alt = settings.brand_name | default: shop.name | escape -%}
         {%- assign logo_height = settings.logo_width | divided_by: settings.logo.aspect_ratio -%}
         {{
           settings.logo
@@ -133,7 +133,7 @@
           class="header__logo-image"
           width="560"
           height="232"
-          alt="{{ shop.name | escape }}"
+          alt="{{ settings.brand_name | default: shop.name | escape }}"
           loading="eager"
         >
       {%- endif -%}

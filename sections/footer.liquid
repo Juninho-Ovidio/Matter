@@ -160,8 +160,8 @@
   {%- comment -%} ---------------- 2. Colunas ---------------- {%- endcomment -%}
   <div class="mfooter__cols">
     <div class="mfooter__brand">
-      <a href="{{ routes.root_url }}" class="mfooter__logo-link" aria-label="{{ shop.name | escape }}">
-        <img src="{{ 'logo-mater.png' | asset_url }}" class="mfooter__logo" width="560" height="232" alt="{{ shop.name | escape }}" loading="lazy">
+      <a href="{{ routes.root_url }}" class="mfooter__logo-link" aria-label="{{ settings.brand_name | default: shop.name | escape }}">
+        <img src="{{ 'logo-mater.png' | asset_url }}" class="mfooter__logo" width="560" height="232" alt="{{ settings.brand_name | default: shop.name | escape }}" loading="lazy">
       </a>
       {%- if section.settings.tagline != blank -%}
         <p class="mfooter__tagline">{{ section.settings.tagline | escape }}</p>
@@ -248,7 +248,7 @@
 
   {%- comment -%} ---------------- 3. Base ---------------- {%- endcomment -%}
   <div class="mfooter__bottom">
-    <p class="mfooter__copy">&copy; {{ 'now' | date: '%Y' }} {{ shop.name }}. Todos os direitos reservados.</p>
+    <p class="mfooter__copy">&copy; {{ 'now' | date: '%Y' }} {{ settings.brand_name | default: shop.name }}. Todos os direitos reservados.</p>
 
     {%- if section.settings.show_payment_icons and shop.enabled_payment_types.size > 0 -%}
       <ul class="mfooter__payments" role="list" aria-label="{{ 'sections.footer.payment' | t }}">
