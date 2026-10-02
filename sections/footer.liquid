@@ -37,7 +37,7 @@
   endif
 
   assign wa_number = section.settings.whatsapp_number | remove: ' ' | remove: '-' | remove: '(' | remove: ')' | remove: '+'
-  assign footer_email = section.settings.email | default: shop.email
+  assign footer_email = section.settings.email | default: 'matercatholicgerencia@gmail.com'
   # Instagram: o setting do footer tem prioridade; senão, o das configurações do tema.
   assign instagram_url = section.settings.instagram_url | default: settings.social_instagram_link
 -%}

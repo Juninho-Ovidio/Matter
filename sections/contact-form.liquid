@@ -46,7 +46,7 @@
     assign wa_text = section.settings.whatsapp_message | url_encode | replace: '+', '%20'
     assign wa_url = wa_url | append: '?text=' | append: wa_text
   endif
-  assign contact_email = section.settings.email | default: shop.email
+  assign contact_email = section.settings.email | default: 'matercatholicgerencia@gmail.com'
   assign subjects = section.settings.subjects | split: ','
 -%}
 
