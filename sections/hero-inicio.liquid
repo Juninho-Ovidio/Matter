@@ -134,7 +134,7 @@
         {%- endfor -%}
       {%- else -%}
         {%- comment -%} Artes da marca empacotadas no tema. {%- endcomment -%}
-        {%- assign default_slides = 'hero-teothokos,hero-inicio,hero-inicio-2,hero-inicio-3,hero-inicio-4' | split: ',' -%}
+        {%- assign default_slides = 'hero-teresinha,hero-teothokos,hero-inicio,hero-inicio-2,hero-inicio-3,hero-inicio-4' | split: ',' -%}
         {%- comment -%}
           Produto de cada arte (mesma ordem dos slides): o card de chamada
           leva direto à camiseta que aparece na foto.
@@ -142,9 +142,9 @@
           uma imagem 1920px (sem 2600/3200), não têm zoom de câmera e, no
           desktop, escondem a copy fixa do hero enquanto estão na tela.
         {%- endcomment -%}
-        {%- assign slide_handles = 'pre-lancamento-i-teothokos,camisa-sao-miguel-arcanjo-preta,camiseta-pietrelcina,camiseta-acutis,camiseta-teresa-calcuta' | split: ',' -%}
-        {%- assign slide_names = 'Theotókos,São Miguel Arcanjo,Pietrelcina,Acútis,Calcutá' | split: ',' -%}
-        {%- assign banner_slides = 'hero-teothokos' | split: ',' -%}
+        {%- assign slide_handles = 'camiseta-santa-teresinha-a-doce-santa-das-rosas,pre-lancamento-i-teothokos,camisa-sao-miguel-arcanjo-preta,camiseta-pietrelcina,camiseta-acutis,camiseta-teresa-calcuta' | split: ',' -%}
+        {%- assign slide_names = 'Teresinha,Theotókos,São Miguel Arcanjo,Pietrelcina,Acútis,Calcutá' | split: ',' -%}
+        {%- assign banner_slides = 'hero-teresinha,hero-teothokos' | split: ',' -%}
         {%- for slide in default_slides -%}
           {%- liquid
             assign slide_product = all_products[slide_handles[forloop.index0]]
@@ -159,7 +159,7 @@
             endif
           -%}
           <div
-            class="hero-inicio__slide{% if is_banner %} hero-inicio__slide--banner{% endif %}{% if forloop.first %} is-active{% endif %}"
+            class="hero-inicio__slide{% if is_banner %} hero-inicio__slide--banner hero-inicio__slide--{{ slide }}{% endif %}{% if forloop.first %} is-active{% endif %}"
             aria-roledescription="slide"
             aria-label="{{ forloop.index }} / {{ forloop.length }}"
             {% unless forloop.first %}aria-hidden="true" inert{% endunless %}
@@ -177,17 +177,17 @@
                 class="hero-inicio__image"
                 src="{{ slide | append: '-1920.jpg' | asset_url }}"
                 srcset="{% for w in desk_widths %}{{ slide | append: '-' | append: w | append: '.jpg' | asset_url }} {{ w }}w{% unless forloop.last %}, {% endunless %}{% endfor %}"
-                sizes="(min-width: 1921px) 1920px, 100vw"
+                sizes="100vw"
                 width="1671"
                 height="841"
-                alt="{% if is_banner %}Pré-lançamento {{ slide_names[forloop.index0] }} — {% endif %}{{ hero_alt }}"
+                alt="{% if slide == 'hero-teothokos' %}Pré-lançamento {{ slide_names[forloop.index0] }} — {% elsif is_banner %}Coleção {{ slide_names[forloop.index0] }} — {% endif %}{{ hero_alt }}"
                 {% if forloop.first %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %}
               >
             </picture>
 
             {%- if slide_product != blank and slide_product.id -%}
               <a class="hero-inicio__cta" href="{{ slide_product.url }}">
-                <span class="hero-inicio__cta-eyebrow">{% if is_banner %}// Pré-lançamento{% else %}// Coleção{% endif %}</span>
+                <span class="hero-inicio__cta-eyebrow">{% if slide == 'hero-teothokos' %}// Pré-lançamento{% else %}// Coleção{% endif %}</span>
                 <span class="hero-inicio__cta-name">{{ slide_names[forloop.index0] }}</span>
                 <span class="hero-inicio__cta-row">
                   <span class="hero-inicio__cta-price">{{ slide_product.price | money }}</span>
@@ -352,21 +352,10 @@
   #shopify-section-{{ section.id }} .hero-inicio {
     --mater-gutter: clamp(20px, 6vw, 100px);
     position: relative;
+    /* Sempre de ponta a ponta, inclusive com zoom reduzido e em telas
+       ultralargas (sem limite de largura nem laterais esmaecidas). */
     width: 100%;
-    /* Zoom reduzido / telas ultralargas: o banner para em 1920px e fica
-       centralizado, em vez de a foto crescer sem fim e deixar os textos
-       (que têm tamanho máximo) pequenos e soltos sobre ela. */
-    max-width: var(--page-max, 1920px);
-    margin-left: auto;
-    margin-right: auto;
     background-color: var(--color-background);
-  }
-  /* Acima de 1920px as laterais da foto se dissolvem no fundo da página. */
-  @media screen and (min-width: 1921px) {
-    #shopify-section-{{ section.id }} .hero-inicio__slides {
-      -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
-      mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
-    }
   }
   #shopify-section-{{ section.id }} .hero-inicio__media {
     position: relative;
@@ -482,6 +471,16 @@
       right: auto;
       left: 51%;
       bottom: 11%;
+    }
+  }
+  /* Teresinha: o card vai para o canto superior direito, a parte lisa da arte
+     (embaixo ficam o título e os textos "Edição Limitada" / "Teresa de Lisieux"). */
+  @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .hero-inicio__slide--hero-teresinha .hero-inicio__cta {
+      left: auto;
+      right: 3%;
+      top: 12%;
+      bottom: auto;
     }
   }
 
@@ -828,6 +827,13 @@
     #shopify-section-{{ section.id }} .hero-inicio__slide--banner .hero-inicio__cta {
       right: auto;
       left: 10px;
+    }
+    /* Teresinha: pílula no topo à direita (embaixo ficam os textos da arte). */
+    #shopify-section-{{ section.id }} .hero-inicio__slide--hero-teresinha .hero-inicio__cta {
+      left: auto;
+      right: 8px;
+      top: 8px;
+      bottom: auto;
     }
     #shopify-section-{{ section.id }} .hero-inicio__cta-eyebrow { display: none; }
     #shopify-section-{{ section.id }} .hero-inicio__cta-name { font-size: 1rem; }
